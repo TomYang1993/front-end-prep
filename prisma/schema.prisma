@@ -1,0 +1,414 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleKey {
+  USER
+  ADMIN
+}
+
+enum QuestionType {
+  FUNCTION_JS
+  REACT_APP
+}
+
+enum AccessTier {
+  FREE
+  PREMIUM
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum QuestionVersionStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum TestVisibility {
+  PUBLIC
+  HIDDEN
+}
+
+enum SubmissionStatus {
+  QUEUED
+  RUNNING
+  PASSED
+  FAILED
+  ERROR
+}
+
+enum EntitlementSource {
+  SUBSCRIPTION
+  PACK
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  EXPIRED
+}
+
+enum PackPurchaseStatus {
+  COMPLETED
+  REFUNDED
+}
+
+enum ThreadStatus {
+  ACTIVE
+  HIDDEN
+  LOCKED
+}
+
+model User {
+  id           String               @id @default(cuid())
+  supabaseId   String               @unique
+  email        String               @unique
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  profile      Profile?
+  userRoles    UserRole[]
+  submissions  Submission[]
+  threads      DiscussionThread[]
+  comments     DiscussionComment[]
+  likes        DiscussionLike[]
+  subscriptions Subscription[]
+  packPurchases PackPurchase[]
+  entitlements Entitlement[]
+  auditLogs    AuditLog[]           @relation("AuditActor")
+  createdQuestions Question[]       @relation("QuestionCreator")
+
+  @@map("users")
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  displayName String
+  bio         String?
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Role {
+  id        String    @id @default(cuid())
+  key       RoleKey   @unique
+  name      String
+  users     UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+model Question {
+  id              String                 @id @default(cuid())
+  slug            String                 @unique
+  title           String
+  prompt          String
+  type            QuestionType
+  difficulty      Difficulty
+  accessTier      AccessTier             @default(FREE)
+  isPublished     Boolean                @default(false)
+  createdById     String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  versions        QuestionVersion[]
+  tags            QuestionTagOnQuestion[]
+  testCases       TestCase[]
+  officialSolutions OfficialSolution[]
+  submissions     Submission[]
+  packLinks       ContentPackQuestion[]
+  threads         DiscussionThread[]
+  createdBy       User?                  @relation("QuestionCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@map("questions")
+}
+
+model QuestionVersion {
+  id            String                @id @default(cuid())
+  questionId    String
+  version       Int
+  content       Json
+  starterCode   Json
+  status        QuestionVersionStatus @default(DRAFT)
+  publishedAt   DateTime?
+  createdAt     DateTime              @default(now())
+  question      Question              @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, version])
+  @@map("question_versions")
+}
+
+model QuestionTag {
+  id        String                @id @default(cuid())
+  name      String                @unique
+  questions QuestionTagOnQuestion[]
+
+  @@map("question_tags")
+}
+
+model QuestionTagOnQuestion {
+  id          String      @id @default(cuid())
+  questionId  String
+  tagId       String
+  question    Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  tag         QuestionTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, tagId])
+  @@map("question_tag_links")
+}
+
+model TestCase {
+  id          String         @id @default(cuid())
+  questionId  String
+  visibility  TestVisibility
+  input       Json
+  expected    Json
+  explanation String?
+  sortOrder   Int            @default(0)
+  question    Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  results     SubmissionResult[]
+
+  @@map("test_cases")
+}
+
+model OfficialSolution {
+  id          String   @id @default(cuid())
+  questionId  String
+  language    String
+  framework   String?
+  explanation String
+  code        String
+  complexity  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("official_solutions")
+}
+
+model Submission {
+  id             String           @id @default(cuid())
+  userId         String
+  questionId     String
+  framework      String
+  code           String
+  status         SubmissionStatus @default(QUEUED)
+  score          Int?
+  runtimeMs      Int?
+  publicResult   Json?
+  hiddenResult   Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question       Question         @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  results        SubmissionResult[]
+
+  @@index([userId, questionId, createdAt])
+  @@map("submissions")
+}
+
+model SubmissionResult {
+  id          String      @id @default(cuid())
+  submissionId String
+  testCaseId  String
+  passed      Boolean
+  runtimeMs   Int?
+  output      Json?
+  error       String?
+  submission  Submission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  testCase    TestCase    @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+
+  @@map("submission_results")
+}
+
+model DiscussionThread {
+  id          String             @id @default(cuid())
+  questionId  String
+  userId      String
+  title       String
+  body        String
+  status      ThreadStatus       @default(ACTIVE)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  question    Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments    DiscussionComment[]
+  likes       DiscussionLike[]
+
+  @@map("discussion_threads")
+}
+
+model DiscussionComment {
+  id          String               @id @default(cuid())
+  threadId    String
+  userId      String
+  parentId    String?
+  body        String
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  thread      DiscussionThread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent      DiscussionComment?   @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     DiscussionComment[]  @relation("CommentReplies")
+  likes       DiscussionLike[]
+
+  @@map("discussion_comments")
+}
+
+model DiscussionLike {
+  id         String             @id @default(cuid())
+  userId     String
+  threadId   String?
+  commentId  String?
+  createdAt  DateTime           @default(now())
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread     DiscussionThread?  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  comment    DiscussionComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, threadId])
+  @@unique([userId, commentId])
+  @@map("discussion_likes")
+}
+
+model SubscriptionPlan {
+  id              String         @id @default(cuid())
+  code            String         @unique
+  name            String
+  amountCents     Int
+  interval        String
+  providerPriceId String         @unique
+  subscriptions   Subscription[]
+  entitlements    Entitlement[]
+
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id                        String             @id @default(cuid())
+  userId                    String
+  planId                    String
+  providerCustomerId        String
+  providerSubscriptionId    String             @unique
+  status                    SubscriptionStatus
+  currentPeriodStart        DateTime
+  currentPeriodEnd          DateTime
+  canceledAt                DateTime?
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+  user                      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                      SubscriptionPlan   @relation(fields: [planId], references: [id], onDelete: Restrict)
+  events                    InvoiceEvent[]
+
+  @@index([userId, status])
+  @@map("subscriptions")
+}
+
+model InvoiceEvent {
+  id               String        @id @default(cuid())
+  subscriptionId   String
+  providerEventId  String        @unique
+  eventType        String
+  payload          Json
+  createdAt        DateTime      @default(now())
+  subscription     Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_events")
+}
+
+model ContentPack {
+  id              String                @id @default(cuid())
+  code            String                @unique
+  name            String
+  description     String?
+  providerPriceId String?
+  links           ContentPackQuestion[]
+  purchases       PackPurchase[]
+  entitlements    Entitlement[]
+
+  @@map("content_packs")
+}
+
+model ContentPackQuestion {
+  id          String      @id @default(cuid())
+  packId      String
+  questionId  String
+  pack        ContentPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  question    Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([packId, questionId])
+  @@map("content_pack_questions")
+}
+
+model PackPurchase {
+  id                            String             @id @default(cuid())
+  userId                        String
+  packId                        String
+  status                        PackPurchaseStatus
+  providerCheckoutSessionId     String?            @unique
+  amountCents                   Int
+  currency                      String             @default("usd")
+  purchasedAt                   DateTime           @default(now())
+  user                          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pack                          ContentPack        @relation(fields: [packId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status])
+  @@map("pack_purchases")
+}
+
+model Entitlement {
+  id         String            @id @default(cuid())
+  userId     String
+  source     EntitlementSource
+  sourceId   String
+  planId     String?
+  packId     String?
+  startsAt   DateTime
+  endsAt     DateTime?
+  active     Boolean           @default(true)
+  createdAt  DateTime          @default(now())
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan       SubscriptionPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+  pack       ContentPack?      @relation(fields: [packId], references: [id], onDelete: SetNull)
+
+  @@index([userId, active, endsAt])
+  @@unique([source, sourceId])
+  @@map("entitlements")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  payload    Json?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
