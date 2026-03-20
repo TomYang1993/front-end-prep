@@ -4,11 +4,10 @@ export default function HomePage() {
   return (
     <section className="hero-grid">
       <div>
-        <p className="eyebrow">React-first coding interview prep</p>
-        <h1>Practice JS functions and React apps with real judge workflows.</h1>
+        <p className="eyebrow">Latest real front end interview questions</p>
+        <h1>Practice real front end interview questions with time limit</h1>
         <p>
-          Solve free and premium questions, run public tests instantly, submit hidden tests, and track your
-          submission history.
+          Learn with real-life developer use-cases
         </p>
         <div className="cta-row">
           <Link href="/questions" className="btn">
