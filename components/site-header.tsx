@@ -8,15 +8,13 @@ export async function SiteHeader() {
 
   return (
     <header className="site-header">
-      <div className="container nav-wrap">
+      <div className="nav-wrap">
         <Link href="/" className="brand">
           <span className="brand-mark">IP</span>
           <span>Interview Platform</span>
         </Link>
         <nav className="nav-links">
           <Link href="/questions">Questions</Link>
-          <Link href="/submissions">History</Link>
-          <Link href="/discuss">Discuss</Link>
           <Link href="/admin">Admin</Link>
           <ThemeToggle />
           <AuthControls email={user?.email || null} />

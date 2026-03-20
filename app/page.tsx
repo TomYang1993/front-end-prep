@@ -145,44 +145,7 @@ const Solution = () => {
         </div>
       </section>
 
-      {/* ─── Social Proof ─── */}
-      <section className="landing-section">
-        <h2 className="section-heading-center">Trusted by Senior Engineers</h2>
 
-        <div className="testimonial-grid">
-          {[
-            {
-              quote: 'The high-density approach of The Kinetic Archive is exactly what\'s missing in modern learning. It respects the engineer\'s intelligence and skips the fluff.',
-              name: 'Marcus Chen',
-              title: 'Staff Engineer @ SynthFlow',
-            },
-            {
-              quote: 'Finally, a resource that focuses on the architectural \'why\' rather than just the syntax \'how\'. Essential for anyone moving from mid to senior level.',
-              name: 'Sarah Jenkins',
-              title: 'Tech Lead @ Obsidian Systems',
-            },
-            {
-              quote: 'The clinical precision of the UI mirrors the quality of the content. This is the gold standard for front-end education.',
-              name: 'David Vo',
-              title: 'Principal Frontend @ Nexus',
-            },
-          ].map((t) => (
-            <div key={t.name} className="testimonial-card">
-              <div className="testimonial-stars flex gap-1 text-tertiary-fixed">
-                {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" stroke="none" />)}
-              </div>
-              <p className="testimonial-quote">&ldquo;{t.quote}&rdquo;</p>
-              <div className="testimonial-author">
-                <div className="testimonial-avatar flex items-center justify-center"><UserCircle size={24} /></div>
-                <div>
-                  <p className="testimonial-name">{t.name}</p>
-                  <p className="testimonial-title">{t.title}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* ─── Final CTA ─── */}
       <section className="landing-cta">

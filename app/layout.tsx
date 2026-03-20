@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Space_Grotesk, IBM_Plex_Mono } from 'next/font/google';
 import '@/styles/globals.css';
 import { SiteHeader } from '@/components/site-header';
+import { HeaderWrapper } from '@/components/header-wrapper';
 import { ToastProvider } from '@/components/toast-provider';
 
 const spaceGrotesk = Space_Grotesk({
@@ -40,7 +41,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ToastProvider>
-          <SiteHeader />
+          <HeaderWrapper>
+            <SiteHeader />
+          </HeaderWrapper>
           <main className="container page-shell">{children}</main>
         </ToastProvider>
       </body>

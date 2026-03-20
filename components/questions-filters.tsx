@@ -23,6 +23,20 @@ export function QuestionsFilters() {
       <span className="filter-icon"><SlidersHorizontal size={18} /></span>
 
       <select
+        value={searchParams.get('type') || ''}
+        onChange={(e) => updateParam('type', e.target.value)}
+      >
+        <option value="">Category: All</option>
+        <option value="REACT_APP">React UI</option>
+        <option value="FUNCTION_JS">JS/TS Logic</option>
+        <option value="concepts">FE Concepts</option>
+        <option value="system">System Design</option>
+        <option value="performance">Performance</option>
+      </select>
+
+      <span className="filter-divider" />
+
+      <select
         value={searchParams.get('difficulty') || ''}
         onChange={(e) => updateParam('difficulty', e.target.value)}
       >

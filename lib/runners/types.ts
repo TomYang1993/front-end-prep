@@ -5,6 +5,7 @@ export interface RunnerExecutionResult {
   output: unknown;
   runtimeMs: number;
   error?: string;
+  logs?: string[];
 }
 
 export interface RunnerAdapter {

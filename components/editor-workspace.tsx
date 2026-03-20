@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import Editor from '@monaco-editor/react';
 import { useToast } from '@/components/toast-provider';
 import { 
   Code2, Lightbulb, History, HelpCircle, FileCode2, 
-  Settings, TerminalSquare, ClipboardList, Play, Upload
+  Settings, TerminalSquare, ClipboardList, Play, Upload,
+  ArrowLeft
 } from 'lucide-react';
 
 interface PublicTest {
@@ -42,6 +44,7 @@ interface RunResult {
   runtimeMs: number;
   error?: string;
   explanation?: string | null;
+  logs?: string[];
 }
 
 type SideTab = 'code' | 'solutions' | 'history';
@@ -60,12 +63,14 @@ export function EditorWorkspace({
 }: EditorWorkspaceProps) {
   const { toast } = useToast();
 
-  const initialCode = useMemo(
-    () => starterCode?.javascript || 'function solve(...args) {\n  return null;\n}',
-    [starterCode]
-  );
+  const [language, setLanguage] = useState<'javascript' | 'typescript'>('javascript');
+  const [codes, setCodes] = useState<Record<string, string>>({
+    javascript: starterCode?.javascript || 'function solve(...args) {\n  return null;\n}',
+    typescript: starterCode?.typescript || 'function solve(...args): any {\n  return null;\n}'
+  });
 
-  const [code, setCode] = useState(initialCode);
+  const code = codes[language];
+  const setCode = (val: string) => setCodes((prev) => ({ ...prev, [language]: val }));
   const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState<RunResult[]>([]);
@@ -91,7 +96,7 @@ export function EditorWorkspace({
     };
 
     updateTheme(); // initial check
-    
+
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((m) => {
         if (m.attributeName === 'data-theme') {
@@ -101,7 +106,14 @@ export function EditorWorkspace({
     });
 
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    return () => observer.disconnect();
+    
+    // Lock viewport scrolling while IDE is active
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      observer.disconnect();
+      document.body.style.overflow = '';
+    };
   }, []);
 
   async function runPublicTests() {
@@ -126,18 +138,20 @@ export function EditorWorkspace({
       const passed = data.summary?.passedCount || 0;
       const total = data.summary?.total || 0;
       const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
-      setConsoleLog((prev) => [
-        ...prev,
-        `[${ts}] Passed ${passed}/${total} tests`,
-        ...(data.results || []).map((r: RunResult) =>
-          `[${ts}] Case ${r.id}: ${r.passed ? 'Accepted' : 'Failed'} (${r.runtimeMs}ms)`
-        ),
-      ]);
-
-      toast({
-        title: passed === total ? 'All public tests passed!' : `Passed ${passed}/${total} tests`,
-        type: passed === total ? 'success' : 'info',
+      const newLogs = [`[${ts}] Passed ${passed}/${total} tests`];
+      
+      (data.results || []).forEach((r: RunResult) => {
+        newLogs.push(`[${ts}] Case ${r.id}: ${r.passed ? 'Accepted' : 'Failed'} (${r.runtimeMs}ms)`);
+        if (r.error) {
+          newLogs.push(`> [ERROR] ${r.error}`);
+        }
+        if (r.logs && r.logs.length > 0) {
+          newLogs.push(`> [Console] Case ${r.id}`);
+          newLogs.push(...r.logs);
+        }
       });
+      
+      setConsoleLog((prev) => [...prev, ...newLogs]);
     } catch (error) {
       const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
       const msg = error instanceof Error ? error.message : 'Unknown error';
@@ -194,6 +208,9 @@ export function EditorWorkspace({
       {/* ─── Side Nav ─── */}
       <aside className="ide-sidenav">
         <div className="ide-sidenav-top">
+          <Link href="/questions" className="ide-sidenav-btn mb-4" title="Back to Questions">
+            <ArrowLeft size={24} strokeWidth={1.5} />
+          </Link>
           <button
             className={`ide-sidenav-btn ${activeSideTab === 'code' ? 'active' : ''}`}
             onClick={() => setActiveSideTab('code')}
@@ -221,9 +238,28 @@ export function EditorWorkspace({
         <section className="ide-left-pane">
           {/* Sub header / tabs */}
           <div className="ide-left-header">
-            <div className="ide-left-title-row">
-              <h1 className="ide-problem-title">{title}</h1>
-              <span className={`diff-badge ${diffClass}`}>{difficulty}</span>
+            <div className="ide-left-title-row flex items-center justify-between w-full">
+              <div className="flex items-center gap-3">
+                <h1 className="ide-problem-title">{title}</h1>
+                <span className={`diff-badge ${diffClass}`}>{difficulty}</span>
+              </div>
+              
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  className="ide-run-btn"
+                  disabled={running}
+                  onClick={runPublicTests}
+                >
+                  <Play size={14} fill="currentColor" /> {running ? 'Running…' : 'Run'}
+                </button>
+                <button
+                  className="ide-submit-btn"
+                  disabled={submitting}
+                  onClick={submitHiddenTests}
+                >
+                  <Upload size={14} /> {submitting ? 'Judging…' : 'Submit'}
+                </button>
+              </div>
             </div>
             <div className="ide-left-tabs">
               <button
@@ -291,11 +327,20 @@ export function EditorWorkspace({
           {/* Editor toolbar */}
           <div className="ide-editor-toolbar">
             <div className="ide-editor-tab-bar">
-              <span className="ide-file-tab active"><FileCode2 size={16} className="inline-block mr-1" /> Solution.js</span>
-              <span className="ide-lang-label">JavaScript</span>
+              <span className="ide-file-tab active">
+                <FileCode2 size={16} className="inline-block mr-1" /> 
+                {language === 'javascript' ? 'Solution.js' : 'Solution.ts'}
+              </span>
             </div>
             <div className="ide-editor-actions">
-              <button className="ide-toolbar-btn" title="Settings"><Settings size={16} /></button>
+              <select 
+                className="ide-lang-select"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as 'javascript' | 'typescript')}
+              >
+                <option value="javascript">JavaScript</option>
+                <option value="typescript">TypeScript</option>
+              </select>
             </div>
           </div>
 
@@ -303,7 +348,7 @@ export function EditorWorkspace({
           <div className="ide-editor-body">
             <Editor
               height="100%"
-              defaultLanguage="javascript"
+              language={language}
               theme={monacoTheme}
               value={code}
               onChange={(value) => setCode(value || '')}
@@ -379,34 +424,6 @@ export function EditorWorkspace({
           </div>
         </section>
       </div>
-
-      {/* ─── Bottom Bar ─── */}
-      <footer className="ide-bottombar">
-        <div className="ide-bottombar-left">
-          <button className="ide-bottombar-btn" onClick={() => setActiveBottomTab('console')}>
-            <TerminalSquare size={16} className="inline-block mr-1" /> Console
-          </button>
-          <button className="ide-bottombar-btn" onClick={() => setActiveBottomTab('testcases')}>
-            <ClipboardList size={16} className="inline-block mr-1" /> Test Cases
-          </button>
-        </div>
-        <div className="ide-bottombar-right">
-          <button
-            className="ide-run-btn flex items-center gap-2"
-            disabled={running}
-            onClick={runPublicTests}
-          >
-            <Play size={16} fill="currentColor" /> {running ? 'Running…' : 'Run Code'}
-          </button>
-          <button
-            className="ide-submit-btn flex items-center gap-2"
-            disabled={submitting}
-            onClick={submitHiddenTests}
-          >
-            <Upload size={16} /> {submitting ? 'Judging…' : 'Submit'}
-          </button>
-        </div>
-      </footer>
     </div>
   );
 }

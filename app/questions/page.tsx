@@ -5,7 +5,6 @@ import { QuestionsTable, type QuestionRow } from '@/components/questions-table';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { listPublishedQuestions } from '@/lib/questions';
 import { prisma } from '@/lib/db/prisma';
-import { TrendingUp, Trophy, Lightbulb } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -101,43 +100,6 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
 
         {/* Table */}
         <QuestionsTable questions={filtered} />
-
-        {/* Stat Widgets */}
-        <div className="stat-widgets">
-          <div className="stat-widget">
-            <div className="stat-widget-header">
-              <span className="stat-widget-icon streak flex items-center justify-center"><TrendingUp size={20} /></span>
-              <span className="stat-widget-title">Daily Streak</span>
-            </div>
-            <div className="stat-widget-body">
-              <div className="stat-widget-number">1</div>
-              <div className="stat-widget-caption">Day of continuous practice.</div>
-            </div>
-          </div>
-
-          <div className="stat-widget">
-            <div className="stat-widget-header">
-              <span className="stat-widget-icon rank flex items-center justify-center"><Trophy size={20} /></span>
-              <span className="stat-widget-title">Progress</span>
-            </div>
-            <div className="stat-widget-body">
-              <div className="stat-widget-number">{solvedCount}</div>
-              <div className="stat-widget-caption">Problems solved out of {questionRows.length} available.</div>
-            </div>
-          </div>
-
-          <div className="stat-widget">
-            <div className="stat-widget-header">
-              <span className="stat-widget-icon skills flex items-center justify-center"><Lightbulb size={20} /></span>
-              <span className="stat-widget-title">Skills Focus</span>
-            </div>
-            <div className="stat-skill-chips">
-              <span className="skill-chip js">Core JS</span>
-              <span className="skill-chip react">React Patterns</span>
-              <span className="skill-chip perf">Web Perf</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

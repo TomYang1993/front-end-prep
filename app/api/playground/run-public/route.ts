@@ -63,7 +63,8 @@ export async function POST(req: NextRequest) {
       output: runResult.output,
       runtimeMs: runResult.runtimeMs,
       error: runResult.error,
-      explanation: testCase.explanation
+      explanation: testCase.explanation,
+      logs: runResult.logs
     });
   }
 
