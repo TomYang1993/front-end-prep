@@ -3,6 +3,8 @@
 import * as ToastPrimitive from '@radix-ui/react-toast';
 import { createContext, useCallback, useContext, useState } from 'react';
 
+import { X } from 'lucide-react';
+
 interface ToastData {
     id: string;
     title: string;
@@ -53,8 +55,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                                 </ToastPrimitive.Description>
                             )}
                         </div>
-                        <ToastPrimitive.Close className="btn-ghost" aria-label="Close">
-                            ✕
+                        <ToastPrimitive.Close className="btn-ghost flex items-center justify-center p-1" aria-label="Close">
+                            <X size={16} />
                         </ToastPrimitive.Close>
                     </ToastPrimitive.Root>
                 ))}

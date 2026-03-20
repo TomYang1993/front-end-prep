@@ -4,6 +4,8 @@ import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useToast } from '@/components/toast-provider';
 
+import { X } from 'lucide-react';
+
 interface PremiumUpsellProps {
   packId: string | null;
 }
@@ -88,8 +90,8 @@ export function PremiumUpsell({ packId }: PremiumUpsellProps) {
           </div>
 
           <Dialog.Close asChild>
-            <button className="btn-ghost dialog-close" type="button" aria-label="Close">
-              ✕
+            <button className="btn-ghost dialog-close flex items-center justify-center" type="button" aria-label="Close">
+              <X size={16} />
             </button>
           </Dialog.Close>
         </Dialog.Content>

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import clsx from 'clsx';
+import { Check, AlertCircle, Minus, Lock, Play, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface QuestionRow {
   id: string;
@@ -39,18 +40,18 @@ export function QuestionsTable({ questions }: QuestionsTableProps) {
               {/* Status */}
               <td>
                 <div className={clsx('status-icon', q.status)}>
-                  {q.status === 'solved' && '✓'}
-                  {q.status === 'attempted' && '!'}
-                  {q.status === 'unattempted' && '—'}
+                  {q.status === 'solved' && <Check size={16} />}
+                  {q.status === 'attempted' && <AlertCircle size={16} />}
+                  {q.status === 'unattempted' && <Minus size={16} />}
                 </div>
               </td>
 
               {/* Title + tags */}
               <td>
                 <div className="question-title-cell">
-                  <Link href={`/questions/${q.slug}`} className="question-title-link">
+                  <Link href={`/questions/${q.slug}`} className="question-title-link flex items-center gap-2">
                     {q.title}
-                    {q.locked && <span className="lock-chip" style={{ marginLeft: '0.5rem' }}>🔒 Pro</span>}
+                    {q.locked && <span className="lock-chip inline-flex items-center gap-1"><Lock size={12} /> Pro</span>}
                   </Link>
                   <div className="question-tags-row">
                     {q.tags.map((tag) => (
@@ -76,7 +77,7 @@ export function QuestionsTable({ questions }: QuestionsTableProps) {
               {/* Action */}
               <td style={{ textAlign: 'right' }}>
                 <Link href={`/questions/${q.slug}`} className="action-btn" title="Open problem">
-                  ▶
+                  <Play size={16} />
                 </Link>
               </td>
             </tr>
@@ -97,9 +98,9 @@ export function QuestionsTable({ questions }: QuestionsTableProps) {
           Showing {questions.length} question{questions.length !== 1 ? 's' : ''}
         </span>
         <div className="pagination-buttons">
-          <button className="pagination-btn nav-arrow" disabled>◀</button>
+          <button className="pagination-btn nav-arrow flex items-center justify-center p-2" disabled><ChevronLeft size={16} /></button>
           <button className="pagination-btn active">1</button>
-          <button className="pagination-btn nav-arrow" disabled>▶</button>
+          <button className="pagination-btn nav-arrow flex items-center justify-center p-2" disabled><ChevronRight size={16} /></button>
         </div>
       </div>
     </div>

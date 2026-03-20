@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Atom, Zap, Blocks, Microscope, Star, UserCircle, Keyboard, Code2 } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -42,7 +43,7 @@ export default function HomePage() {
         <div className="bento-grid">
           {/* React UI — large card */}
           <div className="bento-card bento-card-wide">
-            <span className="bento-icon bento-icon-primary">⚛️</span>
+            <span className="bento-icon bento-icon-primary flex items-center justify-center"><Atom size={24} /></span>
             <h3>React UI Architecture</h3>
             <p>
               Master atomic design, component composition, and design system engineering.
@@ -57,7 +58,7 @@ export default function HomePage() {
 
           {/* JS/TS Logic */}
           <div className="bento-card">
-            <span className="bento-icon bento-icon-secondary">⚡</span>
+            <span className="bento-icon bento-icon-secondary flex items-center justify-center"><Zap size={24} /></span>
             <h3>Logic &amp; Flow</h3>
             <p>
               Deep dive into asynchronous patterns, closure mastery, and type-safe
@@ -67,7 +68,7 @@ export default function HomePage() {
 
           {/* FE Concepts */}
           <div className="bento-card">
-            <span className="bento-icon bento-icon-tertiary">🏗️</span>
+            <span className="bento-icon bento-icon-tertiary flex items-center justify-center"><Blocks size={24} /></span>
             <h3>FE Paradigms</h3>
             <p>
               Understanding the browser, rendering cycles, and memory management
@@ -136,7 +137,7 @@ const Solution = () => {
             {/* Preview pane */}
             <div className="playground-preview">
               <div className="preview-glow" />
-              <span className="preview-icon">🔬</span>
+              <span className="preview-icon flex items-center justify-center"><Microscope size={32} /></span>
               <h4>Live Execution</h4>
               <p className="preview-status">STANDBY: COMPILING ARCHIVE...</p>
             </div>
@@ -167,10 +168,12 @@ const Solution = () => {
             },
           ].map((t) => (
             <div key={t.name} className="testimonial-card">
-              <div className="testimonial-stars">★★★★★</div>
+              <div className="testimonial-stars flex gap-1 text-tertiary-fixed">
+                {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" stroke="none" />)}
+              </div>
               <p className="testimonial-quote">&ldquo;{t.quote}&rdquo;</p>
               <div className="testimonial-author">
-                <div className="testimonial-avatar">👤</div>
+                <div className="testimonial-avatar flex items-center justify-center"><UserCircle size={24} /></div>
                 <div>
                   <p className="testimonial-name">{t.name}</p>
                   <p className="testimonial-title">{t.title}</p>
@@ -219,10 +222,9 @@ const Solution = () => {
           </div>
           <div className="footer-col">
             <h5 className="footer-heading">Connect</h5>
-            <div className="footer-socials">
-              <span>⌨️</span>
-              <span>{ }</span>
-              <span>&lt;/&gt;</span>
+            <div className="footer-socials flex gap-4 text-muted">
+              <span className="hover:text-ink transition-colors cursor-pointer"><Keyboard size={20} /></span>
+              <span className="hover:text-ink transition-colors cursor-pointer"><Code2 size={20} /></span>
             </div>
           </div>
         </div>

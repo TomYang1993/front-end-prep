@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { QuestionTabs } from '@/components/question-tabs';
+import { EditorWorkspace } from '@/components/editor-workspace';
 import { PremiumUpsell } from '@/components/premium-upsell';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { getQuestionDetailBySlug } from '@/lib/questions';
@@ -60,8 +61,24 @@ export default async function QuestionDetailPage({ params }: PageProps) {
     complexity: solution.complexity,
   }));
 
+  if (question.type === 'FUNCTION_JS') {
+    return (
+      <EditorWorkspace
+        questionId={question.id}
+        title={question.title}
+        prompt={question.prompt!}
+        difficulty={question.difficulty}
+        tags={question.tags}
+        starterCode={question.starterCode || undefined}
+        publicTests={publicTests}
+        solutions={solutions}
+      />
+    );
+  }
+
+  // Fallback for REACT_APP and others
   return (
-    <section className="stack-gap">
+    <section className="stack-gap" style={{ padding: '2rem 0' }}>
       <article className="question-header">
         <h1>{question.title}</h1>
         <p>{question.prompt}</p>
@@ -82,7 +99,7 @@ export default async function QuestionDetailPage({ params }: PageProps) {
       <QuestionTabs
         questionId={question.id}
         type={question.type}
-        starterCode={question.starterCode}
+        starterCode={question.starterCode || undefined}
         publicTests={publicTests}
         solutions={solutions}
         initialThreads={initialThreads}

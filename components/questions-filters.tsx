@@ -2,6 +2,8 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 
+import { SlidersHorizontal } from 'lucide-react';
+
 export function QuestionsFilters() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -18,7 +20,7 @@ export function QuestionsFilters() {
 
   return (
     <div className="questions-filters">
-      <span className="filter-icon">🔧</span>
+      <span className="filter-icon"><SlidersHorizontal size={18} /></span>
 
       <select
         value={searchParams.get('difficulty') || ''}

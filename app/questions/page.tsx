@@ -5,6 +5,7 @@ import { QuestionsTable, type QuestionRow } from '@/components/questions-table';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { listPublishedQuestions } from '@/lib/questions';
 import { prisma } from '@/lib/db/prisma';
+import { TrendingUp, Trophy, Lightbulb } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,7 +106,7 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
         <div className="stat-widgets">
           <div className="stat-widget">
             <div className="stat-widget-header">
-              <span className="stat-widget-icon streak">📈</span>
+              <span className="stat-widget-icon streak flex items-center justify-center"><TrendingUp size={20} /></span>
               <span className="stat-widget-title">Daily Streak</span>
             </div>
             <div className="stat-widget-body">
@@ -116,7 +117,7 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
 
           <div className="stat-widget">
             <div className="stat-widget-header">
-              <span className="stat-widget-icon rank">🏆</span>
+              <span className="stat-widget-icon rank flex items-center justify-center"><Trophy size={20} /></span>
               <span className="stat-widget-title">Progress</span>
             </div>
             <div className="stat-widget-body">
@@ -127,7 +128,7 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
 
           <div className="stat-widget">
             <div className="stat-widget-header">
-              <span className="stat-widget-icon skills">🧠</span>
+              <span className="stat-widget-icon skills flex items-center justify-center"><Lightbulb size={20} /></span>
               <span className="stat-widget-title">Skills Focus</span>
             </div>
             <div className="stat-skill-chips">
