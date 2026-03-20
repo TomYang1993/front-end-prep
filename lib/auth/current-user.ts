@@ -9,7 +9,7 @@ export interface SessionUser {
 }
 
 export async function getCurrentUserFromRequest(req: NextRequest): Promise<SessionUser | null> {
-  const devUserId = req.headers.get('x-user-id');
+  const devUserId = process.env.NODE_ENV !== 'production' ? req.headers.get('x-user-id') : null;
   if (devUserId) {
     const devUser = await prisma.user.findUnique({
       where: { id: devUserId },

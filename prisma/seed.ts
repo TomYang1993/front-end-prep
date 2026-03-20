@@ -159,6 +159,129 @@ async function main() {
     }
   });
 
+  // ─── Additional seed questions for a realistic table ───
+
+  const tagReact = await prisma.questionTag.upsert({ where: { name: 'react' }, update: {}, create: { name: 'react' } });
+  const tagCss = await prisma.questionTag.upsert({ where: { name: 'css' }, update: {}, create: { name: 'css' } });
+  const tagA11y = await prisma.questionTag.upsert({ where: { name: 'a11y' }, update: {}, create: { name: 'a11y' } });
+  const tagUtility = await prisma.questionTag.upsert({ where: { name: 'utility' }, update: {}, create: { name: 'utility' } });
+  const tagPerf = await prisma.questionTag.upsert({ where: { name: 'performance' }, update: {}, create: { name: 'performance' } });
+  const tagDesign = await prisma.questionTag.upsert({ where: { name: 'system-design' }, update: {}, create: { name: 'system-design' } });
+  const tagHooks = await prisma.questionTag.upsert({ where: { name: 'hooks' }, update: {}, create: { name: 'hooks' } });
+
+  const extraQuestions = [
+    {
+      slug: 'accordion-component',
+      title: 'Accordion Component',
+      prompt: 'Build an accessible accordion component that expands and collapses sections. Handle keyboard navigation and ARIA attributes.',
+      type: QuestionType.REACT_APP,
+      difficulty: Difficulty.EASY,
+      accessTier: AccessTier.FREE,
+      tags: [tagReact.id, tagA11y.id],
+      starterCode: { react: 'export default function Accordion() {\n  return <div>Accordion</div>;\n}' },
+    },
+    {
+      slug: 'debounce-function',
+      title: 'Debounce Function',
+      prompt: 'Implement a debounce utility function that delays invoking the provided function until after the specified wait time has elapsed since the last invocation.',
+      type: QuestionType.FUNCTION_JS,
+      difficulty: Difficulty.MEDIUM,
+      accessTier: AccessTier.FREE,
+      tags: [tagUtility.id],
+      starterCode: { javascript: 'function debounce(fn, delay) {\n  // your code here\n}' },
+    },
+    {
+      slug: 'virtual-list',
+      title: 'Virtual List Implementation',
+      prompt: 'Build a virtualized list component that efficiently renders only the visible items in a large dataset. Support dynamic row heights.',
+      type: QuestionType.REACT_APP,
+      difficulty: Difficulty.HARD,
+      accessTier: AccessTier.PREMIUM,
+      tags: [tagReact.id, tagPerf.id],
+      starterCode: { react: 'export default function VirtualList({ items }) {\n  return <div>{/* render visible items */}</div>;\n}' },
+    },
+    {
+      slug: 'use-previous-hook',
+      title: 'usePrevious Hook',
+      prompt: 'Implement a custom React hook that returns the previous value of a given state or prop.',
+      type: QuestionType.FUNCTION_JS,
+      difficulty: Difficulty.EASY,
+      accessTier: AccessTier.FREE,
+      tags: [tagReact.id, tagHooks.id],
+      starterCode: { javascript: 'function usePrevious(value) {\n  // your code here\n}' },
+    },
+    {
+      slug: 'css-grid-layout',
+      title: 'Responsive Dashboard Grid',
+      prompt: 'Create a responsive dashboard layout using CSS Grid that adapts from 1 to 3 columns based on viewport width.',
+      type: QuestionType.REACT_APP,
+      difficulty: Difficulty.MEDIUM,
+      accessTier: AccessTier.FREE,
+      tags: [tagCss.id, tagReact.id],
+      starterCode: { react: 'export default function Dashboard() {\n  return <div className="dashboard-grid">{/* widgets */}</div>;\n}' },
+    },
+    {
+      slug: 'design-component-library',
+      title: 'Design System Architecture',
+      prompt: 'Design a scalable component library architecture. Explain how you would structure themes, tokens, variants, and composability.',
+      type: QuestionType.REACT_APP,
+      difficulty: Difficulty.HARD,
+      accessTier: AccessTier.PREMIUM,
+      tags: [tagDesign.id, tagReact.id],
+      starterCode: { react: '// Outline your component library architecture\nexport default function ThemeProvider({ children }) {\n  return <>{children}</>;\n}' },
+    },
+    {
+      slug: 'promise-all-implementation',
+      title: 'Promise.all Implementation',
+      prompt: 'Implement your own version of Promise.all that takes an array of promises and resolves when all promises resolve, or rejects if any promise rejects.',
+      type: QuestionType.FUNCTION_JS,
+      difficulty: Difficulty.MEDIUM,
+      accessTier: AccessTier.FREE,
+      tags: [tagUtility.id],
+      starterCode: { javascript: 'function promiseAll(promises) {\n  // your code here\n}' },
+    },
+  ];
+
+  for (const eq of extraQuestions) {
+    const q = await prisma.question.upsert({
+      where: { slug: eq.slug },
+      update: {},
+      create: {
+        slug: eq.slug,
+        title: eq.title,
+        prompt: eq.prompt,
+        type: eq.type,
+        difficulty: eq.difficulty,
+        accessTier: eq.accessTier,
+        isPublished: true,
+        createdById: starterUser.id,
+      },
+    });
+
+    // Link tags
+    for (const tagId of eq.tags) {
+      await prisma.questionTagOnQuestion.upsert({
+        where: { questionId_tagId: { questionId: q.id, tagId } },
+        update: {},
+        create: { questionId: q.id, tagId },
+      });
+    }
+
+    // Create version
+    await prisma.questionVersion.upsert({
+      where: { questionId_version: { questionId: q.id, version: 1 } },
+      update: {},
+      create: {
+        questionId: q.id,
+        version: 1,
+        status: QuestionVersionStatus.PUBLISHED,
+        content: { description: eq.prompt },
+        starterCode: eq.starterCode,
+        publishedAt: new Date(),
+      },
+    });
+  }
+
   const subscription = await prisma.subscription.upsert({
     where: { providerSubscriptionId: 'sub_demo_active' },
     update: {},
