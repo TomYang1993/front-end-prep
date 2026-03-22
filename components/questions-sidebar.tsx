@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 import { TrendingUp, Trophy, Lightbulb, Star, Bookmark, FileCode2 } from 'lucide-react';
 
@@ -13,10 +11,6 @@ export function QuestionsSidebar({ totalQuestions, solvedCount }: QuestionsSideb
 
   return (
     <aside className="questions-sidebar flex flex-col gap-6">
-      <div className="questions-sidebar-header">
-        <h2>Catalog</h2>
-        <p>Front-end Mastery</p>
-      </div>
 
       <nav className="flex flex-col gap-1">
         <div className="text-xs font-bold text-muted uppercase tracking-wider mb-2 ml-2">Featured Collections</div>

@@ -30,11 +30,9 @@ function getSystemTheme(): Theme {
 }
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>('light');
-  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<Theme>('dark'); // Matches initial server render
 
   useEffect(() => {
-    setMounted(true);
     const stored = getStoredTheme();
     const resolved = stored || getSystemTheme();
     setTheme(resolved);
@@ -49,9 +47,7 @@ export function ThemeToggle() {
     localStorage.setItem('theme', next);
   }
 
-  if (!mounted) {
-    return <button className="theme-toggle" type="button" aria-label="Toggle theme">⏳</button>;
-  }
+
 
   const nextTheme = THEME_ORDER[(THEME_ORDER.indexOf(theme) + 1) % THEME_ORDER.length];
 

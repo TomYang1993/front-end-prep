@@ -8,12 +8,14 @@ import { ToastProvider } from '@/components/toast-provider';
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   variable: '--font-display',
+  display: 'block',
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
   weight: ['400', '500'],
+  display: 'block',
 });
 
 export const metadata: Metadata = {

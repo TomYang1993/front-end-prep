@@ -66,7 +66,7 @@ export function EditorWorkspace({
   const [language, setLanguage] = useState<'javascript' | 'typescript'>('javascript');
   const [codes, setCodes] = useState<Record<string, string>>({
     javascript: starterCode?.javascript || 'function solve(...args) {\n  return null;\n}',
-    typescript: starterCode?.typescript || 'function solve(...args): any {\n  return null;\n}'
+    typescript: starterCode?.typescript || starterCode?.javascript || 'function solve(...args): any {\n  return null;\n}'
   });
 
   const code = codes[language];

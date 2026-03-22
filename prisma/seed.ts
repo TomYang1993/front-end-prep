@@ -188,7 +188,10 @@ async function main() {
       difficulty: Difficulty.MEDIUM,
       accessTier: AccessTier.FREE,
       tags: [tagUtility.id],
-      starterCode: { javascript: 'function debounce(fn, delay) {\n  // your code here\n}' },
+      starterCode: { 
+        javascript: 'function debounce(fn, delay) {\n  // your code here\n}',
+        typescript: 'function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): (...args: Parameters<T>) => void {\n  // your code here\n}'
+      },
     },
     {
       slug: 'virtual-list',
@@ -208,7 +211,10 @@ async function main() {
       difficulty: Difficulty.EASY,
       accessTier: AccessTier.FREE,
       tags: [tagReact.id, tagHooks.id],
-      starterCode: { javascript: 'function usePrevious(value) {\n  // your code here\n}' },
+      starterCode: { 
+        javascript: 'function usePrevious(value) {\n  // your code here\n}',
+        typescript: 'function usePrevious<T>(value: T): T | undefined {\n  // your code here\n  return undefined;\n}'
+      },
     },
     {
       slug: 'css-grid-layout',
@@ -238,7 +244,10 @@ async function main() {
       difficulty: Difficulty.MEDIUM,
       accessTier: AccessTier.FREE,
       tags: [tagUtility.id],
-      starterCode: { javascript: 'function promiseAll(promises) {\n  // your code here\n}' },
+      starterCode: { 
+        javascript: 'function promiseAll(promises) {\n  // your code here\n}',
+        typescript: 'function promiseAll<T>(promises: Iterable<T | PromiseLike<T>>): Promise<T[]> {\n  // your code here\n  return Promise.resolve([]);\n}'
+      },
     },
   ];
 
@@ -270,7 +279,7 @@ async function main() {
     // Create version
     await prisma.questionVersion.upsert({
       where: { questionId_version: { questionId: q.id, version: 1 } },
-      update: {},
+      update: { starterCode: eq.starterCode },
       create: {
         questionId: q.id,
         version: 1,
