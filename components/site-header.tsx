@@ -10,8 +10,8 @@ export async function SiteHeader() {
     <header className="site-header">
       <div className="nav-wrap">
         <Link href="/" className="brand">
-          <span className="brand-mark">IP</span>
-          <span>Interview Platform</span>
+          <span className="brand-mark">FS</span>
+          <span>FullStack Interview</span>
         </Link>
         <nav className="nav-links">
           <Link href="/questions">Questions</Link>

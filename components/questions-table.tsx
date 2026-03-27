@@ -13,8 +13,8 @@ export interface QuestionRow {
   locked: boolean;
   /** 'solved' | 'attempted' | 'unattempted' */
   status: string;
-  /** Pseudo acceptance rate (0–100) */
-  acceptance: number;
+  /** Pseudo completions/attempts count */
+  attemptsCount: number;
 }
 
 interface QuestionsTableProps {
@@ -30,8 +30,7 @@ export function QuestionsTable({ questions }: QuestionsTableProps) {
             <th className="col-status">Status</th>
             <th className="col-title">Challenge Title</th>
             <th className="col-difficulty">Difficulty</th>
-            <th className="col-acceptance">Pass Rate</th>
-            <th className="col-action">Action</th>
+            <th className="col-attempts" style={{ textAlign: 'right' }}>Users Attempted</th>
           </tr>
         </thead>
         <tbody>
@@ -39,7 +38,11 @@ export function QuestionsTable({ questions }: QuestionsTableProps) {
             <tr key={q.id} className={clsx(q.locked && 'question-row-locked')}>
               {/* Status */}
               <td>
-                <div className={clsx('status-icon', q.status)}>
+                <div 
+                  className={clsx('status-icon', q.status)}
+                  title={q.status === 'solved' ? 'Finished' : q.status === 'attempted' ? 'Attempted' : 'Untouched'}
+                  aria-label={q.status === 'solved' ? 'Finished' : q.status === 'attempted' ? 'Attempted' : 'Untouched'}
+                >
                   {q.status === 'solved' && <Check size={16} />}
                   {q.status === 'attempted' && <AlertCircle size={16} />}
                   {q.status === 'unattempted' && <Minus size={16} />}
@@ -69,23 +72,16 @@ export function QuestionsTable({ questions }: QuestionsTableProps) {
                 </span>
               </td>
 
-              {/* Acceptance */}
-              <td className="acceptance-cell">
-                {q.acceptance.toFixed(1)}%
-              </td>
-
-              {/* Action */}
-              <td style={{ textAlign: 'right' }}>
-                <Link href={`/questions/${q.slug}`} className="action-btn" title="Open problem">
-                  <Play size={16} />
-                </Link>
+              {/* Attempts */}
+              <td className="acceptance-cell" style={{ textAlign: 'right' }}>
+                {q.attemptsCount.toLocaleString()}
               </td>
             </tr>
           ))}
 
           {questions.length === 0 && (
             <tr>
-              <td colSpan={5} style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--muted)' }}>
+              <td colSpan={4} style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--muted)' }}>
                 No questions match your filters.
               </td>
             </tr>

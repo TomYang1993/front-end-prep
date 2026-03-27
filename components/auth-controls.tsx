@@ -19,11 +19,9 @@ export function AuthControls({ email }: AuthControlsProps) {
 
   if (!email) {
     return (
-      <div className="auth-controls">
         <Link href="/auth" className="btn btn-secondary">
           Sign in
         </Link>
-      </div>
     );
   }
 

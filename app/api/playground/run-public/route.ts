@@ -11,70 +11,78 @@ const payloadSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const parsed = payloadSchema.safeParse(await req.json());
-  if (!parsed.success) {
-    return badRequest(parsed.error.issues[0]?.message || 'Invalid payload');
-  }
-
-  const { questionId, framework, code } = parsed.data;
-
-  const question = await prisma.question.findUnique({
-    where: { id: questionId },
-    include: {
-      testCases: {
-        where: { visibility: 'PUBLIC' },
-        orderBy: { sortOrder: 'asc' }
-      }
+  try {
+    const parsed = payloadSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return badRequest(parsed.error.issues[0]?.message || 'Invalid payload');
     }
-  });
 
-  if (!question) {
-    return badRequest('Question does not exist', 'QUESTION_NOT_FOUND');
-  }
+    const { questionId, framework, code } = parsed.data;
 
-  const runner = getRunner(framework);
-  const tests = question.testCases;
+    const question = await prisma.question.findUnique({
+      where: { id: questionId },
+      include: {
+        testCases: {
+          where: { visibility: 'PUBLIC' },
+          orderBy: { sortOrder: 'asc' }
+        }
+      }
+    });
 
-  if (framework === 'react') {
-    const single = await runner.run(code, {}, { preview: true });
+    if (!question) {
+      return badRequest('Question does not exist', 'QUESTION_NOT_FOUND');
+    }
+
+    const runner = getRunner(framework);
+    const tests = question.testCases;
+
+    if (framework === 'react') {
+      const single = await runner.run(code, {}, { preview: true });
+      return NextResponse.json({
+        summary: {
+          passedCount: single.passed ? 1 : 0,
+          total: 1
+        },
+        results: [
+          {
+            id: 'react-preview',
+            passed: single.passed,
+            output: single.output,
+            runtimeMs: single.runtimeMs,
+            error: single.error
+          }
+        ]
+      });
+    }
+
+    const results = [];
+    for (const testCase of tests) {
+      const runResult = await runner.run(code, testCase.input, testCase.expected);
+      results.push({
+        id: testCase.id,
+        passed: runResult.passed,
+        output: runResult.output,
+        runtimeMs: runResult.runtimeMs,
+        error: runResult.error,
+        explanation: testCase.explanation,
+        logs: runResult.logs
+      });
+    }
+
+    const passedCount = results.filter((item) => item.passed).length;
+
     return NextResponse.json({
       summary: {
-        passedCount: single.passed ? 1 : 0,
-        total: 1
+        passedCount,
+        total: tests.length
       },
-      results: [
-        {
-          id: 'react-preview',
-          passed: single.passed,
-          output: single.output,
-          runtimeMs: single.runtimeMs,
-          error: single.error
-        }
-      ]
+      results
     });
+  } catch (error) {
+    console.error('Playground execution error:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Internal Server Error' },
+      { status: 500 }
+    );
   }
-
-  const results = [];
-  for (const testCase of tests) {
-    const runResult = await runner.run(code, testCase.input, testCase.expected);
-    results.push({
-      id: testCase.id,
-      passed: runResult.passed,
-      output: runResult.output,
-      runtimeMs: runResult.runtimeMs,
-      error: runResult.error,
-      explanation: testCase.explanation,
-      logs: runResult.logs
-    });
-  }
-
-  const passedCount = results.filter((item) => item.passed).length;
-
-  return NextResponse.json({
-    summary: {
-      passedCount,
-      total: tests.length
-    },
-    results
-  });
 }

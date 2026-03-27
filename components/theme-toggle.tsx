@@ -1,20 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Sun, Moon, Zap } from 'lucide-react';
+import { Sun, Moon, Focus } from 'lucide-react';
 
-type Theme = 'light' | 'dark' | 'kinetic';
+type Theme = 'light' | 'dark' | 'focus';
 
-const THEME_ORDER: Theme[] = ['light', 'dark', 'kinetic'];
+const THEME_ORDER: Theme[] = ['light', 'dark', 'focus'];
 const THEME_ICONS: Record<Theme, React.ReactNode> = {
   light: <Sun size={18} />,
   dark: <Moon size={18} />,
-  kinetic: <Zap size={18} />,
+  focus: <Focus size={18} />,
 };
 const THEME_LABELS: Record<Theme, string> = {
   light: 'Light',
   dark: 'Dark',
-  kinetic: 'Kinetic',
+  focus: 'Focus',
 };
 
 function getStoredTheme(): Theme | null {

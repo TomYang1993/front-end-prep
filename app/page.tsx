@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Atom, Zap, Blocks, Microscope, Star, UserCircle, Keyboard, Code2 } from 'lucide-react';
+import { Atom, Zap, Blocks, Microscope, ArrowRight, Code2, Github, Twitter } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -10,101 +10,104 @@ export default function HomePage() {
         <div className="hero-orb hero-orb-right" />
 
         <div className="hero-content">
-          <span className="hero-badge">System Status: Operational</span>
+          <span className="hero-badge">Practice. Build. Ship.</span>
 
           <h1 className="hero-title">
-            MASTER THE <br />
-            <span className="hero-title-gradient">KINETIC STACK</span>
+            Ace Your <br />
+            <span className="hero-title-gradient">FullStack Interview</span>
           </h1>
 
           <p className="hero-subtitle">
-            A high-density archive for the persistent engineer. Deconstruct React patterns,
-            optimize JS/TS logic, and master fundamental front-end concepts through clinical precision.
+            Sharpen your JavaScript, TypeScript, and React skills with hands-on challenges.
+            Write real code in a live playground, get instant feedback, and build the
+            confidence to crush your next technical interview.
           </p>
 
           <div className="hero-actions">
-            <Link href="/questions" className="btn-kinetic-primary">
-              Start Solving Now
+            <Link href="/questions" className="btn-landing-primary">
+              Start Practicing
+              <ArrowRight size={16} />
             </Link>
-            <Link href="/questions" className="btn-kinetic-secondary">
-              Explore Documentation
+            <Link href="/questions" className="btn-landing-secondary">
+              Browse Questions
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ─── Master Your Stack — Bento Grid ─── */}
+      {/* ─── What You'll Master — Bento Grid ─── */}
       <section className="landing-section">
         <div className="section-heading">
-          <h2>Master Your Stack</h2>
+          <h2>What You&apos;ll Master</h2>
           <div className="heading-accent" />
         </div>
 
         <div className="bento-grid">
-          {/* React UI — large card */}
+          {/* React — large card */}
           <div className="bento-card bento-card-wide">
-            <span className="bento-icon bento-icon-primary flex items-center justify-center"><Atom size={24} /></span>
-            <h3>React UI Architecture</h3>
+            <span className="bento-icon bento-icon-primary"><Atom size={24} /></span>
+            <h3>React &amp; Component Design</h3>
             <p>
-              Master atomic design, component composition, and design system engineering.
-              Build interfaces that scale to millions of users without technical debt.
+              Build production-grade components, manage complex state, and understand
+              the rendering lifecycle. From hooks to server components.
             </p>
             <div className="bento-chips">
+              <span className="bento-chip">Hooks</span>
               <span className="bento-chip">Server Components</span>
-              <span className="bento-chip">State Orchestration</span>
+              <span className="bento-chip">State Management</span>
             </div>
             <div className="bento-glow" />
           </div>
 
           {/* JS/TS Logic */}
           <div className="bento-card">
-            <span className="bento-icon bento-icon-secondary flex items-center justify-center"><Zap size={24} /></span>
-            <h3>Logic &amp; Flow</h3>
+            <span className="bento-icon bento-icon-secondary"><Zap size={24} /></span>
+            <h3>JavaScript &amp; TypeScript</h3>
             <p>
-              Deep dive into asynchronous patterns, closure mastery, and type-safe
-              architectures with TypeScript.
+              Closures, async patterns, prototypes, generics, and the type system —
+              the fundamentals that interviewers love to test.
             </p>
           </div>
 
           {/* FE Concepts */}
           <div className="bento-card">
-            <span className="bento-icon bento-icon-tertiary flex items-center justify-center"><Blocks size={24} /></span>
-            <h3>FE Paradigms</h3>
+            <span className="bento-icon bento-icon-tertiary"><Blocks size={24} /></span>
+            <h3>Frontend Fundamentals</h3>
             <p>
-              Understanding the browser, rendering cycles, and memory management
-              for high-performance applications.
+              DOM APIs, event delegation, performance optimization, accessibility,
+              and browser internals.
             </p>
           </div>
 
           {/* Stats bar — wide */}
           <div className="bento-card bento-card-wide bento-stats-bar">
             <div className="bento-stat">
-              <span className="bento-stat-number">250+</span>
-              <span className="bento-stat-label">Interactive Modules</span>
+              <span className="bento-stat-number">3</span>
+              <span className="bento-stat-label">Categories</span>
             </div>
             <div className="bento-stat-divider" />
             <div className="bento-stat">
-              <span className="bento-stat-number">99.9%</span>
-              <span className="bento-stat-label">Accuracy Rating</span>
+              <span className="bento-stat-number">JS &middot; TS &middot; React</span>
+              <span className="bento-stat-label">Languages &amp; Frameworks</span>
             </div>
             <div className="bento-stat-divider bento-stat-divider-hide" />
             <div className="bento-stat bento-stat-hide">
-              <span className="bento-stat-number">Archive</span>
-              <span className="bento-stat-label">v2.4.0-stable</span>
+              <span className="bento-stat-number">Live</span>
+              <span className="bento-stat-label">In-Browser Execution</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── Real-World Playground ─── */}
+      {/* ─── Live Playground ─── */}
       <section className="landing-section landing-section-dark">
         <div className="landing-section-inner">
           <div className="playground-header">
             <div>
-              <h2>Real-World Playground</h2>
+              <h2>Code in a Live Playground</h2>
               <p className="playground-desc">
-                Don&apos;t just read about engineering. Execute. Our low-latency playground mimics
-                a local development environment with instant feedback loops.
+                No local setup needed. Write your solution in a real editor with syntax highlighting,
+                run it against test cases, and see results instantly — all in your browser.
               </p>
             </div>
           </div>
@@ -113,7 +116,7 @@ export default function HomePage() {
             {/* Editor pane */}
             <div className="playground-editor">
               <div className="editor-tab-bar">
-                <span className="editor-filename">editor.tsx</span>
+                <span className="editor-filename">solution.tsx</span>
                 <div className="editor-dots">
                   <span className="dot dot-red" />
                   <span className="dot dot-yellow" />
@@ -121,62 +124,56 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="editor-code">
-                <pre>{`import { ArchiveEngine } from '@kinetic/core';
+                <pre>{`function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
 
-const Solution = () => {
-  return (
-    <ArchiveEngine
-      mode="clinical"
-      onOptimized={() => commit()}
-    />
-  );
-};`}</pre>
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setDebounced(value),
+      delay
+    );
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debounced;
+}`}</pre>
               </div>
             </div>
 
             {/* Preview pane */}
             <div className="playground-preview">
               <div className="preview-glow" />
-              <span className="preview-icon flex items-center justify-center"><Microscope size={32} /></span>
-              <h4>Live Execution</h4>
-              <p className="preview-status">STANDBY: COMPILING ARCHIVE...</p>
+              <span className="preview-icon"><Microscope size={32} /></span>
+              <h4>Test Results</h4>
+              <p className="preview-status">ALL TESTS PASSING</p>
             </div>
           </div>
         </div>
       </section>
 
-
-
       {/* ─── Final CTA ─── */}
       <section className="landing-cta">
-        <h2 className="cta-headline">READY TO EVOLVE?</h2>
-        <p className="cta-sub">Join 15,000+ engineers archiving mediocrity and building excellence.</p>
-        <div className="cta-form">
-          <input
-            type="email"
-            placeholder="engineer@company.com"
-            className="cta-input"
-            aria-label="Email address"
-          />
-          <Link href="/questions" className="btn-kinetic-primary">
-            Start Solving Now
-          </Link>
-        </div>
-        <p className="cta-fine-print">Immediate access. No credit card required.</p>
+        <h2 className="cta-headline">Ready to level up?</h2>
+        <p className="cta-sub">
+          Jump in and start solving problems. No sign-up wall — just pick a question and code.
+        </p>
+        <Link href="/questions" className="btn-landing-primary btn-landing-lg">
+          Browse All Questions
+          <ArrowRight size={18} />
+        </Link>
       </section>
 
       {/* ─── Footer ─── */}
       <footer className="landing-footer">
         <div className="footer-grid">
           <div>
-            <p className="footer-brand">The Kinetic Archive</p>
-            <p className="footer-copy">© 2024 The Kinetic Archive. Built for the persistent engineer.</p>
+            <p className="footer-brand">FullStack Interview Platform</p>
+            <p className="footer-copy">&copy; {new Date().getFullYear()} FullStack Interview Platform. Built for engineers, by engineers.</p>
           </div>
           <div className="footer-col">
             <h5 className="footer-heading">Platform</h5>
-            <Link href="/questions">Documentation</Link>
-            <Link href="/questions">API Reference</Link>
-            <Link href="/questions">Changelog</Link>
+            <Link href="/questions">Questions</Link>
+            <Link href="/discuss">Discussions</Link>
           </div>
           <div className="footer-col">
             <h5 className="footer-heading">Legal</h5>
@@ -185,9 +182,10 @@ const Solution = () => {
           </div>
           <div className="footer-col">
             <h5 className="footer-heading">Connect</h5>
-            <div className="footer-socials flex gap-4 text-muted">
-              <span className="hover:text-ink transition-colors cursor-pointer"><Keyboard size={20} /></span>
-              <span className="hover:text-ink transition-colors cursor-pointer"><Code2 size={20} /></span>
+            <div className="footer-socials">
+              <span className="footer-social-icon"><Github size={18} /></span>
+              <span className="footer-social-icon"><Twitter size={18} /></span>
+              <span className="footer-social-icon"><Code2 size={18} /></span>
             </div>
           </div>
         </div>

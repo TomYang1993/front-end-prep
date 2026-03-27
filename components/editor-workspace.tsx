@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import Link from 'next/link';
 import Editor from '@monaco-editor/react';
 import { useToast } from '@/components/toast-provider';
@@ -9,6 +9,7 @@ import {
   Settings, TerminalSquare, ClipboardList, Play, Upload,
   ArrowLeft
 } from 'lucide-react';
+import { CheatsheetModal } from '@/components/cheatsheet-modal';
 
 interface PublicTest {
   id: string;
@@ -87,6 +88,37 @@ export function EditorWorkspace({
   const [activeLeftTab, setActiveLeftTab] = useState<LeftTab>('description');
   const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('console');
   const [monacoTheme, setMonacoTheme] = useState<'vs-dark' | 'light'>('vs-dark');
+
+  const [leftWidth, setLeftWidth] = useState(450);
+  const isDragging = useRef(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      // Subtract roughly the width of the left sidenav (~65px)
+      const newWidth = Math.max(300, Math.min(e.clientX - 65, window.innerWidth * 0.7));
+      setLeftWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      if (isDragging.current) {
+        isDragging.current = false;
+        document.body.style.cursor = '';
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
+  const handleMouseDown = () => {
+    isDragging.current = true;
+    document.body.style.cursor = 'col-resize';
+  };
 
   useEffect(() => {
     // Sync Monaco theme with global app theme
@@ -216,16 +248,8 @@ export function EditorWorkspace({
             onClick={() => setActiveSideTab('code')}
             title="Code"
           ><Code2 size={24} strokeWidth={1.5} /></button>
-          <button
-            className={`ide-sidenav-btn ${activeSideTab === 'solutions' ? 'active' : ''}`}
-            onClick={() => setActiveSideTab('solutions')}
-            title="Solutions"
-          ><Lightbulb size={24} strokeWidth={1.5} /></button>
-          <button
-            className={`ide-sidenav-btn ${activeSideTab === 'history' ? 'active' : ''}`}
-            onClick={() => setActiveSideTab('history')}
-            title="History"
-          ><History size={24} strokeWidth={1.5} /></button>
+          
+          <CheatsheetModal />
         </div>
         <div className="ide-sidenav-bottom">
           <button className="ide-sidenav-btn" title="Help"><HelpCircle size={24} strokeWidth={1.5} /></button>
@@ -235,7 +259,7 @@ export function EditorWorkspace({
       {/* ─── Main Content ─── */}
       <div className="ide-content">
         {/* Left Pane: Problem Description */}
-        <section className="ide-left-pane">
+        <section className="ide-left-pane" style={{ width: leftWidth, flex: 'none', maxWidth: '70%', minWidth: '300px' }}>
           {/* Sub header / tabs */}
           <div className="ide-left-header">
             <div className="ide-left-title-row flex items-center justify-between w-full">
@@ -321,6 +345,20 @@ export function EditorWorkspace({
             )}
           </div>
         </section>
+
+        {/* Drag Handle */}
+        <div 
+          className="ide-resizer"
+          onMouseDown={handleMouseDown}
+          style={{
+            width: '8px',
+            backgroundColor: 'transparent',
+            cursor: 'col-resize',
+            zIndex: 10,
+            margin: '0 -4px',
+            position: 'relative',
+          }}
+        />
 
         {/* Right Pane: Editor + Console */}
         <section className="ide-right-pane">

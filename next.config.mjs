@@ -1,6 +1,6 @@
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ['esbuild'],
+    serverComponentsExternalPackages: ['esbuild', 'isolated-vm'],
   },
 };
 

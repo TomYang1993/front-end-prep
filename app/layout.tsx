@@ -28,7 +28,7 @@ const themeScript = `
 (function() {
   try {
     var stored = localStorage.getItem('theme');
-    var valid = ['light', 'dark', 'kinetic'];
+    var valid = ['light', 'dark', 'focus'];
     var theme = (stored && valid.indexOf(stored) !== -1) ? stored : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     document.documentElement.setAttribute('data-theme', theme);
   } catch(e) {}

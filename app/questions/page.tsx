@@ -43,10 +43,8 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
     tags: q.tags,
     locked: q.locked,
     status: submissionStatsByQuestion[q.id] || 'unattempted',
-    // Deterministic pseudo-acceptance based on difficulty
-    acceptance: q.difficulty === 'EASY' ? 78 + hashCode(q.slug) % 15
-              : q.difficulty === 'MEDIUM' ? 35 + hashCode(q.slug) % 20
-              : 10 + hashCode(q.slug) % 15,
+    // Deterministic pseudo-attempt count
+    attemptsCount: 1500 + (hashCode(q.slug) % 5000),
   }));
 
   // Apply filters from search params
@@ -63,6 +61,10 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
   }
   if (searchParams.tier) {
     filtered = filtered.filter((q) => q.accessTier === searchParams.tier);
+  }
+  if (searchParams.query) {
+    const qLabel = searchParams.query.toLowerCase();
+    filtered = filtered.filter((q) => q.title.toLowerCase().includes(qLabel) || q.tags.some(t => t.toLowerCase().includes(qLabel)));
   }
 
   const solvedCount = questionRows.filter((q) => q.status === 'solved').length;
@@ -84,18 +86,11 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
           </div>
         </div>
 
-        {/* Filters + Stat */}
-        <div className="questions-filter-bar">
+        {/* Filters */}
+        <div className="questions-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
           <Suspense>
             <QuestionsFilters />
           </Suspense>
-          <div className="questions-stat-box">
-            <span className="stat-box-label">Questions</span>
-            <div>
-              <span className="stat-box-value">{solvedCount}</span>
-              <span className="stat-box-total"> / {questionRows.length}</span>
-            </div>
-          </div>
         </div>
 
         {/* Table */}
