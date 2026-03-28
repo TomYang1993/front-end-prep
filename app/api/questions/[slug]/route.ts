@@ -31,8 +31,7 @@ export async function GET(req: NextRequest, { params }: Params) {
         take: 20,
         include: {
           user: { include: { profile: true } },
-          comments: true,
-          likes: true
+          _count: { select: { comments: true, likes: true } }
         }
       }
     }
@@ -71,8 +70,8 @@ export async function GET(req: NextRequest, { params }: Params) {
         body: thread.body,
         createdAt: thread.createdAt,
         author: thread.user.profile?.displayName || thread.user.email,
-        commentsCount: thread.comments.length,
-        likesCount: thread.likes.length
+        commentsCount: thread._count.comments,
+        likesCount: thread._count.likes
       }))
     }
   });

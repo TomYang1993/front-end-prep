@@ -14,23 +14,12 @@ interface PageProps {
 
 export default async function QuestionsPage({ searchParams }: PageProps) {
   const user = await getCurrentServerUser();
-  const allQuestions = await listPublishedQuestions(user?.id);
 
-  // Get submission stats for the current user
-  let submissionStatsByQuestion: Record<string, 'solved' | 'attempted'> = {};
-  if (user) {
-    const submissions = await prisma.submission.findMany({
-      where: { userId: user.id },
-      select: { questionId: true, status: true },
-    });
-    for (const sub of submissions) {
-      if (sub.status === 'PASSED') {
-        submissionStatsByQuestion[sub.questionId] = 'solved';
-      } else if (!submissionStatsByQuestion[sub.questionId]) {
-        submissionStatsByQuestion[sub.questionId] = 'attempted';
-      }
-    }
-  }
+  // Fetch questions and submission stats in parallel
+  const [allQuestions, submissionStatsByQuestion] = await Promise.all([
+    listPublishedQuestions(user?.id),
+    getSubmissionStats(user?.id),
+  ]);
 
   // Build question rows with computed fields
   const questionRows: QuestionRow[] = allQuestions.map((q) => ({
@@ -98,6 +87,24 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
       </div>
     </div>
   );
+}
+
+async function getSubmissionStats(userId?: string) {
+  const stats: Record<string, 'solved' | 'attempted'> = {};
+  if (!userId) return stats;
+
+  const submissions = await prisma.submission.findMany({
+    where: { userId },
+    select: { questionId: true, status: true },
+  });
+  for (const sub of submissions) {
+    if (sub.status === 'PASSED') {
+      stats[sub.questionId] = 'solved';
+    } else if (!stats[sub.questionId]) {
+      stats[sub.questionId] = 'attempted';
+    }
+  }
+  return stats;
 }
 
 /** Simple deterministic hash for pseudo-random acceptance rates */

@@ -4,6 +4,8 @@ import '@/styles/globals.css';
 import { SiteHeader } from '@/components/site-header';
 import { HeaderWrapper } from '@/components/header-wrapper';
 import { ToastProvider } from '@/components/toast-provider';
+import { UserProvider } from '@/components/user-provider';
+import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -19,7 +21,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Interview Platform',
+  title: 'Whack The Fullstack Interview',
   description: 'LeetCode + GreatFrontEnd style practice platform for JS and React interviews.',
 };
 
@@ -35,19 +37,23 @@ const themeScript = `
 })();
 `;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentServerUser();
+
   return (
     <html lang="en" className={`${spaceGrotesk.variable} ${ibmPlexMono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        <ToastProvider>
-          <HeaderWrapper>
-            <SiteHeader />
-          </HeaderWrapper>
-          <main className="container page-shell">{children}</main>
-        </ToastProvider>
+        <UserProvider user={user}>
+          <ToastProvider>
+            <HeaderWrapper>
+              <SiteHeader />
+            </HeaderWrapper>
+            <main className="container page-shell">{children}</main>
+          </ToastProvider>
+        </UserProvider>
       </body>
     </html>
   );

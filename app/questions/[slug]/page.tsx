@@ -36,29 +36,11 @@ export default async function QuestionDetailPage({ params }: PageProps) {
     );
   }
 
-  const initialThreads = question.threads.map((thread) => ({
-    id: thread.id,
-    title: thread.title,
-    body: thread.body,
-    author: thread.user.profile?.displayName || thread.user.email,
-    commentsCount: thread.comments.length,
-    likesCount: thread.likes.length,
-  }));
-
-  const publicTests = question.testCases.map((testCase) => ({
-    id: testCase.id,
-    input: testCase.input,
-    expected: testCase.expected,
-    explanation: testCase.explanation,
-  }));
-
-  const solutions = question.officialSolutions.map((solution) => ({
-    id: solution.id,
-    language: solution.language,
-    framework: solution.framework,
-    explanation: solution.explanation,
-    code: solution.code,
-    complexity: solution.complexity,
+  const publicTests = question.publicTests.map((t) => ({
+    id: t.id,
+    input: t.input,
+    expected: t.expected,
+    explanation: t.explanation ?? undefined,
   }));
 
   if (question.type === 'FUNCTION_JS') {
@@ -66,12 +48,11 @@ export default async function QuestionDetailPage({ params }: PageProps) {
       <EditorWorkspace
         questionId={question.id}
         title={question.title}
-        prompt={question.prompt!}
+        prompt={question.prompt}
         difficulty={question.difficulty}
         tags={question.tags}
         starterCode={question.starterCode || undefined}
         publicTests={publicTests}
-        solutions={solutions}
       />
     );
   }
@@ -101,8 +82,6 @@ export default async function QuestionDetailPage({ params }: PageProps) {
         type={question.type}
         starterCode={question.starterCode || undefined}
         publicTests={publicTests}
-        solutions={solutions}
-        initialThreads={initialThreads}
       />
     </section>
   );

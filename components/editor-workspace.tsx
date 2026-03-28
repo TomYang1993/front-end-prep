@@ -35,7 +35,6 @@ interface EditorWorkspaceProps {
   tags: string[];
   starterCode?: Record<string, string>;
   publicTests: PublicTest[];
-  solutions: SolutionView[];
 }
 
 interface RunResult {
@@ -60,9 +59,10 @@ export function EditorWorkspace({
   tags,
   starterCode,
   publicTests,
-  solutions,
 }: EditorWorkspaceProps) {
   const { toast } = useToast();
+  const [solutions, setSolutions] = useState<SolutionView[]>([]);
+  const [loadingSolutions, setLoadingSolutions] = useState(false);
 
   const [language, setLanguage] = useState<'javascript' | 'typescript'>('javascript');
   const [codes, setCodes] = useState<Record<string, string>>({
@@ -88,6 +88,18 @@ export function EditorWorkspace({
   const [activeLeftTab, setActiveLeftTab] = useState<LeftTab>('description');
   const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('console');
   const [monacoTheme, setMonacoTheme] = useState<'vs-dark' | 'light'>('vs-dark');
+
+  useEffect(() => {
+    if (activeLeftTab === 'solutions' && solutions.length === 0 && !loadingSolutions) {
+      setLoadingSolutions(true);
+      fetch(`/api/questions/${questionId}/solutions`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) setSolutions(data);
+        })
+        .finally(() => setLoadingSolutions(false));
+    }
+  }, [activeLeftTab, questionId, solutions.length, loadingSolutions]);
 
   const [leftWidth, setLeftWidth] = useState(450);
   const isDragging = useRef(false);
@@ -327,7 +339,9 @@ export function EditorWorkspace({
               </>
             ) : (
               <div className="ide-solutions-list">
-                {solutions.length === 0 ? (
+                {loadingSolutions ? (
+                  <p className="ide-empty-state">Loading official solutions...</p>
+                ) : solutions.length === 0 ? (
                   <p className="ide-empty-state">No official solutions published yet.</p>
                 ) : (
                   solutions.map((sol) => (

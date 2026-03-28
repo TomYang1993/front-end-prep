@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Atom, Zap, Blocks, Microscope, ArrowRight, Code2, Github, Twitter } from 'lucide-react';
+import { Atom, Zap, Blocks, Microscope, ArrowRight, Youtube, Twitter } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -14,7 +14,7 @@ export default function HomePage() {
 
           <h1 className="hero-title">
             Ace Your <br />
-            <span className="hero-title-gradient">FullStack Interview</span>
+            <span className="hero-title-gradient">Whack The Fullstack Interview</span>
           </h1>
 
           <p className="hero-subtitle">
@@ -167,8 +167,8 @@ export default function HomePage() {
       <footer className="landing-footer">
         <div className="footer-grid">
           <div>
-            <p className="footer-brand">FullStack Interview Platform</p>
-            <p className="footer-copy">&copy; {new Date().getFullYear()} FullStack Interview Platform. Built for engineers, by engineers.</p>
+            <p className="footer-brand">Whack The Fullstack Interview</p>
+            <p className="footer-copy">&copy; {new Date().getFullYear()} Whack The Fullstack Interview. Built for engineers, by engineers.</p>
           </div>
           <div className="footer-col">
             <h5 className="footer-heading">Platform</h5>
@@ -183,9 +183,8 @@ export default function HomePage() {
           <div className="footer-col">
             <h5 className="footer-heading">Connect</h5>
             <div className="footer-socials">
-              <span className="footer-social-icon"><Github size={18} /></span>
+              <span className="footer-social-icon"><Youtube size={18} /></span>
               <span className="footer-social-icon"><Twitter size={18} /></span>
-              <span className="footer-social-icon"><Code2 size={18} /></span>
             </div>
           </div>
         </div>

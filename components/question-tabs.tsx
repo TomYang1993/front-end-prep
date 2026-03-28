@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { ProblemPlayground } from '@/components/problem-playground';
 import { DiscussSection } from '@/components/discuss-section';
@@ -34,8 +35,6 @@ interface QuestionTabsProps {
     type: 'FUNCTION_JS' | 'REACT_APP';
     starterCode?: Record<string, string>;
     publicTests: PublicTest[];
-    solutions: SolutionView[];
-    initialThreads: ThreadView[];
 }
 
 export function QuestionTabs({
@@ -43,20 +42,40 @@ export function QuestionTabs({
     type,
     starterCode,
     publicTests,
-    solutions,
-    initialThreads,
 }: QuestionTabsProps) {
+    const [solutions, setSolutions] = useState<SolutionView[]>([]);
+    const [threads, setThreads] = useState<ThreadView[]>([]);
+    const [loadingSolutions, setLoadingSolutions] = useState(false);
+    const [loadingThreads, setLoadingThreads] = useState(false);
+    const [activeTab, setActiveTab] = useState('playground');
+
+    useEffect(() => {
+        if (activeTab === 'solutions' && solutions.length === 0 && !loadingSolutions) {
+            setLoadingSolutions(true);
+            fetch(`/api/questions/${questionId}/solutions`)
+                .then(res => res.json())
+                .then(data => { if(Array.isArray(data)) setSolutions(data); })
+                .finally(() => setLoadingSolutions(false));
+        } else if (activeTab === 'discuss' && threads.length === 0 && !loadingThreads) {
+            setLoadingThreads(true);
+            fetch(`/api/questions/${questionId}/threads`)
+                .then(res => res.json())
+                .then(data => { if(Array.isArray(data)) setThreads(data); })
+                .finally(() => setLoadingThreads(false));
+        }
+    }, [activeTab, questionId, solutions.length, threads.length, loadingSolutions, loadingThreads]);
+
     return (
-        <Tabs.Root defaultValue="playground">
+        <Tabs.Root defaultValue="playground" onValueChange={setActiveTab}>
             <Tabs.List className="tabs-list" aria-label="Question sections">
                 <Tabs.Trigger className="tabs-trigger" value="playground">
                     Playground
                 </Tabs.Trigger>
                 <Tabs.Trigger className="tabs-trigger" value="solutions">
-                    Solutions ({solutions.length})
+                    Solutions
                 </Tabs.Trigger>
                 <Tabs.Trigger className="tabs-trigger" value="discuss">
-                    Discuss ({initialThreads.length})
+                    Discuss
                 </Tabs.Trigger>
             </Tabs.List>
 
@@ -71,7 +90,9 @@ export function QuestionTabs({
 
             <Tabs.Content className="tabs-content" value="solutions">
                 <section className="stack-gap">
-                    {solutions.length === 0 ? (
+                    {loadingSolutions ? (
+                        <p>Loading official solutions...</p>
+                    ) : solutions.length === 0 ? (
                         <p>No official solution published yet.</p>
                     ) : (
                         solutions.map((solution) => (
@@ -92,7 +113,11 @@ export function QuestionTabs({
             </Tabs.Content>
 
             <Tabs.Content className="tabs-content" value="discuss">
-                <DiscussSection questionId={questionId} initialThreads={initialThreads} />
+                {loadingThreads ? (
+                    <p>Loading discussion threads...</p>
+                ) : (
+                    <DiscussSection questionId={questionId} initialThreads={threads} />
+                )}
             </Tabs.Content>
         </Tabs.Root>
     );

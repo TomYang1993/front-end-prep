@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db/prisma';
 import { badRequest, unauthorized, forbidden } from '@/lib/api';
 import { requireAdmin } from '@/lib/auth/current-user';
 import { createAuditLog } from '@/lib/audit';
+import { refreshQuestionRenderData } from '@/lib/questions-snapshot';
 
 const testSchema = z.object({
   visibility: z.enum(['PUBLIC', 'HIDDEN']),
@@ -104,13 +105,16 @@ export async function POST(req: NextRequest) {
     }
   });
 
-  await createAuditLog({
-    actorId: admin.id,
-    action: 'admin.question.create',
-    entityType: 'Question',
-    entityId: question.id,
-    payload: { slug: question.slug }
-  });
+  await Promise.all([
+    refreshQuestionRenderData(question.id),
+    createAuditLog({
+      actorId: admin.id,
+      action: 'admin.question.create',
+      entityType: 'Question',
+      entityId: question.id,
+      payload: { slug: question.slug }
+    }),
+  ]);
 
   return NextResponse.json({ question }, { status: 201 });
 }
