@@ -5,6 +5,7 @@ import { QuestionsTable, type QuestionRow } from '@/components/questions-table';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { listPublishedQuestions } from '@/lib/questions';
 import { prisma } from '@/lib/db/prisma';
+import { createTimer } from '@/lib/server-timing';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,13 +14,14 @@ interface PageProps {
 }
 
 export default async function QuestionsPage({ searchParams }: PageProps) {
-  const user = await getCurrentServerUser();
+  const t = createTimer('GET /questions');
+  const user = await t.time('auth', getCurrentServerUser());
 
-  // Fetch questions and submission stats in parallel
   const [allQuestions, submissionStatsByQuestion] = await Promise.all([
-    listPublishedQuestions(user?.id),
-    getSubmissionStats(user?.id),
+    t.time('questions', listPublishedQuestions(user?.id)),
+    t.time('submissions', getSubmissionStats(user?.id)),
   ]);
+  t.summary();
 
   // Build question rows with computed fields
   const questionRows: QuestionRow[] = allQuestions.map((q) => ({

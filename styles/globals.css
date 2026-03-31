@@ -124,8 +124,6 @@ code {
   gap: 1rem;
   min-height: 56px;
   padding: 0 1.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
 .brand {
@@ -523,6 +521,17 @@ code {
 
 
 
+.oauth-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.oauth-btn svg {
+  flex-shrink: 0;
+}
+
 /* ─── Theme Toggle ─── */
 .theme-toggle {
   width: 32px;
@@ -768,9 +777,7 @@ code {
 
 @media (max-width: 720px) {
   .nav-wrap {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 0.8rem 0;
+    padding: 0 1rem;
   }
 
   .grid-two {
@@ -2769,3 +2776,449 @@ code {
   font-family: var(--font-mono);
   color: var(--ink);
 }
+
+/* ─── Legal / Static Pages ─── */
+.legal-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.legal-page h1 {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.4rem;
+  line-height: 1.15;
+}
+
+.legal-page .legal-last-updated {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 2rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.legal-page h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 2.2rem 0 0.6rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.legal-page h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 1.4rem 0 0.4rem;
+  color: var(--ink);
+}
+
+.legal-page p {
+  font-size: 0.88rem;
+  line-height: 1.75;
+  color: var(--ink-secondary);
+  margin: 0 0 0.8rem;
+}
+
+.legal-page ul,
+.legal-page ol {
+  font-size: 0.88rem;
+  line-height: 1.75;
+  color: var(--ink-secondary);
+  margin: 0 0 1rem;
+  padding-left: 1.4rem;
+}
+
+.legal-page li {
+  margin-bottom: 0.3rem;
+}
+
+.legal-page a {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s ease;
+}
+
+.legal-page a:hover {
+  color: var(--brand-hover);
+}
+
+.legal-page strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.legal-page .legal-contact {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.2rem;
+  margin: 1.5rem 0;
+  font-size: 0.88rem;
+  color: var(--ink-secondary);
+}
+
+.legal-page .legal-contact strong {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: var(--ink);
+}
+
+/* ─── FAQ ─── */
+.faq-section {
+  margin-bottom: 2rem;
+}
+
+.faq-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--brand);
+  margin: 0 0 0.8rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--brand-subtle);
+}
+
+.faq-item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+  background: var(--surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+}
+
+.faq-item[open] {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px var(--brand-subtle);
+}
+
+.faq-item summary {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  transition: color 0.15s ease;
+  user-select: none;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary::after {
+  content: '+';
+  font-size: 1.1rem;
+  font-weight: 300;
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.15s ease;
+}
+
+.faq-item[open] summary::after {
+  content: '−';
+  color: var(--brand);
+}
+
+.faq-item summary:hover {
+  color: var(--brand);
+}
+
+.faq-item .faq-answer {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--ink-secondary);
+  padding: 0 1rem 1rem;
+  border-top: 1px solid var(--line-soft);
+  margin-top: 0;
+}
+
+.faq-item .faq-answer p {
+  margin: 0.6rem 0 0;
+}
+
+.faq-item .faq-answer p:first-child {
+  margin-top: 0.8rem;
+}
+
+/* Legal page breadcrumb */
+.legal-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 1.2rem;
+}
+
+.legal-breadcrumb a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.legal-breadcrumb a:hover {
+  color: var(--brand);
+}
+
+.legal-breadcrumb span {
+  color: var(--line);
+}
+
+/* ─── Pricing Page ─── */
+.pricing-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+  text-align: center;
+}
+
+.pricing-header {
+  margin-bottom: 3rem;
+}
+
+.pricing-title {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0.8rem 0 0.6rem;
+}
+
+.pricing-subtitle {
+  font-size: 1rem;
+  color: var(--muted);
+  max-width: 440px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+  align-items: start;
+}
+
+/* ─ Card base ─ */
+.pricing-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1.8rem 1.4rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.pricing-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ─ Featured card ─ */
+.pricing-card-featured {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 1px var(--brand), var(--shadow-lg);
+  z-index: 1;
+}
+
+.pricing-card-yearly {
+  border-color: var(--accent-secondary);
+}
+
+.pricing-card-yearly:hover {
+  box-shadow: 0 0 0 1px var(--accent-secondary), var(--shadow-lg);
+}
+
+/* ─ Badge ─ */
+.pricing-badge {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.8rem;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.pricing-badge-save {
+  background: var(--accent-secondary);
+}
+
+/* ─ Card header ─ */
+.pricing-card-header {
+  margin-bottom: 1.2rem;
+}
+
+.pricing-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.6rem;
+}
+
+.pricing-icon-free {
+  background: var(--bg-subtle);
+  color: var(--muted);
+}
+
+.pricing-icon-pro {
+  background: var(--brand-subtle);
+  color: var(--brand);
+}
+
+.pricing-icon-yearly {
+  background: rgba(124, 58, 237, 0.1);
+  color: var(--accent-secondary);
+}
+
+.pricing-plan-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 0.2rem;
+}
+
+.pricing-plan-desc {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ─ Price ─ */
+.pricing-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  margin-bottom: 1.4rem;
+  flex-wrap: wrap;
+}
+
+.pricing-amount {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.pricing-period {
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.pricing-billed {
+  width: 100%;
+  font-size: 0.76rem;
+  color: var(--accent-secondary);
+  font-weight: 600;
+  margin-top: -0.1rem;
+}
+
+/* ─ Features list ─ */
+.pricing-features {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.pricing-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.84rem;
+  color: var(--ink-secondary);
+  line-height: 1.4;
+}
+
+.pricing-check {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--good);
+}
+
+.pricing-check-pro {
+  color: var(--brand);
+}
+
+/* ─ Buttons ─ */
+.pricing-btn {
+  display: block;
+  text-align: center;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.pricing-btn:hover {
+  transform: translateY(-1px);
+}
+
+.pricing-btn-primary {
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+
+.pricing-btn-primary:hover {
+  background: var(--brand-hover);
+}
+
+.pricing-btn-secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.pricing-btn-secondary:hover {
+  background: var(--bg-subtle);
+  border-color: var(--muted);
+}
+
+/* ─ Footnote ─ */
+.pricing-footnote {
+  margin-top: 2.5rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* ─ Responsive ─ */
+@media (max-width: 820px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .pricing-card-featured {
+    order: -1;
+  }
+}
+

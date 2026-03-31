@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { createSupabaseServerClient } from '@/lib/auth/supabase';
+import { readSessionCookie } from '@/lib/auth/session-cookie';
 
 export interface SessionUser {
   id: string;
@@ -9,6 +10,7 @@ export interface SessionUser {
 }
 
 export async function getCurrentUserFromRequest(req: NextRequest): Promise<SessionUser | null> {
+  // Dev header override
   const devUserId = process.env.NODE_ENV !== 'production' ? req.headers.get('x-user-id') : null;
   if (devUserId) {
     const devUser = await prisma.user.findUnique({
@@ -16,7 +18,6 @@ export async function getCurrentUserFromRequest(req: NextRequest): Promise<Sessi
       include: { userRoles: { include: { role: true } } }
     });
     if (!devUser) return null;
-
     return {
       id: devUser.id,
       email: devUser.email,
@@ -24,6 +25,11 @@ export async function getCurrentUserFromRequest(req: NextRequest): Promise<Sessi
     };
   }
 
+  // Fast path: session cookie
+  const session = await readSessionCookie();
+  if (session) return session;
+
+  // Slow path: Bearer token → Supabase verify → DB lookup
   const authHeader = req.headers.get('authorization');
   const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice('Bearer '.length) : null;
   const hasSupabaseEnv = Boolean(
@@ -31,23 +37,30 @@ export async function getCurrentUserFromRequest(req: NextRequest): Promise<Sessi
   );
 
   if (bearerToken && hasSupabaseEnv) {
-    const supabaseAdmin = createSupabaseServerClient();
-    const { data, error } = await supabaseAdmin.auth.getUser(bearerToken);
+    const supabase = createSupabaseServerClient();
+    const { data, error } = await supabase.auth.getUser(bearerToken);
     if (!error && data.user?.id && data.user.email) {
-      const user = await prisma.user.upsert({
+      let user = await prisma.user.findUnique({
         where: { supabaseId: data.user.id },
-        update: { email: data.user.email },
-        create: {
-          supabaseId: data.user.id,
-          email: data.user.email,
-          profile: {
-            create: {
-              displayName: data.user.user_metadata?.full_name || data.user.email.split('@')[0]
-            }
-          }
-        },
         include: { userRoles: { include: { role: true } } }
       });
+
+      if (!user) {
+        user = await prisma.user.upsert({
+          where: { supabaseId: data.user.id },
+          update: { email: data.user.email },
+          create: {
+            supabaseId: data.user.id,
+            email: data.user.email,
+            profile: {
+              create: {
+                displayName: data.user.user_metadata?.full_name || data.user.email.split('@')[0]
+              }
+            }
+          },
+          include: { userRoles: { include: { role: true } } }
+        });
+      }
 
       return {
         id: user.id,
@@ -55,20 +68,6 @@ export async function getCurrentUserFromRequest(req: NextRequest): Promise<Sessi
         roles: user.userRoles.map((item) => item.role.key)
       };
     }
-  }
-
-  if (process.env.NODE_ENV !== 'production') {
-    const fallback = await prisma.user.findFirst({
-      where: { email: 'demo@interview.dev' },
-      include: { userRoles: { include: { role: true } } }
-    });
-
-    if (!fallback) return null;
-    return {
-      id: fallback.id,
-      email: fallback.email,
-      roles: fallback.userRoles.map((item) => item.role.key)
-    };
   }
 
   return null;

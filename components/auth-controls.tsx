@@ -14,6 +14,8 @@ export function AuthControls({ email }: AuthControlsProps) {
   async function signOut() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
+    await fetch('/api/auth/sign-out', { method: 'POST' });
+    router.push('/');
     router.refresh();
   }
 

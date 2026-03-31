@@ -15,7 +15,7 @@ export async function SiteHeader() {
         </Link>
         <nav className="nav-links">
           <Link href="/questions">Questions</Link>
-          <Link href="/admin">Admin</Link>
+          <Link href="/pricing">Pricing</Link>
           <ThemeToggle />
           <AuthControls email={user?.email || null} />
         </nav>

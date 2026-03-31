@@ -1,17 +1,20 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { SESSION_COOKIE_NAME, verifySessionToken } from '@/lib/auth/session-cookie';
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
+  const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const session = token ? await verifySessionToken(token) : null;
+
+  // In dev mode we used to auto-login here — removed so real auth flow works.
+
+  // ── Protected routes: require session ──
   const restrictedPrefixes = ['/submissions', '/admin'];
-  const requiresAuth = restrictedPrefixes.some((prefix) => req.nextUrl.pathname.startsWith(prefix));
+  const requiresAuth = restrictedPrefixes.some((prefix) =>
+    req.nextUrl.pathname.startsWith(prefix)
+  );
 
-  if (!requiresAuth) {
-    return NextResponse.next();
-  }
-
-  const hasSupabaseSession = Boolean(req.cookies.get('sb-access-token')?.value || req.cookies.get('sb-refresh-token')?.value);
-
-  if (!hasSupabaseSession && process.env.NODE_ENV === 'production') {
+  if (requiresAuth && !session) {
     return NextResponse.redirect(new URL('/questions', req.url));
   }
 
@@ -19,5 +22,6 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/submissions/:path*', '/admin/:path*']
+  // Run on all page routes, skip static assets and API routes
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/).*)'],
 };

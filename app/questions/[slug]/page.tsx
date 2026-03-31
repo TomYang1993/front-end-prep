@@ -5,6 +5,7 @@ import { EditorWorkspace } from '@/components/editor-workspace';
 import { PremiumUpsell } from '@/components/premium-upsell';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { getQuestionDetailBySlug } from '@/lib/questions';
+import { createTimer } from '@/lib/server-timing';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,8 +16,10 @@ interface PageProps {
 }
 
 export default async function QuestionDetailPage({ params }: PageProps) {
-  const user = await getCurrentServerUser();
-  const question = await getQuestionDetailBySlug(params.slug, user?.id);
+  const t = createTimer(`GET /questions/${params.slug}`);
+  const user = await t.time('auth', getCurrentServerUser());
+  const question = await t.time('query', getQuestionDetailBySlug(params.slug, user?.id));
+  t.summary();
 
   if (!question) {
     notFound();

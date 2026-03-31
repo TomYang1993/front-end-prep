@@ -177,8 +177,8 @@ export default function HomePage() {
           </div>
           <div className="footer-col">
             <h5 className="footer-heading">Legal</h5>
-            <Link href="#">Terms of Service</Link>
-            <Link href="#">Privacy Policy</Link>
+            <Link href="/terms">Terms of Service</Link>
+            <Link href="/privacy">Privacy Policy</Link>
           </div>
           <div className="footer-col">
             <h5 className="footer-heading">Connect</h5>
