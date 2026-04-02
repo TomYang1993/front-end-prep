@@ -261,7 +261,7 @@ export function EditorWorkspace({
             title="Code"
           ><Code2 size={24} strokeWidth={1.5} /></button>
           
-          <CheatsheetModal />
+          <CheatsheetModal type="js" />
         </div>
         <div className="ide-sidenav-bottom">
           <button className="ide-sidenav-btn" title="Help"><HelpCircle size={24} strokeWidth={1.5} /></button>

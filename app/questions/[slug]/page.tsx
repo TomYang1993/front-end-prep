@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { QuestionTabs } from '@/components/question-tabs';
 import { EditorWorkspace } from '@/components/editor-workspace';
+import { CheatsheetModal } from '@/components/cheatsheet-modal';
 import { PremiumUpsell } from '@/components/premium-upsell';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { getQuestionDetailBySlug } from '@/lib/questions';
@@ -61,10 +62,15 @@ export default async function QuestionDetailPage({ params }: PageProps) {
   }
 
   // Fallback for REACT_APP and others
+  const cheatsheetType = question.type === 'REACT_APP' ? 'react' as const : 'js' as const;
+
   return (
     <section className="stack-gap" style={{ padding: '2rem 0' }}>
       <article className="question-header">
-        <h1>{question.title}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1>{question.title}</h1>
+          <CheatsheetModal type={cheatsheetType} />
+        </div>
         <p>{question.prompt}</p>
         <p className="meta-row">
           <span>{question.type}</span>

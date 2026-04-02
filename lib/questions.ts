@@ -16,6 +16,7 @@ export async function listPublishedQuestions(userId?: string) {
     const rd = question.renderData as QuestionRenderData | null;
     return {
       ...question,
+      description: rd?.description ?? null,
       tags: rd?.tags ?? [],
       locked: !canAccessQuestion(question.accessTier, question.id, entitlement)
     };

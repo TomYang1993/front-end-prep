@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import clsx from 'clsx';
-import { Check, AlertCircle, Minus, Lock, Play, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, AlertCircle, Minus, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface QuestionRow {
   id: string;
   slug: string;
   title: string;
+  description: string | null;
   difficulty: string;
   type: string;
   accessTier: string;
@@ -13,8 +14,6 @@ export interface QuestionRow {
   locked: boolean;
   /** 'solved' | 'attempted' | 'unattempted' */
   status: string;
-  /** Pseudo completions/attempts count */
-  attemptsCount: number;
 }
 
 interface QuestionsTableProps {
@@ -28,9 +27,9 @@ export function QuestionsTable({ questions }: QuestionsTableProps) {
         <thead>
           <tr>
             <th className="col-status">Status</th>
-            <th className="col-title">Challenge Title</th>
+            <th className="col-title">Challenge</th>
+            <th className="col-description">Description</th>
             <th className="col-difficulty">Difficulty</th>
-            <th className="col-attempts" style={{ textAlign: 'right' }}>Users Attempted</th>
           </tr>
         </thead>
         <tbody>
@@ -38,7 +37,7 @@ export function QuestionsTable({ questions }: QuestionsTableProps) {
             <tr key={q.id} className={clsx(q.locked && 'question-row-locked')}>
               {/* Status */}
               <td>
-                <div 
+                <div
                   className={clsx('status-icon', q.status)}
                   title={q.status === 'solved' ? 'Finished' : q.status === 'attempted' ? 'Attempted' : 'Untouched'}
                   aria-label={q.status === 'solved' ? 'Finished' : q.status === 'attempted' ? 'Attempted' : 'Untouched'}
@@ -49,7 +48,7 @@ export function QuestionsTable({ questions }: QuestionsTableProps) {
                 </div>
               </td>
 
-              {/* Title + tags */}
+              {/* Title + tags + attempts */}
               <td>
                 <div className="question-title-cell">
                   <Link href={`/questions/${q.slug}`} className="question-title-link flex items-center gap-2">
@@ -65,16 +64,16 @@ export function QuestionsTable({ questions }: QuestionsTableProps) {
                 </div>
               </td>
 
+              {/* Description */}
+              <td className="col-description-cell">
+                <span className="question-description">{q.description}</span>
+              </td>
+
               {/* Difficulty */}
               <td style={{ textAlign: 'center' }}>
                 <span className={clsx('diff-badge', q.difficulty.toLowerCase())}>
                   {q.difficulty}
                 </span>
-              </td>
-
-              {/* Attempts */}
-              <td className="acceptance-cell" style={{ textAlign: 'right' }}>
-                {q.attemptsCount.toLocaleString()}
               </td>
             </tr>
           ))}

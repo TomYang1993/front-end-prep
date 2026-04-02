@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { QuestionsSidebar } from '@/components/questions-sidebar';
 import { QuestionsFilters } from '@/components/questions-filters';
+import { QuestionsStatsBar } from '@/components/questions-stats-bar';
 import { QuestionsTable, type QuestionRow } from '@/components/questions-table';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { listPublishedQuestions } from '@/lib/questions';
@@ -28,14 +29,13 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
     id: q.id,
     slug: q.slug,
     title: q.title,
+    description: q.description,
     difficulty: q.difficulty,
     type: q.type,
     accessTier: q.accessTier,
     tags: q.tags,
     locked: q.locked,
     status: submissionStatsByQuestion[q.id] || 'unattempted',
-    // Deterministic pseudo-attempt count
-    attemptsCount: 1500 + (hashCode(q.slug) % 5000),
   }));
 
   // Apply filters from search params
@@ -50,15 +50,13 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
   if (searchParams.status) {
     filtered = filtered.filter((q) => q.status === searchParams.status);
   }
-  if (searchParams.tier) {
-    filtered = filtered.filter((q) => q.accessTier === searchParams.tier);
-  }
   if (searchParams.query) {
     const qLabel = searchParams.query.toLowerCase();
-    filtered = filtered.filter((q) => q.title.toLowerCase().includes(qLabel) || q.tags.some(t => t.toLowerCase().includes(qLabel)));
+    filtered = filtered.filter((q) => q.title.toLowerCase().includes(qLabel) || q.description?.toLowerCase().includes(qLabel) || q.tags.some(t => t.toLowerCase().includes(qLabel)));
   }
 
   const solvedCount = questionRows.filter((q) => q.status === 'solved').length;
+  const attemptedCount = questionRows.filter((q) => q.status === 'attempted').length;
 
   return (
     <div className="questions-layout">
@@ -67,15 +65,12 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
       </Suspense>
 
       <div className="questions-main">
-        {/* Header */}
-        <div className="questions-header">
-          <div>
-            <h1>Front-end Explorer</h1>
-            <p className="questions-header-desc">
-              Master UI engineering, logic patterns, and high-performance system designs. Built for the modern web architect.
-            </p>
-          </div>
-        </div>
+        {/* Stats bar */}
+        <QuestionsStatsBar
+          totalQuestions={questionRows.length}
+          solvedCount={solvedCount}
+          attemptedCount={attemptedCount}
+        />
 
         {/* Filters */}
         <div className="questions-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
@@ -109,11 +104,3 @@ async function getSubmissionStats(userId?: string) {
   return stats;
 }
 
-/** Simple deterministic hash for pseudo-random acceptance rates */
-function hashCode(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash);
-}

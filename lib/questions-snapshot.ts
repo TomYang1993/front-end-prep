@@ -7,6 +7,7 @@ import { prisma } from '@/lib/db/prisma';
  * and the full detail page — zero joins at read time.
  */
 export interface QuestionRenderData {
+  description: string | null;
   tags: string[];
   starterCode: Record<string, string>;
   publicTests: {
@@ -42,7 +43,10 @@ export async function buildQuestionRenderData(questionId: string): Promise<Quest
     }),
   ]);
 
+  const versionContent = latestVersion?.content as { description?: string } | null;
+
   return {
+    description: versionContent?.description ?? null,
     tags: tagLinks.map((l) => l.tag.name),
     starterCode: (latestVersion?.starterCode ?? {}) as Record<string, string>,
     publicTests: publicTests.map((t) => ({

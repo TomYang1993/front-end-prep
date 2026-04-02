@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Atom, Zap, Blocks, Microscope, ArrowRight, Youtube, Twitter } from 'lucide-react';
+import { Atom, Zap, Timer, Microscope, ArrowRight, Youtube, Twitter } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -10,26 +10,21 @@ export default function HomePage() {
         <div className="hero-orb hero-orb-right" />
 
         <div className="hero-content">
-          <span className="hero-badge">Practice. Build. Ship.</span>
-
           <h1 className="hero-title">
             Ace Your <br />
-            <span className="hero-title-gradient">Whack The Fullstack Interview</span>
+            <span className="hero-title-gradient">Fullstack Interview</span>
           </h1>
 
           <p className="hero-subtitle">
-            Sharpen your JavaScript, TypeScript, and React skills with hands-on challenges.
-            Write real code in a live playground, get instant feedback, and build the
-            confidence to crush your next technical interview.
+            Sharpen your fullstack skills with hands-on challenges.
+            Questions are updated regularly to keep up with current trends in the job market.
+            Completely free — and if you&apos;re feeling generous, <a href="#" className="hero-coffee-link">buy me a coffee</a>!
           </p>
 
           <div className="hero-actions">
             <Link href="/questions" className="btn-landing-primary">
               Start Practicing
               <ArrowRight size={16} />
-            </Link>
-            <Link href="/questions" className="btn-landing-secondary">
-              Browse Questions
             </Link>
           </div>
         </div>
@@ -38,7 +33,7 @@ export default function HomePage() {
       {/* ─── What You'll Master — Bento Grid ─── */}
       <section className="landing-section">
         <div className="section-heading">
-          <h2>What You&apos;ll Master</h2>
+          <h2>Why Did I Build This?</h2>
           <div className="heading-accent" />
         </div>
 
@@ -46,57 +41,51 @@ export default function HomePage() {
           {/* React — large card */}
           <div className="bento-card bento-card-wide">
             <span className="bento-icon bento-icon-primary"><Atom size={24} /></span>
-            <h3>React &amp; Component Design</h3>
+            <h3>A Knowledge Base, Built from Experience</h3>
             <p>
-              Build production-grade components, manage complex state, and understand
-              the rendering lifecycle. From hooks to server components.
+              As a seasoned engineer, I&apos;ve been through countless interviews. I built this platform to organize what I&apos;ve learned and share it with others — because helping others learn makes you better too.
             </p>
-            <div className="bento-chips">
-              <span className="bento-chip">Hooks</span>
-              <span className="bento-chip">Server Components</span>
-              <span className="bento-chip">State Management</span>
-            </div>
             <div className="bento-glow" />
           </div>
 
           {/* JS/TS Logic */}
           <div className="bento-card">
             <span className="bento-icon bento-icon-secondary"><Zap size={24} /></span>
-            <h3>JavaScript &amp; TypeScript</h3>
+            <h3>Just for fun!</h3>
             <p>
-              Closures, async patterns, prototypes, generics, and the type system —
-              the fundamentals that interviewers love to test.
+              Most of the website will be built by AI. Fun Project!
             </p>
           </div>
 
-          {/* FE Concepts */}
           <div className="bento-card">
-            <span className="bento-icon bento-icon-tertiary"><Blocks size={24} /></span>
-            <h3>Frontend Fundamentals</h3>
+            <span className="bento-icon bento-icon-tertiary"><Timer size={24} /></span>
+            <h3>Practice with a Timebox</h3>
             <p>
-              DOM APIs, event delegation, performance optimization, accessibility,
-              and browser internals.
+              In real interviews, you&apos;re always on the clock. Our interview mode enforces actual time limits to give you real interview pressure. Surprisingly, most platforms don&apos;t offer this.
             </p>
           </div>
 
-          {/* Stats bar — wide */}
+          {/* Supported languages — wide */}
           <div className="bento-card bento-card-wide bento-stats-bar">
+            <h3 className="bento-stats-title">Supported Languages and Frameworks for Now</h3>
             <div className="bento-stat">
-              <span className="bento-stat-number">3</span>
-              <span className="bento-stat-label">Categories</span>
+              <span className="bento-stat-number">JavaScript</span>
             </div>
             <div className="bento-stat-divider" />
             <div className="bento-stat">
-              <span className="bento-stat-number">JS &middot; TS &middot; React</span>
-              <span className="bento-stat-label">Languages &amp; Frameworks</span>
+              <span className="bento-stat-number">TypeScript</span>
             </div>
-            <div className="bento-stat-divider bento-stat-divider-hide" />
-            <div className="bento-stat bento-stat-hide">
-              <span className="bento-stat-number">Live</span>
-              <span className="bento-stat-label">In-Browser Execution</span>
+            <div className="bento-stat-divider" />
+            <div className="bento-stat">
+              <span className="bento-stat-number">React</span>
+            </div>
+            <div className="bento-stat-divider" />
+            <div className="bento-stat">
+              <span className="bento-stat-number">Python</span>
             </div>
           </div>
         </div>
+
       </section>
 
       {/* ─── Live Playground ─── */}
@@ -151,17 +140,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Final CTA ─── */}
-      <section className="landing-cta">
-        <h2 className="cta-headline">Ready to level up?</h2>
-        <p className="cta-sub">
-          Jump in and start solving problems. No sign-up wall — just pick a question and code.
-        </p>
-        <Link href="/questions" className="btn-landing-primary btn-landing-lg">
-          Browse All Questions
-          <ArrowRight size={18} />
-        </Link>
-      </section>
+
+
 
       {/* ─── Footer ─── */}
       <footer className="landing-footer">

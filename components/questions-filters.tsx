@@ -100,16 +100,6 @@ export function QuestionsFilters() {
         <option value="unattempted">Not Started</option>
       </select>
 
-      <select
-        className="ide-lang-select"
-        value={searchParams.get('tier') || ''}
-        onChange={(e) => updateParam('tier', e.target.value)}
-        style={{ padding: '0.5rem 0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: '0.85rem' }}
-      >
-        <option value="">Access: All</option>
-        <option value="FREE">Free</option>
-        <option value="PREMIUM">Premium</option>
-      </select>
     </div>
   );
 }

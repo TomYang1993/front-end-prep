@@ -174,6 +174,7 @@ async function main() {
       slug: 'accordion-component',
       title: 'Accordion Component',
       prompt: 'Build an accessible accordion component that expands and collapses sections. Handle keyboard navigation and ARIA attributes.',
+      description: 'Build an accessible expand/collapse accordion with keyboard nav and ARIA support.',
       type: QuestionType.REACT_APP,
       difficulty: Difficulty.EASY,
       accessTier: AccessTier.FREE,
@@ -184,11 +185,12 @@ async function main() {
       slug: 'debounce-function',
       title: 'Debounce Function',
       prompt: 'Implement a debounce utility function that delays invoking the provided function until after the specified wait time has elapsed since the last invocation.',
+      description: 'Implement a debounce utility that delays function calls until a wait period has elapsed since the last invocation.',
       type: QuestionType.FUNCTION_JS,
       difficulty: Difficulty.MEDIUM,
       accessTier: AccessTier.FREE,
       tags: [tagUtility.id],
-      starterCode: { 
+      starterCode: {
         javascript: 'function debounce(fn, delay) {\n  // your code here\n}',
         typescript: 'function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): (...args: Parameters<T>) => void {\n  // your code here\n}'
       },
@@ -197,6 +199,7 @@ async function main() {
       slug: 'virtual-list',
       title: 'Virtual List Implementation',
       prompt: 'Build a virtualized list component that efficiently renders only the visible items in a large dataset. Support dynamic row heights.',
+      description: 'Build a virtualized list that renders only visible items from a large dataset with dynamic row heights.',
       type: QuestionType.REACT_APP,
       difficulty: Difficulty.HARD,
       accessTier: AccessTier.PREMIUM,
@@ -207,11 +210,12 @@ async function main() {
       slug: 'use-previous-hook',
       title: 'usePrevious Hook',
       prompt: 'Implement a custom React hook that returns the previous value of a given state or prop.',
+      description: 'Create a custom React hook that tracks and returns the previous value of any state or prop.',
       type: QuestionType.FUNCTION_JS,
       difficulty: Difficulty.EASY,
       accessTier: AccessTier.FREE,
       tags: [tagReact.id, tagHooks.id],
-      starterCode: { 
+      starterCode: {
         javascript: 'function usePrevious(value) {\n  // your code here\n}',
         typescript: 'function usePrevious<T>(value: T): T | undefined {\n  // your code here\n  return undefined;\n}'
       },
@@ -220,6 +224,7 @@ async function main() {
       slug: 'css-grid-layout',
       title: 'Responsive Dashboard Grid',
       prompt: 'Create a responsive dashboard layout using CSS Grid that adapts from 1 to 3 columns based on viewport width.',
+      description: 'Create a responsive CSS Grid dashboard layout that adapts from 1 to 3 columns based on viewport width.',
       type: QuestionType.REACT_APP,
       difficulty: Difficulty.MEDIUM,
       accessTier: AccessTier.FREE,
@@ -230,6 +235,7 @@ async function main() {
       slug: 'design-component-library',
       title: 'Design System Architecture',
       prompt: 'Design a scalable component library architecture. Explain how you would structure themes, tokens, variants, and composability.',
+      description: 'Design a scalable component library with themes, design tokens, variants, and composable primitives.',
       type: QuestionType.REACT_APP,
       difficulty: Difficulty.HARD,
       accessTier: AccessTier.PREMIUM,
@@ -240,13 +246,40 @@ async function main() {
       slug: 'promise-all-implementation',
       title: 'Promise.all Implementation',
       prompt: 'Implement your own version of Promise.all that takes an array of promises and resolves when all promises resolve, or rejects if any promise rejects.',
+      description: 'Implement Promise.all from scratch — resolve when all promises settle, reject on the first failure.',
       type: QuestionType.FUNCTION_JS,
       difficulty: Difficulty.MEDIUM,
       accessTier: AccessTier.FREE,
       tags: [tagUtility.id],
-      starterCode: { 
+      starterCode: {
         javascript: 'function promiseAll(promises) {\n  // your code here\n}',
         typescript: 'function promiseAll<T>(promises: Iterable<T | PromiseLike<T>>): Promise<T[]> {\n  // your code here\n  return Promise.resolve([]);\n}'
+      },
+    },
+    {
+      slug: 'rate-limiter-button',
+      title: 'Rate Limiter Button',
+      prompt: 'Build a React component with a button that limits how often it can be clicked. Implement a simple rate limiter that disables the button after N clicks within a time window, re-enabling it once the window resets. Display the remaining clicks and cooldown timer.',
+      description: 'Build a button with a rate limiter that caps clicks per time window and shows a cooldown timer.',
+      type: QuestionType.REACT_APP,
+      difficulty: Difficulty.MEDIUM,
+      accessTier: AccessTier.FREE,
+      tags: [tagReact.id, tagHooks.id],
+      starterCode: {
+        react: 'export default function RateLimiterButton() {\n  return <button>Click me</button>;\n}'
+      },
+    },
+    {
+      slug: 'autocomplete-search',
+      title: 'Autocomplete Search',
+      prompt: 'Build an autocomplete search input that fetches and displays suggestions as the user types. Handle debounced API calls, keyboard navigation through results (arrow keys + enter), loading and empty states, and click-outside to dismiss. Use a provided mock fetch function for data.',
+      description: 'Build a search input with autocomplete suggestions, debounced fetching, and keyboard navigation.',
+      type: QuestionType.REACT_APP,
+      difficulty: Difficulty.MEDIUM,
+      accessTier: AccessTier.FREE,
+      tags: [tagReact.id, tagA11y.id, tagPerf.id],
+      starterCode: {
+        react: 'const mockFetch = (query) =>\n  new Promise((resolve) =>\n    setTimeout(() => resolve(\n      ["Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape"]\n        .filter((item) => item.toLowerCase().includes(query.toLowerCase()))\n    ), 200)\n  );\n\nexport default function AutocompleteSearch() {\n  return <input type="text" placeholder="Search..." />;\n}'
       },
     },
   ];
@@ -284,7 +317,7 @@ async function main() {
         questionId: q.id,
         version: 1,
         status: QuestionVersionStatus.PUBLISHED,
-        content: { description: eq.prompt },
+        content: { description: eq.description },
         starterCode: eq.starterCode,
         publishedAt: new Date(),
       },
