@@ -61,7 +61,7 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
   return (
     <div className="questions-layout">
       <Suspense>
-        <QuestionsSidebar totalQuestions={questionRows.length} solvedCount={solvedCount} />
+        <QuestionsSidebar />
       </Suspense>
 
       <div className="questions-main">

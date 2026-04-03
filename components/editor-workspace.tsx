@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Editor from '@monaco-editor/react';
 import { useToast } from '@/components/toast-provider';
 import { 
-  Code2, Lightbulb, History, HelpCircle, FileCode2, 
-  Settings, TerminalSquare, ClipboardList, Play, Upload,
+  Code2, Lightbulb, HelpCircle, FileCode2,
+  TerminalSquare, ClipboardList, Play, Upload,
   ArrowLeft
 } from 'lucide-react';
 import { CheatsheetModal } from '@/components/cheatsheet-modal';

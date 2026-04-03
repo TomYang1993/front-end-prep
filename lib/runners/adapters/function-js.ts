@@ -127,10 +127,10 @@ export class FunctionJsRunner implements RunnerAdapter {
       };
     } catch (error) {
       if (context) {
-          try { context.release(); } catch(e) {}
+          try { context.release(); } catch {}
       }
       if (isolate && !isolate.isDisposed) {
-          try { isolate.dispose(); } catch(e) {}
+          try { isolate.dispose(); } catch {}
       }
 
       const normalizedMessage =

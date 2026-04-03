@@ -14,7 +14,7 @@ import { RunnerAdapter, RunnerExecutionResult } from '@/lib/runners/types';
 export class ReactPreviewRunner implements RunnerAdapter {
   framework = 'react' as const;
 
-  async run(code?: string, input?: unknown, expected?: unknown): Promise<RunnerExecutionResult> {
+  async run(): Promise<RunnerExecutionResult> {
     return {
       passed: true,
       output: { 

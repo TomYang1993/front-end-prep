@@ -34,7 +34,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
     }));
 
     return NextResponse.json(formatted);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

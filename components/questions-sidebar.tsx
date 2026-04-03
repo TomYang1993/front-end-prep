@@ -1,10 +1,6 @@
 import Link from 'next/link';
 import { Star, Bookmark } from 'lucide-react';
 
-interface QuestionsSidebarProps {
-  totalQuestions: number;
-  solvedCount: number;
-}
 
 const COLLECTIONS = [
   { href: '/questions?list=top-10', label: '10 Most Liked', icon: Star },
@@ -14,7 +10,7 @@ const COLLECTIONS = [
   { href: '/questions?list=staff-10', label: 'Staff level 10', icon: Bookmark },
 ];
 
-export function QuestionsSidebar({ totalQuestions, solvedCount }: QuestionsSidebarProps) {
+export function QuestionsSidebar() {
   return (
     <aside className="questions-sidebar flex flex-col gap-6">
 
