@@ -1,4 +1,4 @@
-import { PrismaClient, AccessTier, Difficulty, QuestionType, QuestionVersionStatus, TestVisibility, SubscriptionStatus, PackPurchaseStatus, EntitlementSource } from '@prisma/client';
+import { PrismaClient, AccessTier, Difficulty, QuestionType, QuestionVersionStatus, TestVisibility, SubscriptionStatus, PackPurchaseStatus, EntitlementSource, SubmissionStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -202,7 +202,7 @@ async function main() {
       description: 'Build a virtualized list that renders only visible items from a large dataset with dynamic row heights.',
       type: QuestionType.REACT_APP,
       difficulty: Difficulty.HARD,
-      accessTier: AccessTier.PREMIUM,
+      accessTier: AccessTier.FREE,
       tags: [tagReact.id, tagPerf.id],
       starterCode: { react: 'export default function VirtualList({ items }) {\n  return <div>{/* render visible items */}</div>;\n}' },
     },
@@ -238,7 +238,7 @@ async function main() {
       description: 'Design a scalable component library with themes, design tokens, variants, and composable primitives.',
       type: QuestionType.REACT_APP,
       difficulty: Difficulty.HARD,
-      accessTier: AccessTier.PREMIUM,
+      accessTier: AccessTier.FREE,
       tags: [tagDesign.id, tagReact.id],
       starterCode: { react: '// Outline your component library architecture\nexport default function ThemeProvider({ children }) {\n  return <>{children}</>;\n}' },
     },
@@ -287,7 +287,13 @@ async function main() {
   for (const eq of extraQuestions) {
     const q = await prisma.question.upsert({
       where: { slug: eq.slug },
-      update: {},
+      update: {
+        title: eq.title,
+        prompt: eq.prompt,
+        type: eq.type,
+        difficulty: eq.difficulty,
+        accessTier: eq.accessTier,
+      },
       create: {
         slug: eq.slug,
         title: eq.title,
@@ -323,6 +329,53 @@ async function main() {
       },
     });
   }
+
+  // Add some mock submissions for testing Statuses (Solved, Attempted)
+  const qTwoSum = await prisma.question.findUniqueOrThrow({ where: { slug: 'two-sum' } });
+  const qAccordion = await prisma.question.findUniqueOrThrow({ where: { slug: 'accordion-component' } });
+  const qDebounce = await prisma.question.findUniqueOrThrow({ where: { slug: 'debounce-function' } });
+  
+  await prisma.submission.upsert({
+    where: { id: 'mock_sub_twosum' },
+    update: { status: SubmissionStatus.PASSED, score: 100, framework: 'javascript' },
+    create: {
+      id: 'mock_sub_twosum',
+      userId: starterUser.id,
+      questionId: qTwoSum.id,
+      framework: 'javascript',
+      code: 'function solve(nums, target) { return [0, 1]; }',
+      status: SubmissionStatus.PASSED,
+      score: 100
+    }
+  });
+
+  await prisma.submission.upsert({
+    where: { id: 'mock_sub_accordion' },
+    update: { status: SubmissionStatus.PASSED, score: 100, framework: 'react' },
+    create: {
+      id: 'mock_sub_accordion',
+      userId: starterUser.id,
+      questionId: qAccordion.id,
+      framework: 'react',
+      code: 'export default function Accordion() { return <div />; }',
+      status: SubmissionStatus.PASSED,
+      score: 100
+    }
+  });
+
+  await prisma.submission.upsert({
+    where: { id: 'mock_sub_debounce' },
+    update: { status: SubmissionStatus.FAILED, score: 50, framework: 'javascript' },
+    create: {
+      id: 'mock_sub_debounce',
+      userId: starterUser.id,
+      questionId: qDebounce.id,
+      framework: 'javascript',
+      code: 'function debounce() { console.log("wip"); }',
+      status: SubmissionStatus.FAILED,
+      score: 50
+    }
+  });
 
   const subscription = await prisma.subscription.upsert({
     where: { providerSubscriptionId: 'sub_demo_active' },

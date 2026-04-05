@@ -1,5 +1,4 @@
 import { Suspense } from 'react';
-import { QuestionsSidebar } from '@/components/questions-sidebar';
 import { QuestionsFilters } from '@/components/questions-filters';
 import { QuestionsStatsBar } from '@/components/questions-stats-bar';
 import { QuestionsTable, type QuestionRow } from '@/components/questions-table';
@@ -56,20 +55,34 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
   }
 
   const solvedCount = questionRows.filter((q) => q.status === 'solved').length;
-  const attemptedCount = questionRows.filter((q) => q.status === 'attempted').length;
+
+  // Categorise questions by tags for the stats bar
+  const categorise = (q: QuestionRow) => {
+    const t = q.tags.map(s => s.toLowerCase()).join(' ') + ' ' + q.type.toLowerCase();
+    if (/react|css|html|ui|dom|component|layout|style/i.test(t)) return 'ui';
+    if (/node|api|server|backend|database|express|rest/i.test(t)) return 'backend';
+    if (/concept|pattern|design|system|architecture|theory/i.test(t)) return 'concepts';
+    return 'js';
+  };
+
+  const cats = { js: { solved: 0, total: 0 }, ui: { solved: 0, total: 0 }, backend: { solved: 0, total: 0 }, concepts: { solved: 0, total: 0 } };
+  for (const q of questionRows) {
+    const cat = categorise(q);
+    cats[cat].total++;
+    if (q.status === 'solved') cats[cat].solved++;
+  }
 
   return (
     <div className="questions-layout">
-      <Suspense>
-        <QuestionsSidebar />
-      </Suspense>
-
       <div className="questions-main">
         {/* Stats bar */}
         <QuestionsStatsBar
           totalQuestions={questionRows.length}
           solvedCount={solvedCount}
-          attemptedCount={attemptedCount}
+          js={cats.js}
+          ui={cats.ui}
+          backend={cats.backend}
+          concepts={cats.concepts}
         />
 
         {/* Filters */}

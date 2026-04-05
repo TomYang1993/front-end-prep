@@ -1,8 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { QuestionTabs } from '@/components/question-tabs';
 import { EditorWorkspace } from '@/components/editor-workspace';
-import { CheatsheetModal } from '@/components/cheatsheet-modal';
+import { ReactEditorWorkspace } from '@/components/react-editor-workspace';
 import { PremiumUpsell } from '@/components/premium-upsell';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { getQuestionDetailBySlug } from '@/lib/questions';
@@ -61,37 +60,16 @@ export default async function QuestionDetailPage({ params }: PageProps) {
     );
   }
 
-  // Fallback for REACT_APP and others
-  const cheatsheetType = question.type === 'REACT_APP' ? 'react' as const : 'js' as const;
-
+  // REACT_APP and other types
   return (
-    <section className="stack-gap" style={{ padding: '2rem 0' }}>
-      <article className="question-header">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h1>{question.title}</h1>
-          <CheatsheetModal type={cheatsheetType} />
-        </div>
-        <p>{question.prompt}</p>
-        <p className="meta-row">
-          <span>{question.type}</span>
-          <span className={`difficulty ${question.difficulty.toLowerCase()}`}>{question.difficulty}</span>
-          <span>{question.accessTier}</span>
-        </p>
-        <p className="tag-row">
-          {question.tags.map((tag) => (
-            <span key={tag} className="tag">
-              {tag}
-            </span>
-          ))}
-        </p>
-      </article>
-
-      <QuestionTabs
-        questionId={question.id}
-        type={question.type}
-        starterCode={question.starterCode || undefined}
-        publicTests={publicTests}
-      />
-    </section>
+    <ReactEditorWorkspace
+      questionId={question.id}
+      title={question.title}
+      prompt={question.prompt}
+      difficulty={question.difficulty}
+      tags={question.tags}
+      starterCode={question.starterCode || undefined}
+      publicTests={publicTests}
+    />
   );
 }

@@ -36,7 +36,7 @@ export function QuestionsFilters() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'nowrap', width: '100%' }}>
       {/* Search Bar */}
-      <div style={{ position: 'relative', flex: 1, maxWidth: '280px' }}>
+      <div style={{ position: 'relative', flex: 1, maxWidth: '289px' }}>
         <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
         <input
           type="text"
