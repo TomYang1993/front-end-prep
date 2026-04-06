@@ -118,9 +118,11 @@ body::before {
   pointer-events: none;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 pre,
@@ -616,26 +618,22 @@ code {
   color-scheme: dark;
 }
 
-/* ─── Scrollbar (all dark themes) ─── */
-[data-theme='dark'] ::-webkit-scrollbar,
-[data-theme='focus'] ::-webkit-scrollbar {
+/* ─── Scrollbar (all themes) ─── */
+::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-[data-theme='dark'] ::-webkit-scrollbar-track,
-[data-theme='focus'] ::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: var(--bg);
 }
 
-[data-theme='dark'] ::-webkit-scrollbar-thumb,
-[data-theme='focus'] ::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background: var(--line);
   border-radius: 4px;
 }
 
-[data-theme='dark'] ::-webkit-scrollbar-thumb:hover,
-[data-theme='focus'] ::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
 }
 

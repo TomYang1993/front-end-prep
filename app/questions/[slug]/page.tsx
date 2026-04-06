@@ -59,7 +59,7 @@ export default async function QuestionDetailPage({ params }: PageProps) {
           const parsed = JSON.parse(d.code);
           if (parsed.app) starterCode.react = parsed.app;
           if (parsed.styles) starterCode.css = parsed.styles;
-        } catch (e) {
+        } catch {
           // ignore parsing error
         }
       } else {

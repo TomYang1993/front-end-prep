@@ -74,7 +74,7 @@ export function QuestionsTable({ questions }: QuestionsTableProps) {
 
               {/* Difficulty */}
               <td className="py-4 align-top text-center">
-                <span className={clsx('inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none', q.difficulty.toLowerCase() === 'easy' ? 'bg-good-subtle text-good' : q.difficulty.toLowerCase() === 'medium' ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' : 'bg-warn-subtle text-warn')}>
+                <span className={clsx('inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none', q.difficulty.toLowerCase() === 'easy' ? 'bg-good-subtle text-good' : q.difficulty.toLowerCase() === 'medium' ? 'bg-accent-tertiary/12 text-accent-tertiary' : 'bg-warn-subtle text-warn')}>
                   {q.difficulty}
                 </span>
               </td>

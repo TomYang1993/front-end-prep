@@ -19,7 +19,7 @@ export function QuestionCard(props: QuestionCardProps) {
           <h3 className="m-0">{props.title}</h3>
           <p className="meta-row">
             <span>{props.type}</span>
-            <span className={clsx('font-semibold', props.difficulty.toLowerCase() === 'easy' ? 'text-good' : props.difficulty.toLowerCase() === 'medium' ? 'text-[#d97706]' : 'text-warn')}>{props.difficulty}</span>
+            <span className={clsx('font-semibold', props.difficulty.toLowerCase() === 'easy' ? 'text-good' : props.difficulty.toLowerCase() === 'medium' ? 'text-accent-tertiary' : 'text-warn')}>{props.difficulty}</span>
             <span>{props.accessTier}</span>
           </p>
         </div>

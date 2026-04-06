@@ -303,7 +303,7 @@ export function ReactEditorWorkspace({
             <div className={`flex items-center gap-4 mb-4 flex items-center justify-between w-full`}>
               <div className="flex items-center gap-3">
                 <h1 className="text-[1.25rem] font-bold m-0">{title}</h1>
-                <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${diffClass === 'easy' ? 'bg-good-subtle text-good' : diffClass === 'medium' ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' : 'bg-warn-subtle text-warn'}`}>{difficulty}</span>
+                <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${diffClass === 'easy' ? 'bg-good-subtle text-good' : diffClass === 'medium' ? 'bg-accent-tertiary/12 text-accent-tertiary' : 'bg-warn-subtle text-warn'}`}>{difficulty}</span>
               </div>
               <div className="flex items-center justify-end gap-3">
                 <button className="inline-flex items-center justify-center gap-2 bg-transparent border border-brand text-brand py-[0.4rem] px-[1.4rem] rounded-md text-[0.75rem] font-bold cursor-pointer transition-all duration-200 hover:bg-brand/10 disabled:opacity-50 disabled:cursor-not-allowed" disabled={running} onClick={runPublicTests}>

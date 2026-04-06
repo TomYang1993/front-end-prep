@@ -21,7 +21,7 @@ export function AuthControls({ email }: AuthControlsProps) {
 
   if (!email) {
     return (
-        <Link href="/auth" className="btn btn-secondary">
+        <Link href="/auth" className="px-2.5 py-[0.3rem] rounded-lg border border-line text-ink font-medium transition-all duration-150 hover:bg-bg-subtle hover:border-muted">
           Sign in
         </Link>
     );
