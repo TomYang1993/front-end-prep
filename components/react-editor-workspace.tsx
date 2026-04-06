@@ -10,6 +10,7 @@ import {
   TerminalSquare, ClipboardList, Play, Upload,
   ArrowLeft, Eye, Palette
 } from 'lucide-react';
+import { useDebounce } from '@/lib/hooks/use-debounce';
 import { CheatsheetModal } from '@/components/cheatsheet-modal';
 
 interface PublicTest {
@@ -80,7 +81,25 @@ export function ReactEditorWorkspace({
   });
 
   const code = codes[activeFile];
-  const setCode = (val: string) => setCodes((prev) => ({ ...prev, [activeFile]: val }));
+  const setCode = (val: string) => {
+    setCodes((prev) => ({ ...prev, [activeFile]: val }));
+    localStorage.setItem(`draft-${questionId}-react`, JSON.stringify({ ...codes, [activeFile]: val }));
+  };
+
+  const debouncedCodes = useDebounce(codes, 2000);
+  const initialMount = useRef(true);
+
+  useEffect(() => {
+    if (initialMount.current) {
+      initialMount.current = false;
+      return;
+    }
+    fetch('/api/drafts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ questionId, framework: 'react', code: JSON.stringify(debouncedCodes) })
+    }).catch(err => console.error('Autosave failed:', err));
+  }, [debouncedCodes, questionId]);
 
   const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -257,95 +276,94 @@ export function ReactEditorWorkspace({
   const editorLanguage = activeFile === 'app' ? 'typescript' : 'css';
 
   return (
-    <div className="ide-workspace">
+    <div className="flex h-screen w-screen ml-[calc(-50vw+50%)] -mt-8 -mb-16 bg-bg overflow-hidden focus-mode:bg-[#15140f]">
       {/* ─── Side Nav ─── */}
-      <aside className="ide-sidenav">
-        <div className="ide-sidenav-top">
-          <Link href="/questions" className="ide-sidenav-btn mb-4" title="Back to Questions">
+      <aside className="w-[64px] bg-black border-r border-line flex flex-col items-center justify-between py-4 z-10">
+        <div className="flex flex-col gap-4">
+          <Link href="/questions" className={`w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink [&.active]:bg-brand/15 [&.active]:text-brand mb-4`} title="Back to Questions">
             <ArrowLeft size={24} strokeWidth={1.5} />
           </Link>
-          <button className="ide-sidenav-btn active" title="Code">
+          <button className={`w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink [&.active]:bg-brand/15 [&.active]:text-brand active`} title="Code">
             <Code2 size={24} strokeWidth={1.5} />
           </button>
           <CheatsheetModal type="react" />
         </div>
-        <div className="ide-sidenav-bottom">
-          <button className="ide-sidenav-btn" title="Help">
+        <div className="flex flex-col gap-4">
+          <button className="w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink [&.active]:bg-brand/15 [&.active]:text-brand" title="Help">
             <HelpCircle size={24} strokeWidth={1.5} />
           </button>
         </div>
       </aside>
 
       {/* ─── Main Content ─── */}
-      <div className="ide-content">
+      <div className="flex-1 flex min-w-0">
         {/* Left Pane: Problem Description */}
-        <section className="ide-left-pane" style={{ width: leftWidth, flex: 'none', maxWidth: '70%', minWidth: '300px' }}>
-          <div className="ide-left-header">
-            <div className="ide-left-title-row flex items-center justify-between w-full">
+        <section className={`flex flex-col bg-surface border-r border-line flex-none max-w-[70%] min-w-[300px]`} style={{ width: leftWidth }}>
+          <div className="px-6 pt-4 border-b border-line bg-surface-raised">
+            <div className={`flex items-center gap-4 mb-4 flex items-center justify-between w-full`}>
               <div className="flex items-center gap-3">
-                <h1 className="ide-problem-title">{title}</h1>
-                <span className={`diff-badge ${diffClass}`}>{difficulty}</span>
+                <h1 className="text-[1.25rem] font-bold m-0">{title}</h1>
+                <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${diffClass === 'easy' ? 'bg-good-subtle text-good' : diffClass === 'medium' ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' : 'bg-warn-subtle text-warn'}`}>{difficulty}</span>
               </div>
               <div className="flex items-center justify-end gap-3">
-                <button className="ide-run-btn" disabled={running} onClick={runPublicTests}>
+                <button className="inline-flex items-center justify-center gap-2 bg-transparent border border-brand text-brand py-[0.4rem] px-[1.4rem] rounded-md text-[0.75rem] font-bold cursor-pointer transition-all duration-200 hover:bg-brand/10 disabled:opacity-50 disabled:cursor-not-allowed" disabled={running} onClick={runPublicTests}>
                   <Play size={14} fill="currentColor" /> {running ? 'Running…' : 'Run'}
                 </button>
-                <button className="ide-submit-btn" disabled={submitting} onClick={submitHiddenTests}>
+                <button className="bg-brand text-white border-none py-[0.4rem] px-[1.5rem] rounded-md text-[0.75rem] font-bold cursor-pointer transition-all duration-200 shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed" disabled={submitting} onClick={submitHiddenTests}>
                   <Upload size={14} /> {submitting ? 'Judging…' : 'Submit'}
                 </button>
               </div>
             </div>
-            <div className="ide-left-tabs">
+            <div className="flex gap-6">
               <button
-                className={`ide-left-tab ${activeLeftTab === 'description' ? 'active' : ''}`}
+                className={`py-2 text-[0.75rem] font-bold uppercase tracking-[0.05em] bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer transition-all duration-200 hover:text-ink [&.active]:text-ink [&.active]:border-brand ${activeLeftTab === 'description' ? 'active' : ''}`}
                 onClick={() => setActiveLeftTab('description')}
               >Description</button>
               <button
-                className={`ide-left-tab ${activeLeftTab === 'solutions' ? 'active' : ''}`}
+                className={`py-2 text-[0.75rem] font-bold uppercase tracking-[0.05em] bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer transition-all duration-200 hover:text-ink [&.active]:text-ink [&.active]:border-brand ${activeLeftTab === 'solutions' ? 'active' : ''}`}
                 onClick={() => setActiveLeftTab('solutions')}
               ><Lightbulb size={16} className="inline-block mr-1" /> Solutions</button>
             </div>
           </div>
 
-          {/* Scrollable content */}
-          <div className="ide-left-body">
+          <div className="flex-1 overflow-y-auto p-6">
             {activeLeftTab === 'description' ? (
               <>
-                <div className="ide-tag-row">
+                <div className="flex flex-wrap gap-2 mb-6">
                   {tags.map((tag) => (
-                    <span key={tag} className="ide-tag">{tag}</span>
+                    <span key={tag} className="text-[0.65rem] py-1 px-2 bg-surface-raised rounded-sm text-ink-secondary">{tag}</span>
                   ))}
                 </div>
-                <div className="ide-description">
+                <div className="text-[0.95rem] leading-[1.6] text-ink mb-8">
                   <p>{prompt}</p>
                 </div>
                 {publicTests.map((test, i) => (
-                  <div key={test.id} className="ide-example">
-                    <h3 className="ide-example-heading">Example {i + 1}:</h3>
-                    <div className="ide-example-block">
-                      <div><span className="ide-example-label">Expected:</span> {JSON.stringify(test.expected)}</div>
+                  <div key={test.id} className="mb-6">
+                    <h3 className="text-[0.75rem] uppercase tracking-[0.1em] font-bold text-muted m-0 mb-2">Example {i + 1}:</h3>
+                    <div className="bg-surface-raised border-l-[3px] border-brand p-4 rounded-r-md font-mono text-[0.85rem] text-ink-secondary flex flex-col gap-2">
+                      <div><span className="text-muted">Expected:</span> {JSON.stringify(test.expected)}</div>
                       {test.explanation && (
-                        <div className="ide-example-explanation">{test.explanation}</div>
+                        <div>{test.explanation}</div>
                       )}
                     </div>
                   </div>
                 ))}
               </>
             ) : (
-              <div className="ide-solutions-list">
+              <div className="flex flex-col gap-6">
                 {loadingSolutions ? (
-                  <p className="ide-empty-state">Loading official solutions...</p>
+                  <p className="text-muted text-center py-8">Loading official solutions...</p>
                 ) : solutions.length === 0 ? (
-                  <p className="ide-empty-state">No official solutions published yet.</p>
+                  <p className="text-muted text-center py-8">No official solutions published yet.</p>
                 ) : (
                   solutions.map((sol) => (
-                    <article key={sol.id} className="ide-solution-card">
-                      <div className="ide-solution-meta">
+                    <article key={sol.id} className="bg-surface-raised border border-line rounded-md p-6">
+                      <div className="flex gap-4 text-[0.75rem] text-muted mb-4 uppercase tracking-[0.05em]">
                         <span>{sol.language}</span>
                         {sol.complexity && <span>{sol.complexity}</span>}
                       </div>
                       <p>{sol.explanation}</p>
-                      <pre className="ide-solution-code"><code>{sol.code}</code></pre>
+                      <pre className="bg-surface p-4 rounded-md overflow-x-auto font-mono text-[0.8rem] text-ink-secondary mt-4 dark:bg-black"><code>{sol.code}</code></pre>
                     </article>
                   ))
                 )}
@@ -356,43 +374,33 @@ export function ReactEditorWorkspace({
 
         {/* Drag Handle */}
         <div
-          className="ide-resizer"
           onMouseDown={handleMouseDown}
-          style={{
-            width: '8px',
-            backgroundColor: 'transparent',
-            cursor: 'col-resize',
-            zIndex: 10,
-            margin: '0 -4px',
-            position: 'relative',
-          }}
+          className="w-2 bg-transparent cursor-col-resize z-10 -mx-1 relative shrink-0"
         />
 
         {/* Right Pane: Editor + Console/Preview */}
-        <section className="ide-right-pane">
-          {/* Editor toolbar with multi-file tabs */}
-          <div className="ide-editor-toolbar">
-            <div className="ide-editor-tab-bar">
+        <section className="flex-1 flex flex-col bg-surface-raised min-w-[400px] dark:bg-black focus-mode:bg-black">
+          <div className="h-10 bg-surface border-b border-line flex justify-between items-center px-4">
+            <div className="flex items-center h-full">
               <button
-                className={`ide-file-tab ${activeFile === 'app' ? 'active' : ''}`}
+                className={`font-mono text-[0.75rem] font-bold text-muted h-full flex items-center px-4 bg-transparent border-none border-b-2 border-transparent cursor-pointer transition-colors duration-200 hover:text-ink-secondary [&.active]:text-brand [&.active]:border-brand ${activeFile === 'app' ? 'active' : ''}`}
                 onClick={() => setActiveFile('app')}
               >
                 <FileCode2 size={16} className="inline-block mr-1" /> App.tsx
               </button>
               <button
-                className={`ide-file-tab ${activeFile === 'styles' ? 'active' : ''}`}
+                className={`font-mono text-[0.75rem] font-bold text-muted h-full flex items-center px-4 bg-transparent border-none border-b-2 border-transparent cursor-pointer transition-colors duration-200 hover:text-ink-secondary [&.active]:text-brand [&.active]:border-brand ${activeFile === 'styles' ? 'active' : ''}`}
                 onClick={() => setActiveFile('styles')}
               >
                 <Palette size={16} className="inline-block mr-1" /> styles.css
               </button>
             </div>
-            <div className="ide-editor-actions">
-              <span className="ide-react-badge">React v18</span>
+            <div className="flex gap-2">
+              <span className="font-mono text-[0.65rem] font-semibold text-muted bg-surface-raised border border-line py-[0.2rem] px-[0.6rem] rounded-sm">React v18</span>
             </div>
           </div>
 
-          {/* Monaco Editor */}
-          <div className="ide-editor-body">
+          <div className="flex-1 relative min-h-[200px]">
             <Editor
               height="100%"
               language={editorLanguage}
@@ -411,60 +419,59 @@ export function ReactEditorWorkspace({
             />
           </div>
 
-          {/* Console / Test Cases / Preview Panel */}
-          <div className="ide-console">
-            <div className="ide-console-tabs">
+          <div className="h-[30%] min-h-[150px] bg-surface border-t border-line flex flex-col">
+            <div className="h-10 bg-surface-raised flex px-4">
               <button
-                className={`ide-console-tab ${activeBottomTab === 'console' ? 'active' : ''}`}
+                className={`px-6 text-[0.75rem] font-bold bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer flex items-center gap-2 [&.active]:text-brand [&.active]:border-brand flex-shrink-0 ${activeBottomTab === 'console' ? 'active' : ''}`}
                 onClick={() => setActiveBottomTab('console')}
               ><TerminalSquare size={16} className="inline-block mr-1" /> Console</button>
               <button
-                className={`ide-console-tab ${activeBottomTab === 'testcases' ? 'active' : ''}`}
+                className={`px-6 text-[0.75rem] font-bold bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer flex items-center gap-2 [&.active]:text-brand [&.active]:border-brand flex-shrink-0 ${activeBottomTab === 'testcases' ? 'active' : ''}`}
                 onClick={() => setActiveBottomTab('testcases')}
               ><ClipboardList size={16} className="inline-block mr-1" /> Test Cases</button>
               <button
-                className={`ide-console-tab ${activeBottomTab === 'preview' ? 'active' : ''}`}
+                className={`px-6 text-[0.75rem] font-bold bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer flex items-center gap-2 [&.active]:text-brand [&.active]:border-brand flex-shrink-0 ${activeBottomTab === 'preview' ? 'active' : ''}`}
                 onClick={() => setActiveBottomTab('preview')}
               ><Eye size={16} className="inline-block mr-1" /> Preview</button>
             </div>
 
-            <div className="ide-console-body">
-              {/* Console output — always mounted, visibility toggled */}
-              <div style={{ display: activeBottomTab === 'console' ? 'block' : 'none', height: '100%' }}>
-                <div className="ide-console-log">
+            <div className="flex-1 overflow-y-auto p-4 bg-surface-raised dark:bg-black focus-mode:bg-black">
+              {/* Console output */}
+              <div className={`h-full ${activeBottomTab === 'console' ? 'block' : 'hidden'}`}>
+                <div className="font-mono text-[0.75rem] text-ink flex flex-col gap-1">
                   {consoleLog.length === 0 ? (
-                    <span className="ide-console-empty">Run or submit to see output here.</span>
+                    <span className="text-muted">Run or submit to see output here.</span>
                   ) : (
                     consoleLog.map((line, i) => (
-                      <div key={i} className={`ide-console-line ${line.includes('ERROR') ? 'error' : line.includes('#') ? 'comment' : ''}`}>
+                      <div key={i} className={`flex ${line.includes('ERROR') ? 'error' : line.includes('#') ? 'comment' : ''}`}>
                         {line}
                       </div>
                     ))
                   )}
                   {results.length > 0 && (
-                    <div className="ide-console-results">
+                    <div>
                       {results.map((r) => (
-                        <div key={r.id} className={`ide-result-badge ${r.passed ? 'pass' : 'fail'}`}>
+                        <div key={r.id} className={`inline-block py-1 px-2 rounded-sm text-[0.75rem] font-bold ${r.passed ? 'pass' : 'fail'}`}>
                           Case {r.id}: {r.passed ? 'Accepted' : 'Failed'}
                         </div>
                       ))}
                     </div>
                   )}
                   {hiddenSummary && (
-                    <div className={`ide-result-badge ${hiddenSummary.status === 'PASSED' ? 'pass' : 'fail'}`} style={{ marginTop: '0.5rem' }}>
+                    <div className={`inline-block py-1 px-2 rounded-sm text-[0.75rem] font-bold ${hiddenSummary.status === 'PASSED' ? 'pass' : 'fail'} mt-2`}>
                       Judge: {hiddenSummary.status} | Score: {hiddenSummary.score}% | {hiddenSummary.passedCount}/{hiddenSummary.total}
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Test Cases — always mounted, visibility toggled */}
-              <div style={{ display: activeBottomTab === 'testcases' ? 'block' : 'none', height: '100%' }}>
-                <div className="ide-testcases">
+              {/* Test Cases */}
+              <div className={`h-full ${activeBottomTab === 'testcases' ? 'block' : 'hidden'}`}>
+                <div className="flex flex-col gap-4">
                   {publicTests.map((test, i) => (
-                    <div key={test.id} className="ide-testcase">
-                      <span className="ide-testcase-label">Case {i + 1}</span>
-                      <div className="ide-testcase-data">
+                    <div key={test.id}>
+                      <span className="text-[0.75rem] font-bold text-muted mb-1 block">Case {i + 1}</span>
+                      <div className="bg-surface p-3 rounded-md font-mono text-[0.8rem] text-ink-secondary flex flex-col gap-1">
                         <span>Expected: {JSON.stringify(test.expected)}</span>
                       </div>
                     </div>
@@ -473,7 +480,7 @@ export function ReactEditorWorkspace({
               </div>
 
               {/* Preview — always mounted so Sandpack stays bundled */}
-              <div className="ide-preview-wrap" style={{ display: activeBottomTab === 'preview' ? 'flex' : 'none' }}>
+              <div className={`w-full h-full bg-[#f9fafb] border border-line rounded-sm overflow-hidden dark:bg-white dark:border-none ${activeBottomTab === 'preview' ? 'flex' : 'hidden'}`}>
                 <SandpackProvider
                   template="react-ts"
                   files={sandpackFiles}

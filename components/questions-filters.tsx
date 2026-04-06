@@ -34,39 +34,27 @@ export function QuestionsFilters() {
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'nowrap', width: '100%' }}>
+    <div className="flex items-center gap-3 flex-nowrap w-full">
       {/* Search Bar */}
-      <div style={{ position: 'relative', flex: 1, maxWidth: '289px' }}>
-        <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
+      <div className="relative flex-1 max-w-[289px]">
+        <Search size={16} className="absolute left-[10px] top-1/2 -translate-y-1/2 text-muted" />
         <input
           type="text"
           placeholder="Search questions..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '0.5rem 1rem 0.5rem 2.2rem',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--line)',
-            background: 'var(--surface)',
-            color: 'var(--ink)',
-            fontSize: '0.88rem',
-            outline: 'none',
-          }}
-          onFocus={(e) => { e.target.style.borderColor = 'var(--brand)'; }}
-          onBlur={(e) => { e.target.style.borderColor = 'var(--line)'; }}
+          className="w-full py-2 pl-[2.2rem] pr-4 rounded-sm border border-line bg-surface text-ink text-[0.88rem] outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand"
         />
       </div>
 
-      <span className="filter-divider" style={{ margin: '0 0.5rem' }} />
-      <span className="filter-icon" style={{ display: 'flex', alignItems: 'center' }}><SlidersHorizontal size={18} /></span>
+      <span className="mx-2 text-line">|</span>
+      <span className="flex items-center text-muted"><SlidersHorizontal size={18} /></span>
 
-      {/* Dropdowns replacing the old bordered wrapper styling with the ide-lang-select styling directly */}
+      {/* Dropdowns */}
       <select
-        className="ide-lang-select"
+        className="ide-lang-select px-[0.8rem] py-[0.5rem] rounded-sm border border-line bg-surface text-ink text-[0.85rem] outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand"
         value={searchParams.get('type') || ''}
         onChange={(e) => updateParam('type', e.target.value)}
-        style={{ padding: '0.5rem 0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: '0.85rem' }}
       >
         <option value="">Category: All</option>
         <option value="REACT_APP">React UI</option>
@@ -77,10 +65,9 @@ export function QuestionsFilters() {
       </select>
 
       <select
-        className="ide-lang-select"
+        className="ide-lang-select px-[0.8rem] py-[0.5rem] rounded-sm border border-line bg-surface text-ink text-[0.85rem] outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand"
         value={searchParams.get('difficulty') || ''}
         onChange={(e) => updateParam('difficulty', e.target.value)}
-        style={{ padding: '0.5rem 0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: '0.85rem' }}
       >
         <option value="">Difficulty: All</option>
         <option value="EASY">Easy</option>
@@ -89,17 +76,15 @@ export function QuestionsFilters() {
       </select>
 
       <select
-        className="ide-lang-select"
+        className="ide-lang-select px-[0.8rem] py-[0.5rem] rounded-sm border border-line bg-surface text-ink text-[0.85rem] outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand"
         value={searchParams.get('status') || ''}
         onChange={(e) => updateParam('status', e.target.value)}
-        style={{ padding: '0.5rem 0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: '0.85rem' }}
       >
         <option value="">Status: All</option>
         <option value="solved">Completed</option>
         <option value="attempted">Attempted</option>
         <option value="unattempted">Not Started</option>
       </select>
-
     </div>
   );
 }

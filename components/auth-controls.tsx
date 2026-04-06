@@ -28,7 +28,7 @@ export function AuthControls({ email }: AuthControlsProps) {
   }
 
   return (
-    <div className="auth-controls">
+    <div className="inline-flex items-center gap-2 text-[0.82rem]">
       <span>{email}</span>
       <button type="button" className="btn btn-secondary" onClick={signOut}>
         Sign out

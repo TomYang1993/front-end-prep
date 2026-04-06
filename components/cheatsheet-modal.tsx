@@ -2,7 +2,6 @@
 
 import * as Dialog from '@radix-ui/react-dialog';
 import { BookOpen, X } from 'lucide-react';
-import styles from './cheatsheet-modal.module.css';
 
 type CheatsheetType = 'js' | 'react';
 
@@ -14,9 +13,9 @@ function JSCheatsheet() {
   return (
     <>
       <section>
-        <h2 className={styles.sectionHeading}><code>typeof</code> Operator</h2>
-        <blockquote className={styles.quoteBlock}>Good for testing primitive values, not good for reference types.</blockquote>
-        <pre className={styles.codeBlock}><code>{`typeof 1           // "number"
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink"><code>typeof</code> Operator</h2>
+        <blockquote className="border-l-[3px] border-brand pl-4 mb-3 text-muted italic text-[0.88rem]">Good for testing primitive values, not good for reference types.</blockquote>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`typeof 1           // "number"
 typeof "s"         // "string"
 typeof true        // "boolean"
 typeof null        // "object" (famous bug!)
@@ -28,9 +27,9 @@ typeof Date        // "function"`}</code></pre>
       </section>
 
       <section>
-        <h2 className={styles.sectionHeading}>Equality & Coercion</h2>
-        <blockquote className={styles.quoteBlock}>Always use <code>===</code> unless you intentionally want coercion.</blockquote>
-        <pre className={styles.codeBlock}><code>{`0 == ""       // true  (coercion)
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Equality & Coercion</h2>
+        <blockquote className="border-l-[3px] border-brand pl-4 mb-3 text-muted italic text-[0.88rem]">Always use <code>===</code> unless you intentionally want coercion.</blockquote>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`0 == ""       // true  (coercion)
 0 === ""      // false (strict)
 null == undefined   // true
 null === undefined  // false
@@ -38,8 +37,8 @@ NaN === NaN         // false — use Number.isNaN()`}</code></pre>
       </section>
 
       <section>
-        <h2 className={styles.sectionHeading}>Array Methods</h2>
-        <pre className={styles.codeBlock}><code>{`// Transform
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Array Methods</h2>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`// Transform
 arr.map(x => x * 2)         // new array
 arr.filter(x => x > 0)      // new array
 arr.reduce((acc, x) => acc + x, 0)
@@ -57,8 +56,8 @@ arr.sort((a, b) => a - b)   // in-place, returns arr`}</code></pre>
       </section>
 
       <section>
-        <h2 className={styles.sectionHeading}>Closures & Scope</h2>
-        <pre className={styles.codeBlock}><code>{`function counter() {
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Closures & Scope</h2>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`function counter() {
   let count = 0;
   return {
     inc: () => ++count,
@@ -76,8 +75,8 @@ for (let i = 0; i < 3; i++) {
       </section>
 
       <section>
-        <h2 className={styles.sectionHeading}>Promises & Async</h2>
-        <pre className={styles.codeBlock}><code>{`// Promise combinators
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Promises & Async</h2>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`// Promise combinators
 Promise.all([p1, p2])      // rejects on first failure
 Promise.allSettled([p1,p2]) // always resolves
 Promise.race([p1, p2])     // first to settle
@@ -95,8 +94,8 @@ async function fetchData() {
       </section>
 
       <section>
-        <h2 className={styles.sectionHeading}>Destructuring & Spread</h2>
-        <pre className={styles.codeBlock}><code>{`const { a, b, ...rest } = obj;
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Destructuring & Spread</h2>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`const { a, b, ...rest } = obj;
 const [first, , third] = arr;
 const merged = { ...obj1, ...obj2 };
 const copy = [...arr1, ...arr2];
@@ -113,8 +112,8 @@ function ReactCheatsheet() {
   return (
     <>
       <section>
-        <h2 className={styles.sectionHeading}>Component Patterns</h2>
-        <pre className={styles.codeBlock}><code>{`// Function component
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Component Patterns</h2>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`// Function component
 function Card({ title, children }) {
   return (
     <div className="card">
@@ -131,8 +130,8 @@ function Card({ title, children }) {
       </section>
 
       <section>
-        <h2 className={styles.sectionHeading}>Hooks</h2>
-        <pre className={styles.codeBlock}><code>{`// State
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Hooks</h2>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`// State
 const [count, setCount] = useState(0);
 setCount(prev => prev + 1);  // functional update
 
@@ -152,9 +151,9 @@ const handler = useCallback((e) => {}, [dep]);`}</code></pre>
       </section>
 
       <section>
-        <h2 className={styles.sectionHeading}>Custom Hooks</h2>
-        <blockquote className={styles.quoteBlock}>Extract reusable logic into <code>use*</code> functions. Must call hooks at the top level.</blockquote>
-        <pre className={styles.codeBlock}><code>{`function useDebounce(value, delay) {
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Custom Hooks</h2>
+        <blockquote className="border-l-[3px] border-brand pl-4 mb-3 text-muted italic text-[0.88rem]">Extract reusable logic into <code>use*</code> functions. Must call hooks at the top level.</blockquote>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`function useDebounce(value, delay) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
     const id = setTimeout(() => setDebounced(value), delay);
@@ -176,8 +175,8 @@ function useLocalStorage(key, initial) {
       </section>
 
       <section>
-        <h2 className={styles.sectionHeading}>Event Handling & Forms</h2>
-        <pre className={styles.codeBlock}><code>{`function Form() {
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Event Handling & Forms</h2>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`function Form() {
   const [value, setValue] = useState("");
 
   const handleSubmit = (e) => {
@@ -198,9 +197,9 @@ function useLocalStorage(key, initial) {
       </section>
 
       <section>
-        <h2 className={styles.sectionHeading}>Keys & Lists</h2>
-        <blockquote className={styles.quoteBlock}>Keys must be stable, unique, and not array indices (when order can change).</blockquote>
-        <pre className={styles.codeBlock}><code>{`// Good — stable unique id
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Keys & Lists</h2>
+        <blockquote className="border-l-[3px] border-brand pl-4 mb-3 text-muted italic text-[0.88rem]">Keys must be stable, unique, and not array indices (when order can change).</blockquote>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`// Good — stable unique id
 {items.map(item => (
   <li key={item.id}>{item.name}</li>
 ))}
@@ -212,8 +211,8 @@ function useLocalStorage(key, initial) {
       </section>
 
       <section>
-        <h2 className={styles.sectionHeading}>Performance</h2>
-        <pre className={styles.codeBlock}><code>{`// Prevent unnecessary re-renders
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Performance</h2>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`// Prevent unnecessary re-renders
 const MemoChild = React.memo(function Child({ data }) {
   return <div>{data}</div>;
 });
@@ -242,17 +241,17 @@ export function CheatsheetModal({ type = 'js' }: CheatsheetModalProps) {
 
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
-        <Dialog.Content className="dialog-content" style={{ maxWidth: '750px', width: '90vw', maxHeight: '85vh', overflowY: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'nowrap', gap: '1rem' }}>
-            <Dialog.Title style={{ fontSize: '1.15rem', fontWeight: 600, margin: 0 }}>{title}</Dialog.Title>
+        <Dialog.Content className="dialog-content max-w-[750px] w-[90vw] max-h-[85vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-4 flex-nowrap gap-4">
+            <Dialog.Title className="text-[1.15rem] font-semibold m-0">{title}</Dialog.Title>
             <Dialog.Close asChild>
-              <button aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--muted)', flexShrink: 0, padding: 0 }}>
+              <button aria-label="Close" className="bg-transparent border-none cursor-pointer text-muted shrink-0 p-0 hover:text-ink transition-colors">
                 <X size={20} />
               </button>
             </Dialog.Close>
           </div>
 
-          <div style={{ display: 'grid', gap: '1.25rem', lineHeight: 1.5 }}>
+          <div className="grid gap-5 leading-relaxed">
             {type === 'react' ? <ReactCheatsheet /> : <JSCheatsheet />}
           </div>
         </Dialog.Content>

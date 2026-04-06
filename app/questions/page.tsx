@@ -73,8 +73,8 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="questions-layout">
-      <div className="questions-main">
+    <div className="max-w-[1120px] mx-auto px-4 sm:px-6">
+      <div className="grid gap-5 py-8">
         {/* Stats bar */}
         <QuestionsStatsBar
           totalQuestions={questionRows.length}
@@ -86,7 +86,7 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
         />
 
         {/* Filters */}
-        <div className="questions-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
+        <div className="flex items-center gap-4 w-full">
           <Suspense>
             <QuestionsFilters />
           </Suspense>
