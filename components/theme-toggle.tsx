@@ -53,7 +53,7 @@ export function ThemeToggle() {
 
   return (
     <button
-      className="theme-toggle"
+      className="w-8 h-8 inline-grid place-items-center border border-line rounded-lg bg-surface text-muted cursor-pointer transition-all duration-200 text-base hover:bg-bg-subtle hover:text-brand hover:border-brand hover:rotate-[15deg]"
       type="button"
       onClick={cycle}
       aria-label={`Switch to ${THEME_LABELS[nextTheme]} mode`}

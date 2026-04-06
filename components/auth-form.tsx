@@ -90,7 +90,7 @@ export function AuthForm() {
   }
 
   return (
-    <div className="feature-panel" style={{ maxWidth: 400, margin: '0 auto', width: '100%' }}>
+    <div className="feature-panel max-w-[400px] mx-auto w-full">
       <form onSubmit={handleSubmit} className="form-stack">
         <h1>
           {mode === 'login' && 'Sign In'}
@@ -110,6 +110,7 @@ export function AuthForm() {
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
           required
+          className="focus-mode:bg-ink focus-mode:text-surface"
         />
 
         {mode !== 'magic' && (
@@ -120,6 +121,7 @@ export function AuthForm() {
             placeholder="Password"
             required
             minLength={6}
+            className="focus-mode:bg-ink focus-mode:text-surface"
           />
         )}
 
@@ -131,19 +133,19 @@ export function AuthForm() {
           )}
         </button>
 
-        {status && <p style={{ color: 'var(--brand)', fontSize: '0.88rem', fontWeight: 500 }}>{status}</p>}
+        {status && <p className="text-brand text-[0.88rem] font-medium">{status}</p>}
       </form>
 
-      <div style={{ display: 'flex', alignItems: 'center', margin: '1.5rem 0' }}>
-        <div style={{ flex: 1, backgroundColor: 'var(--muted)', height: 1, opacity: 0.3 }} />
-        <span style={{ padding: '0 1rem', fontSize: '0.88rem', color: 'var(--muted)' }}>OR</span>
-        <div style={{ flex: 1, backgroundColor: 'var(--muted)', height: 1, opacity: 0.3 }} />
+      <div className="flex items-center my-6">
+        <div className="flex-1 bg-muted h-px opacity-30" />
+        <span className="px-4 text-[0.88rem] text-muted">OR</span>
+        <div className="flex-1 bg-muted h-px opacity-30" />
       </div>
 
       <div className="form-stack">
         <button 
           type="button" 
-          className="btn btn-secondary oauth-btn" 
+          className="btn btn-secondary inline-flex items-center justify-center gap-2.5 [&_svg]:shrink-0" 
           onClick={handleGoogleLogin} 
           disabled={loading}
         >
@@ -158,7 +160,7 @@ export function AuthForm() {
 
         <button 
           type="button" 
-          className="btn btn-secondary oauth-btn" 
+          className="btn btn-secondary inline-flex items-center justify-center gap-2.5 [&_svg]:shrink-0" 
           onClick={handleGitHubLogin} 
           disabled={loading}
         >

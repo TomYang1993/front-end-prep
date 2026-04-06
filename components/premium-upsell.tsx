@@ -58,31 +58,29 @@ export function PremiumUpsell({ packId }: PremiumUpsellProps) {
       </Dialog.Trigger>
 
       <Dialog.Portal>
-        <Dialog.Overlay className="dialog-overlay" />
-        <Dialog.Content className="dialog-content">
-          <Dialog.Title className="dialog-title">Unlock Premium Content</Dialog.Title>
-          <Dialog.Description className="dialog-description">
+        <Dialog.Overlay className="fixed inset-0 bg-overlay backdrop-blur-[2px] z-40 transition-opacity duration-200" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface border border-line rounded-lg shadow-lg p-6 w-[90vw] max-w-[450px] z-50 flex flex-col focus:outline-none">
+          <Dialog.Title className="text-xl font-bold m-0 mb-2">Unlock Premium Content</Dialog.Title>
+          <Dialog.Description className="text-muted text-[0.9rem] leading-relaxed mb-6">
             Get access to this question and all premium content.
           </Dialog.Description>
 
-          <div className="stack-gap">
+          <div className="flex flex-col gap-4">
             <button
-              className="btn"
+              className="btn w-full"
               type="button"
               disabled={busy !== null}
               onClick={() => startCheckout('subscription')}
-              style={{ width: '100%' }}
             >
               {busy === 'subscription' ? 'Starting checkout…' : 'Subscribe to Pro — $29/mo'}
             </button>
 
             {packId && (
               <button
-                className="btn btn-secondary"
+                className="btn btn-secondary w-full"
                 type="button"
                 disabled={busy !== null}
                 onClick={() => startCheckout('payment')}
-                style={{ width: '100%' }}
               >
                 {busy === 'payment' ? 'Starting checkout…' : 'Buy this pack — one-time'}
               </button>
@@ -90,7 +88,7 @@ export function PremiumUpsell({ packId }: PremiumUpsellProps) {
           </div>
 
           <Dialog.Close asChild>
-            <button className="btn-ghost dialog-close flex items-center justify-center" type="button" aria-label="Close">
+            <button className="absolute top-4 right-4 bg-transparent border-none cursor-pointer text-muted hover:text-ink transition-colors shrink-0 p-0" type="button" aria-label="Close">
               <X size={16} />
             </button>
           </Dialog.Close>

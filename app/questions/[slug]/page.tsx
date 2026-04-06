@@ -5,6 +5,7 @@ import { ReactEditorWorkspace } from '@/components/react-editor-workspace';
 import { PremiumUpsell } from '@/components/premium-upsell';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { getQuestionDetailBySlug } from '@/lib/questions';
+import { prisma } from '@/lib/db/prisma';
 import { createTimer } from '@/lib/server-timing';
 
 export const dynamic = 'force-dynamic';
@@ -46,6 +47,27 @@ export default async function QuestionDetailPage({ params }: PageProps) {
     explanation: t.explanation ?? undefined,
   }));
 
+  const starterCode: Record<string, string> = { ...((question.starterCode as Record<string, string>) || {}) };
+
+  if (user) {
+    const drafts = await prisma.codeDraft.findMany({
+      where: { userId: user.id, questionId: question.id }
+    });
+    for (const d of drafts) {
+      if (d.framework === 'react') {
+        try {
+          const parsed = JSON.parse(d.code);
+          if (parsed.app) starterCode.react = parsed.app;
+          if (parsed.styles) starterCode.css = parsed.styles;
+        } catch {
+          // ignore parsing error
+        }
+      } else {
+        starterCode[d.framework] = d.code;
+      }
+    }
+  }
+
   if (question.type === 'FUNCTION_JS') {
     return (
       <EditorWorkspace
@@ -54,7 +76,7 @@ export default async function QuestionDetailPage({ params }: PageProps) {
         prompt={question.prompt}
         difficulty={question.difficulty}
         tags={question.tags}
-        starterCode={question.starterCode || undefined}
+        starterCode={starterCode}
         publicTests={publicTests}
       />
     );

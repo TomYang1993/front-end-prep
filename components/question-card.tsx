@@ -13,21 +13,23 @@ interface QuestionCardProps {
 
 export function QuestionCard(props: QuestionCardProps) {
   return (
-    <article className="question-card">
-      <div className="question-card-top">
+    <article className="bg-surface border border-line rounded-2xl p-4 shadow-lg transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h3>{props.title}</h3>
+          <h3 className="m-0">{props.title}</h3>
           <p className="meta-row">
             <span>{props.type}</span>
-            <span className={clsx('difficulty', props.difficulty.toLowerCase())}>{props.difficulty}</span>
+            <span className={clsx('font-semibold', props.difficulty.toLowerCase() === 'easy' ? 'text-good' : props.difficulty.toLowerCase() === 'medium' ? 'text-accent-tertiary' : 'text-warn')}>{props.difficulty}</span>
             <span>{props.accessTier}</span>
           </p>
         </div>
-        {props.locked ? <span className="pill lock">Locked</span> : <span className="pill">Open</span>}
+        {props.locked
+          ? <span className="text-[0.74rem] uppercase tracking-[0.08em] px-2 py-0.5 rounded-full bg-warn-subtle text-warn">Locked</span>
+          : <span className="text-[0.74rem] uppercase tracking-[0.08em] px-2 py-0.5 rounded-full bg-brand-subtle text-good">Open</span>}
       </div>
-      <p className="tag-row">
+      <p className="flex gap-2 flex-wrap text-muted text-[0.88rem]">
         {props.tags.map((tag) => (
-          <span key={tag} className="tag">
+          <span key={tag} className="bg-bg-subtle rounded-full px-2 py-0.5 transition-colors duration-200">
             {tag}
           </span>
         ))}

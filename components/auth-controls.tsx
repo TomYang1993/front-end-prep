@@ -21,14 +21,14 @@ export function AuthControls({ email }: AuthControlsProps) {
 
   if (!email) {
     return (
-        <Link href="/auth" className="btn btn-secondary">
+        <Link href="/auth" className="px-2.5 py-[0.3rem] rounded-lg border border-line text-ink font-medium transition-all duration-150 hover:bg-bg-subtle hover:border-muted">
           Sign in
         </Link>
     );
   }
 
   return (
-    <div className="auth-controls">
+    <div className="inline-flex items-center gap-2 text-[0.82rem]">
       <span>{email}</span>
       <button type="button" className="btn btn-secondary" onClick={signOut}>
         Sign out
