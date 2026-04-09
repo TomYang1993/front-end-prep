@@ -6,7 +6,7 @@ import { getRunner } from '@/lib/runners/registry';
 
 const payloadSchema = z.object({
   questionId: z.string().min(1),
-  framework: z.enum(['javascript', 'react']),
+  framework: z.enum(['javascript', 'react', 'python']),
   code: z.string().min(1)
 });
 

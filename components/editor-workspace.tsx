@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { CheatsheetModal } from '@/components/cheatsheet-modal';
+import { usePythonRunner } from '@/hooks/use-python-runner';
 
 interface PublicTest {
   id: string;
@@ -30,6 +31,7 @@ interface SolutionView {
 
 interface EditorWorkspaceProps {
   questionId: string;
+  questionType?: 'FUNCTION_JS' | 'FUNCTION_PYTHON';
   title: string;
   prompt: string;
   difficulty: string;
@@ -54,6 +56,7 @@ type BottomTab = 'console' | 'testcases';
 
 export function EditorWorkspace({
   questionId,
+  questionType = 'FUNCTION_JS',
   title,
   prompt,
   difficulty,
@@ -65,10 +68,22 @@ export function EditorWorkspace({
   const [solutions, setSolutions] = useState<SolutionView[]>([]);
   const [loadingSolutions, setLoadingSolutions] = useState(false);
 
-  const [language, setLanguage] = useState<'javascript' | 'typescript'>('javascript');
-  const [codes, setCodes] = useState<Record<string, string>>({
-    javascript: starterCode?.javascript || 'function solve(...args) {\n  return null;\n}',
-    typescript: starterCode?.typescript || starterCode?.javascript || 'function solve(...args): any {\n  return null;\n}'
+  const isPython = questionType === 'FUNCTION_PYTHON';
+  const pythonRunner = usePythonRunner(isPython);
+
+  const [language, setLanguage] = useState<'javascript' | 'typescript' | 'python'>(
+    isPython ? 'python' : 'javascript'
+  );
+  const [codes, setCodes] = useState<Record<string, string>>(() => {
+    if (isPython) {
+      return {
+        python: starterCode?.python || 'def solve(*args):\n    return None\n',
+      } as Record<string, string>;
+    }
+    return {
+      javascript: starterCode?.javascript || 'function solve(...args) {\n  return null;\n}',
+      typescript: starterCode?.typescript || starterCode?.javascript || 'function solve(...args): any {\n  return null;\n}',
+    } as Record<string, string>;
   });
 
   const code = codes[language];
@@ -181,24 +196,39 @@ export function EditorWorkspace({
     setConsoleLog((prev) => [...prev, `[${now}] # Executing public tests...`]);
 
     try {
-      const response = await fetch('/api/playground/run-public', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionId, framework: 'javascript', code }),
-      });
+      let testResults: RunResult[];
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Public test run failed');
+      if (isPython) {
+        // Run client-side via Pyodide Web Worker
+        const pyResults = await pythonRunner.runTests(code, publicTests);
+        testResults = pyResults.map((r) => ({
+          id: r.id,
+          passed: r.passed,
+          output: r.output,
+          runtimeMs: r.runtimeMs,
+          error: r.error,
+          logs: r.logs,
+        }));
+      } else {
+        // Run server-side via isolated-vm
+        const response = await fetch('/api/playground/run-public', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ questionId, framework: 'javascript', code }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Public test run failed');
+        testResults = data.results || [];
+      }
 
-      setSummary(data.summary || null);
-      setResults(data.results || []);
+      const passedCount = testResults.filter((r) => r.passed).length;
+      setSummary({ passedCount, total: testResults.length });
+      setResults(testResults);
 
-      const passed = data.summary?.passedCount || 0;
-      const total = data.summary?.total || 0;
       const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
-      const newLogs = [`[${ts}] Passed ${passed}/${total} tests`];
+      const newLogs = [`[${ts}] Passed ${passedCount}/${testResults.length} tests`];
 
-      (data.results || []).forEach((r: RunResult) => {
+      testResults.forEach((r: RunResult) => {
         newLogs.push(`[${ts}] Case ${r.id}: ${r.passed ? 'Accepted' : 'Failed'} (${r.runtimeMs}ms)`);
         if (r.error) {
           newLogs.push(`> [ERROR] ${r.error}`);
@@ -227,28 +257,66 @@ export function EditorWorkspace({
     setConsoleLog((prev) => [...prev, `[${ts}] # Submitting for hidden judge...`]);
 
     try {
-      const response = await fetch('/api/submissions/judge-hidden', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionId, framework: 'javascript', code, publicResult: { summary, results } }),
-      });
+      if (isPython) {
+        // Fetch hidden tests, run client-side, post results
+        const testsRes = await fetch(`/api/questions/${questionId}/hidden-tests`);
+        if (!testsRes.ok) throw new Error('Failed to fetch hidden tests');
+        const hiddenTests: { id: string; input: unknown; expected: unknown }[] = await testsRes.json();
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Hidden judge failed');
+        const pyResults = await pythonRunner.runTests(code, hiddenTests);
+        const passedCount = pyResults.filter((r) => r.passed).length;
+        const total = pyResults.length;
+        const score = total > 0 ? Math.round((passedCount / total) * 100) : 0;
+        const status = passedCount === total ? 'PASSED' : 'FAILED';
 
-      setHiddenSummary({ score: data.score, status: data.status, passedCount: data.passedCount, total: data.total });
+        // Record submission on server
+        await fetch('/api/submissions/judge-hidden', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            questionId,
+            framework: 'python',
+            code,
+            publicResult: { summary, results },
+            clientResults: { passedCount, total, score, runtimeMs: pyResults.reduce((s, r) => s + r.runtimeMs, 0) },
+          }),
+        });
 
-      const ts2 = new Date().toLocaleTimeString('en-US', { hour12: false });
-      setConsoleLog((prev) => [
-        ...prev,
-        `[${ts2}] Judge: ${data.status} | Score: ${data.score}% | ${data.passedCount}/${data.total}`,
-      ]);
+        setHiddenSummary({ score, status, passedCount, total });
+        const ts2 = new Date().toLocaleTimeString('en-US', { hour12: false });
+        setConsoleLog((prev) => [
+          ...prev,
+          `[${ts2}] Judge: ${status} | Score: ${score}% | ${passedCount}/${total}`,
+        ]);
+        toast({
+          title: status === 'PASSED' ? 'All hidden tests passed!' : `Score: ${score}%`,
+          description: `${passedCount}/${total} hidden tests passed`,
+          type: status === 'PASSED' ? 'success' : 'info',
+        });
+      } else {
+        const response = await fetch('/api/submissions/judge-hidden', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ questionId, framework: 'javascript', code, publicResult: { summary, results } }),
+        });
 
-      toast({
-        title: data.status === 'PASSED' ? 'All hidden tests passed!' : `Score: ${data.score}%`,
-        description: `${data.passedCount}/${data.total} hidden tests passed`,
-        type: data.status === 'PASSED' ? 'success' : 'info',
-      });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Hidden judge failed');
+
+        setHiddenSummary({ score: data.score, status: data.status, passedCount: data.passedCount, total: data.total });
+
+        const ts2 = new Date().toLocaleTimeString('en-US', { hour12: false });
+        setConsoleLog((prev) => [
+          ...prev,
+          `[${ts2}] Judge: ${data.status} | Score: ${data.score}% | ${data.passedCount}/${data.total}`,
+        ]);
+
+        toast({
+          title: data.status === 'PASSED' ? 'All hidden tests passed!' : `Score: ${data.score}%`,
+          description: `${data.passedCount}/${data.total} hidden tests passed`,
+          type: data.status === 'PASSED' ? 'success' : 'info',
+        });
+      }
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Unknown error';
       setConsoleLog((prev) => [...prev, `[${ts}] ERROR: ${msg}`]);
@@ -275,7 +343,7 @@ export function EditorWorkspace({
             title="Code"
           ><Code2 size={24} strokeWidth={1.5} /></button>
 
-          <CheatsheetModal type="js" />
+          <CheatsheetModal type={isPython ? 'python' : 'js'} />
         </div>
         <div className="flex flex-col gap-4">
           <button className="w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink [&.active]:bg-brand/15 [&.active]:text-brand" title="Help"><HelpCircle size={24} strokeWidth={1.5} /></button>
@@ -296,14 +364,14 @@ export function EditorWorkspace({
               <div className="flex items-center justify-end gap-3">
                 <button
                   className="inline-flex items-center justify-center gap-2 bg-transparent border border-brand text-brand py-[0.4rem] px-[1.4rem] rounded-md text-[0.75rem] font-bold cursor-pointer transition-all duration-200 hover:bg-brand/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={running}
+                  disabled={running || (isPython && pythonRunner.loading)}
                   onClick={runPublicTests}
                 >
                   <Play size={14} fill="currentColor" /> {running ? 'Running…' : 'Run'}
                 </button>
                 <button
                   className="bg-brand text-white border-none py-[0.4rem] px-[1.5rem] rounded-md text-[0.75rem] font-bold cursor-pointer transition-all duration-200 shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={submitting}
+                  disabled={submitting || (isPython && pythonRunner.loading)}
                   onClick={submitHiddenTests}
                 >
                   <Upload size={14} /> {submitting ? 'Judging…' : 'Submit'}
@@ -383,18 +451,25 @@ export function EditorWorkspace({
             <div className="flex items-center h-full">
               <span className={`font-mono text-[0.75rem] font-bold text-muted h-full flex items-center px-4 bg-transparent border-none border-b-2 border-transparent cursor-pointer transition-colors duration-200 hover:text-ink-secondary [&.active]:text-brand [&.active]:border-brand active`}>
                 <FileCode2 size={16} className="inline-block mr-1" />
-                {language === 'javascript' ? 'Solution.js' : 'Solution.ts'}
+                {isPython ? 'solution.py' : language === 'javascript' ? 'Solution.js' : 'Solution.ts'}
               </span>
+              {isPython && pythonRunner.loading && (
+                <span className="ml-3 text-[0.7rem] text-accent-tertiary animate-pulse">Loading Python runtime…</span>
+              )}
             </div>
             <div className="flex gap-2">
-              <select
-                className="appearance-none bg-surface-raised border border-[#444] text-ink font-mono text-[0.75rem] font-semibold py-[0.35rem] pr-[1.8rem] pl-3 ml-4 rounded-md outline-none cursor-pointer transition-all duration-200 shadow-sm hover:border-brand hover:bg-brand/10 focus:border-brand focus:ring-2 focus:ring-brand/20 bg-no-repeat"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as 'javascript' | 'typescript')}
-              >
-                <option value="javascript">JavaScript</option>
-                <option value="typescript">TypeScript</option>
-              </select>
+              {isPython ? (
+                <span className="font-mono text-[0.7rem] font-semibold text-accent-tertiary bg-accent-tertiary/10 px-3 py-1 rounded-md">Python 3.11</span>
+              ) : (
+                <select
+                  className="appearance-none bg-surface-raised border border-[#444] text-ink font-mono text-[0.75rem] font-semibold py-[0.35rem] pr-[1.8rem] pl-3 ml-4 rounded-md outline-none cursor-pointer transition-all duration-200 shadow-sm hover:border-brand hover:bg-brand/10 focus:border-brand focus:ring-2 focus:ring-brand/20 bg-no-repeat"
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as 'javascript' | 'typescript')}
+                >
+                  <option value="javascript">JavaScript</option>
+                  <option value="typescript">TypeScript</option>
+                </select>
+              )}
             </div>
           </div>
 

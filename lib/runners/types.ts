@@ -1,4 +1,4 @@
-export type RunnerFramework = 'javascript' | 'react';
+export type RunnerFramework = 'javascript' | 'react' | 'python';
 
 export interface RunnerExecutionResult {
   passed: boolean;

@@ -19,7 +19,7 @@ const bodySchema = z.object({
   slug: z.string().min(3),
   title: z.string().min(3),
   prompt: z.string().min(10),
-  type: z.enum(['FUNCTION_JS', 'REACT_APP']),
+  type: z.enum(['FUNCTION_JS', 'REACT_APP', 'FUNCTION_PYTHON']),
   difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
   accessTier: z.enum(['FREE', 'PREMIUM']),
   isPublished: z.boolean().default(false),

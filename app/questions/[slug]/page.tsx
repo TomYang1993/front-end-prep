@@ -68,10 +68,11 @@ export default async function QuestionDetailPage({ params }: PageProps) {
     }
   }
 
-  if (question.type === 'FUNCTION_JS') {
+  if (question.type === 'FUNCTION_JS' || question.type === 'FUNCTION_PYTHON') {
     return (
       <EditorWorkspace
         questionId={question.id}
+        questionType={question.type}
         title={question.title}
         prompt={question.prompt}
         difficulty={question.difficulty}

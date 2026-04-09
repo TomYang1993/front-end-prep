@@ -59,6 +59,7 @@ export function QuestionsFilters() {
         <option value="">Category: All</option>
         <option value="REACT_APP">React UI</option>
         <option value="FUNCTION_JS">JS/TS Logic</option>
+        <option value="FUNCTION_PYTHON">Python</option>
         <option value="concepts">FE Concepts</option>
         <option value="system">System Design</option>
         <option value="performance">Performance</option>

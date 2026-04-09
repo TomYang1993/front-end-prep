@@ -3,17 +3,21 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
-const defaultStarter = `function solve(...args) {
+const defaultStarterJs = `function solve(...args) {
   return null;
 }`;
+
+const defaultStarterPython = `def solve(*args):
+    return None
+`;
 
 export function AdminQuestionForm() {
   const [slug, setSlug] = useState('');
   const [title, setTitle] = useState('');
   const [prompt, setPrompt] = useState('');
   const [tags, setTags] = useState('');
-  const [starterCode, setStarterCode] = useState(defaultStarter);
-  const [type, setType] = useState<'FUNCTION_JS' | 'REACT_APP'>('FUNCTION_JS');
+  const [starterCode, setStarterCode] = useState(defaultStarterJs);
+  const [type, setType] = useState<'FUNCTION_JS' | 'REACT_APP' | 'FUNCTION_PYTHON'>('FUNCTION_JS');
   const [difficulty, setDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('EASY');
   const [accessTier, setAccessTier] = useState<'FREE' | 'PREMIUM'>('FREE');
   const [isPublished, setIsPublished] = useState(true);
@@ -49,9 +53,9 @@ export function AdminQuestionForm() {
           starterCode:
             type === 'REACT_APP'
               ? { react: starterCode }
-              : {
-                  javascript: starterCode
-                },
+              : type === 'FUNCTION_PYTHON'
+                ? { python: starterCode }
+                : { javascript: starterCode },
           testCases: [
             {
               visibility: 'PUBLIC',
@@ -107,9 +111,15 @@ export function AdminQuestionForm() {
       <div className="grid-two">
         <label>
           Type
-          <select value={type} onChange={(event) => setType(event.target.value as 'FUNCTION_JS' | 'REACT_APP')}>
+          <select value={type} onChange={(event) => {
+            const val = event.target.value as 'FUNCTION_JS' | 'REACT_APP' | 'FUNCTION_PYTHON';
+            setType(val);
+            if (val === 'FUNCTION_PYTHON') setStarterCode(defaultStarterPython);
+            else if (val !== 'REACT_APP') setStarterCode(defaultStarterJs);
+          }}>
             <option value="FUNCTION_JS">FUNCTION_JS</option>
             <option value="REACT_APP">REACT_APP</option>
+            <option value="FUNCTION_PYTHON">FUNCTION_PYTHON</option>
           </select>
         </label>
         <label>

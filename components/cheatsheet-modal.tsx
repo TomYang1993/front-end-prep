@@ -3,7 +3,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { BookOpen, X } from 'lucide-react';
 
-type CheatsheetType = 'js' | 'react';
+type CheatsheetType = 'js' | 'react' | 'python';
 
 interface CheatsheetModalProps {
   type?: CheatsheetType;
@@ -227,9 +227,115 @@ const HeavyChart = React.lazy(() => import('./Chart'));
   );
 }
 
+function PythonCheatsheet() {
+  return (
+    <>
+      <section>
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Data Structures</h2>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`# Lists
+nums = [1, 2, 3]
+nums.append(4)          # [1, 2, 3, 4]
+nums.pop()              # removes last
+nums.insert(0, 0)       # insert at index
+
+# Dictionaries
+d = {"a": 1, "b": 2}
+d.get("c", 0)           # default value
+d.keys(), d.values(), d.items()
+
+# Sets
+s = {1, 2, 3}
+s.add(4)
+s.discard(2)            # no error if missing
+s1 & s2                 # intersection
+s1 | s2                 # union
+
+# Deque (double-ended queue)
+from collections import deque
+q = deque([1, 2, 3])
+q.appendleft(0)
+q.popleft()
+
+# DefaultDict
+from collections import defaultdict
+dd = defaultdict(list)
+dd["key"].append("val")`}</code></pre>
+      </section>
+
+      <section>
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Common Patterns</h2>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`# List comprehension
+squares = [x**2 for x in range(10)]
+evens = [x for x in nums if x % 2 == 0]
+
+# Dictionary comprehension
+freq = {ch: s.count(ch) for ch in set(s)}
+
+# Sorting
+sorted(nums)                       # returns new list
+nums.sort(key=lambda x: -x)       # in-place, descending
+sorted(pairs, key=lambda p: p[1]) # sort by second element
+
+# Enumerate & Zip
+for i, val in enumerate(nums):
+    print(i, val)
+
+for a, b in zip(list1, list2):
+    print(a, b)
+
+# Unpacking
+first, *rest = [1, 2, 3, 4]   # first=1, rest=[2,3,4]`}</code></pre>
+      </section>
+
+      <section>
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">String Operations</h2>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`s = "hello world"
+s.split()              # ["hello", "world"]
+" ".join(["a", "b"])   # "a b"
+s.strip()              # remove whitespace
+s.replace("l", "r")    # "herro worrd"
+s[::-1]                # reverse: "dlrow olleh"
+s.startswith("he")     # True
+s.isdigit()            # False
+f"value is {x:.2f}"    # f-string formatting`}</code></pre>
+      </section>
+
+      <section>
+        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Classes & OOP</h2>
+        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`class BankAccount:
+    def __init__(self, owner: str, balance: float = 0):
+        self.owner = owner
+        self.balance = balance
+
+    def deposit(self, amount: float):
+        self.balance += amount
+        return self.balance
+
+    def withdraw(self, amount: float):
+        if amount > self.balance:
+            raise ValueError("Insufficient funds")
+        self.balance -= amount
+        return self.balance
+
+    def __repr__(self):
+        return f"BankAccount({self.owner}, {self.balance})"
+
+# Inheritance
+class SavingsAccount(BankAccount):
+    def __init__(self, owner, balance=0, rate=0.02):
+        super().__init__(owner, balance)
+        self.rate = rate
+
+    def add_interest(self):
+        self.balance *= (1 + self.rate)`}</code></pre>
+      </section>
+    </>
+  );
+}
+
 export function CheatsheetModal({ type = 'js' }: CheatsheetModalProps) {
-  const title = type === 'react' ? 'React Cheatsheet' : 'JavaScript Cheatsheet';
-  const btnTitle = type === 'react' ? 'React Cheatsheet' : 'JS Cheatsheet';
+  const title = type === 'python' ? 'Python Cheatsheet' : type === 'react' ? 'React Cheatsheet' : 'JavaScript Cheatsheet';
+  const btnTitle = type === 'python' ? 'Python Cheatsheet' : type === 'react' ? 'React Cheatsheet' : 'JS Cheatsheet';
 
   return (
     <Dialog.Root>
@@ -252,7 +358,7 @@ export function CheatsheetModal({ type = 'js' }: CheatsheetModalProps) {
           </div>
 
           <div className="grid gap-5 leading-relaxed">
-            {type === 'react' ? <ReactCheatsheet /> : <JSCheatsheet />}
+            {type === 'python' ? <PythonCheatsheet /> : type === 'react' ? <ReactCheatsheet /> : <JSCheatsheet />}
           </div>
         </Dialog.Content>
       </Dialog.Portal>
