@@ -100,17 +100,7 @@ export function ReactEditorWorkspace({
     }).catch(err => console.error('Autosave failed:', err));
   }, [debouncedCodes, questionId]);
 
-  const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [results, setResults] = useState<RunResult[]>([]);
-  const [summary, setSummary] = useState<{ passedCount: number; total: number } | null>(null);
-  const [hiddenSummary, setHiddenSummary] = useState<{
-    score: number;
-    status: string;
-    passedCount: number;
-    total: number;
-  } | null>(null);
-  const [consoleLog, setConsoleLog] = useState<string[]>([]);
 
   const [activeLeftTab, setActiveLeftTab] = useState<LeftTab>('description');
   const [monacoTheme, setMonacoTheme] = useState<'vs-dark' | 'light'>('vs-dark');

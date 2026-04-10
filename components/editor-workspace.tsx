@@ -107,13 +107,6 @@ export function EditorWorkspace({
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState<RunResult[]>([]);
   const [summary, setSummary] = useState<{ passedCount: number; total: number } | null>(null);
-  const [hiddenSummary, setHiddenSummary] = useState<{
-    score: number;
-    status: string;
-    passedCount: number;
-    total: number;
-  } | null>(null);
-  const [consoleLog, setConsoleLog] = useState<string[]>([]);
 
   const [activeLeftTab, setActiveLeftTab] = useState<LeftTab>('description');
   const [monacoTheme, setMonacoTheme] = useState<'vs-dark' | 'light'>('vs-dark');
@@ -187,15 +180,11 @@ export function EditorWorkspace({
 
   async function runPublicTests() {
     setRunning(true);
-    setHiddenSummary(null);
-    const now = new Date().toLocaleTimeString('en-US', { hour12: false });
-    setConsoleLog((prev) => [...prev, `[${now}] # Executing public tests...`]);
 
     try {
       let testResults: RunResult[];
 
       if (isPython) {
-        // Run client-side via Pyodide Web Worker
         const pyResults = await pythonRunner.runTests(code, publicTests);
         testResults = pyResults.map((r) => ({
           id: r.id,
@@ -206,7 +195,6 @@ export function EditorWorkspace({
           logs: r.logs,
         }));
       } else {
-        // Run server-side via isolated-vm
         const response = await fetch('/api/playground/run-public', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -220,26 +208,8 @@ export function EditorWorkspace({
       const passedCount = testResults.filter((r) => r.passed).length;
       setSummary({ passedCount, total: testResults.length });
       setResults(testResults);
-
-      const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
-      const newLogs = [`[${ts}] Passed ${passedCount}/${testResults.length} tests`];
-
-      testResults.forEach((r: RunResult) => {
-        newLogs.push(`[${ts}] Case ${r.id}: ${r.passed ? 'Accepted' : 'Failed'} (${r.runtimeMs}ms)`);
-        if (r.error) {
-          newLogs.push(`> [ERROR] ${r.error}`);
-        }
-        if (r.logs && r.logs.length > 0) {
-          newLogs.push(`> [Console] Case ${r.id}`);
-          newLogs.push(...r.logs);
-        }
-      });
-
-      setConsoleLog((prev) => [...prev, ...newLogs]);
     } catch (error) {
-      const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
       const msg = error instanceof Error ? error.message : 'Unknown error';
-      setConsoleLog((prev) => [...prev, `[${ts}] ERROR: ${msg}`]);
       setResults([{ id: 'runtime-error', passed: false, output: null, runtimeMs: 0, error: msg }]);
       toast({ title: 'Test run failed', description: msg, type: 'error' });
     } finally {
@@ -249,12 +219,9 @@ export function EditorWorkspace({
 
   async function submitHiddenTests() {
     setSubmitting(true);
-    const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
-    setConsoleLog((prev) => [...prev, `[${ts}] # Submitting for hidden judge...`]);
 
     try {
       if (isPython) {
-        // Fetch hidden tests, run client-side, post results
         const testsRes = await fetch(`/api/questions/${questionId}/hidden-tests`);
         if (!testsRes.ok) throw new Error('Failed to fetch hidden tests');
         const hiddenTests: { id: string; input: unknown; expected: unknown }[] = await testsRes.json();
@@ -265,7 +232,6 @@ export function EditorWorkspace({
         const score = total > 0 ? Math.round((passedCount / total) * 100) : 0;
         const status = passedCount === total ? 'PASSED' : 'FAILED';
 
-        // Record submission on server
         await fetch('/api/submissions/judge-hidden', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -278,12 +244,6 @@ export function EditorWorkspace({
           }),
         });
 
-        setHiddenSummary({ score, status, passedCount, total });
-        const ts2 = new Date().toLocaleTimeString('en-US', { hour12: false });
-        setConsoleLog((prev) => [
-          ...prev,
-          `[${ts2}] Judge: ${status} | Score: ${score}% | ${passedCount}/${total}`,
-        ]);
         toast({
           title: status === 'PASSED' ? 'All hidden tests passed!' : `Score: ${score}%`,
           description: `${passedCount}/${total} hidden tests passed`,
@@ -299,14 +259,6 @@ export function EditorWorkspace({
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Hidden judge failed');
 
-        setHiddenSummary({ score: data.score, status: data.status, passedCount: data.passedCount, total: data.total });
-
-        const ts2 = new Date().toLocaleTimeString('en-US', { hour12: false });
-        setConsoleLog((prev) => [
-          ...prev,
-          `[${ts2}] Judge: ${data.status} | Score: ${data.score}% | ${data.passedCount}/${data.total}`,
-        ]);
-
         toast({
           title: data.status === 'PASSED' ? 'All hidden tests passed!' : `Score: ${data.score}%`,
           description: `${data.passedCount}/${data.total} hidden tests passed`,
@@ -315,8 +267,6 @@ export function EditorWorkspace({
       }
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Unknown error';
-      setConsoleLog((prev) => [...prev, `[${ts}] ERROR: ${msg}`]);
-      setHiddenSummary({ score: 0, status: 'ERROR', passedCount: 0, total: 0 });
       toast({ title: 'Submission failed', description: msg, type: 'error' });
     } finally {
       setSubmitting(false);
