@@ -39,15 +39,6 @@ interface ReactEditorWorkspaceProps {
   publicTests: PublicTest[];
 }
 
-interface RunResult {
-  id: string;
-  passed: boolean;
-  output: unknown;
-  runtimeMs: number;
-  error?: string;
-  explanation?: string | null;
-}
-
 type ActiveFile = 'app' | 'styles';
 type LeftTab = 'description' | 'solutions';
 
@@ -165,34 +156,6 @@ export function ReactEditorWorkspace({
     };
   }, []);
 
-  // Listen for test results from Sandpack iframe
-  useEffect(() => {
-    const handleMessage = (e: MessageEvent) => {
-      if (e.data?.type === 'REACT_TEST_RESULTS') {
-        const res = e.data.results as RunResult[];
-        const passedCount = res.filter(r => r.passed).length;
-        setSummary({ passedCount, total: res.length });
-        setResults(res);
-        setRunning(false);
-
-        const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
-        const newLogs = [`[${ts}] Passed ${passedCount}/${res.length} tests`];
-        res.forEach((r) => {
-          newLogs.push(`[${ts}] Case ${r.id}: ${r.passed ? 'Accepted' : 'Failed'}`);
-          if (r.error) newLogs.push(`> [ERROR] ${r.error}`);
-        });
-        setConsoleLog((prev) => [...prev, ...newLogs]);
-
-        toast({
-          title: passedCount === res.length ? 'All public tests passed!' : `Passed ${passedCount}/${res.length} tests`,
-          type: passedCount === res.length ? 'success' : 'info',
-        });
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [toast]);
-
   // Build Sandpack files (test harness + user code + user styles)
   const sandpackFiles = useMemo(() => ({
     '/App.tsx': buildTestHarness(publicTests),
@@ -200,51 +163,17 @@ export function ReactEditorWorkspace({
     '/styles.css': codes.styles,
   }), [codes.app, codes.styles, publicTests]);
 
-  async function runPublicTests() {
-    setRunning(true);
-    setHiddenSummary(null);
-    const now = new Date().toLocaleTimeString('en-US', { hour12: false });
-    setConsoleLog((prev) => [...prev, `[${now}] # Running React tests...`]);
-
-    const iframes = document.querySelectorAll('iframe');
-    iframes.forEach(iframe => {
-      iframe.contentWindow?.postMessage({ type: 'RUN_REACT_TESTS' }, '*');
-    });
-
-    // Timeout fallback
-    setTimeout(() => {
-      setRunning((current) => {
-        if (current) {
-          const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
-          setConsoleLog((prev) => [...prev, `[${ts}] ERROR: Test execution timed out`]);
-          toast({ title: 'Test timed out', description: 'Preview may still be loading', type: 'error' });
-          return false;
-        }
-        return current;
-      });
-    }, 10000);
-  }
-
   async function submitHiddenTests() {
     setSubmitting(true);
-    const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
-    setConsoleLog((prev) => [...prev, `[${ts}] # Submitting for hidden judge...`]);
-
     try {
       const response = await fetch('/api/submissions/judge-hidden', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionId, framework: 'react', code: codes.app, publicResult: { summary, results } }),
+        body: JSON.stringify({ questionId, framework: 'react', code: codes.app }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Hidden judge failed');
 
-      setHiddenSummary({ score: data.score, status: data.status, passedCount: data.passedCount, total: data.total });
-      const ts2 = new Date().toLocaleTimeString('en-US', { hour12: false });
-      setConsoleLog((prev) => [
-        ...prev,
-        `[${ts2}] Judge: ${data.status} | Score: ${data.score}% | ${data.passedCount}/${data.total}`,
-      ]);
       toast({
         title: data.status === 'PASSED' ? 'All hidden tests passed!' : `Score: ${data.score}%`,
         description: `${data.passedCount}/${data.total} hidden tests passed`,
@@ -252,8 +181,6 @@ export function ReactEditorWorkspace({
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Unknown error';
-      setConsoleLog((prev) => [...prev, `[${ts}] ERROR: ${msg}`]);
-      setHiddenSummary({ score: 0, status: 'ERROR', passedCount: 0, total: 0 });
       toast({ title: 'Submission failed', description: msg, type: 'error' });
     } finally {
       setSubmitting(false);
