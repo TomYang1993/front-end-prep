@@ -30,7 +30,7 @@ export function AuthControls({ email }: AuthControlsProps) {
   return (
     <div className="inline-flex items-center gap-2 text-[0.82rem]">
       <span>{email}</span>
-      <button type="button" className="btn btn-secondary" onClick={signOut}>
+      <button type="button" className="px-2.5 py-[0.3rem] rounded-lg border border-line text-ink font-medium transition-all duration-150 hover:bg-bg-subtle hover:border-muted" onClick={signOut}>
         Sign out
       </button>
     </div>

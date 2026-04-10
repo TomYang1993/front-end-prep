@@ -1,152 +1,40 @@
 'use client';
 
 import { useState } from 'react';
-import type { FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/auth/supabase-browser';
 
-type AuthMode = 'login' | 'register' | 'magic';
-
 export function AuthForm() {
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [mode, setMode] = useState<AuthMode>('login');
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
 
   const supabase = createSupabaseBrowserClient();
   const getRedirectUrl = () => `${window.location.origin}/auth/callback?next=/questions`;
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setStatus('');
-    setLoading(true);
-
-    try {
-      if (mode === 'magic') {
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: getRedirectUrl() }
-        });
-        if (error) throw error;
-        setStatus('Check your email for the magic link.');
-      } else if (mode === 'register') {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: getRedirectUrl() }
-        });
-        if (error) throw error;
-        setStatus('Registration successful! Please check your email to confirm your account.');
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        if (error) throw error;
-        router.push('/questions');
-        router.refresh();
-      }
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleGoogleLogin() {
+  async function handleOAuth(provider: 'google' | 'github') {
     setStatus('');
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: getRedirectUrl(),
-        }
+        provider,
+        options: { redirectTo: getRedirectUrl() },
       });
       if (error) throw error;
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'Google login failed');
-      setLoading(false);
-    }
-  }
-
-  async function handleGitHubLogin() {
-    setStatus('');
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: getRedirectUrl(),
-        }
-      });
-      if (error) throw error;
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'GitHub login failed');
+      setStatus(error instanceof Error ? error.message : `${provider} login failed`);
       setLoading(false);
     }
   }
 
   return (
     <div className="feature-panel max-w-[400px] mx-auto w-full">
-      <form onSubmit={handleSubmit} className="form-stack">
-        <h1>
-          {mode === 'login' && 'Sign In'}
-          {mode === 'register' && 'Create Account'}
-          {mode === 'magic' && 'Magic Link Login'}
-        </h1>
-        
-        {mode === 'magic' ? (
-          <p>Use your email magic link to access submission history and premium content without a password.</p>
-        ) : (
-          <p>Sign in to access your submission history and premium content.</p>
-        )}
-
-        <input
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="you@example.com"
-          required
-          className="focus-mode:bg-ink focus-mode:text-surface"
-        />
-
-        {mode !== 'magic' && (
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Password"
-            required
-            minLength={6}
-            className="focus-mode:bg-ink focus-mode:text-surface"
-          />
-        )}
-
-        <button className="btn" disabled={loading} type="submit">
-          {loading ? 'Processing...' : (
-            mode === 'login' ? 'Sign in' : 
-            mode === 'register' ? 'Register' : 
-            'Send magic link'
-          )}
-        </button>
-
-        {status && <p className="text-brand text-[0.88rem] font-medium">{status}</p>}
-      </form>
-
-      <div className="flex items-center my-6">
-        <div className="flex-1 bg-muted h-px opacity-30" />
-        <span className="px-4 text-[0.88rem] text-muted">OR</span>
-        <div className="flex-1 bg-muted h-px opacity-30" />
-      </div>
-
       <div className="form-stack">
-        <button 
-          type="button" 
-          className="btn btn-secondary inline-flex items-center justify-center gap-2.5 [&_svg]:shrink-0" 
-          onClick={handleGoogleLogin} 
+        <h1>Sign In</h1>
+        <p>Sign in to access your submission history and premium content.</p>
+
+        <button
+          type="button"
+          className="btn btn-secondary inline-flex items-center justify-center gap-2.5 [&_svg]:shrink-0"
+          onClick={() => handleOAuth('google')}
           disabled={loading}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -158,10 +46,10 @@ export function AuthForm() {
           Continue with Google
         </button>
 
-        <button 
-          type="button" 
-          className="btn btn-secondary inline-flex items-center justify-center gap-2.5 [&_svg]:shrink-0" 
-          onClick={handleGitHubLogin} 
+        <button
+          type="button"
+          className="btn btn-secondary inline-flex items-center justify-center gap-2.5 [&_svg]:shrink-0"
+          onClick={() => handleOAuth('github')}
           disabled={loading}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -170,27 +58,8 @@ export function AuthForm() {
           Continue with GitHub
         </button>
 
-        {mode === 'login' && (
-          <>
-            <button type="button" className="btn btn-secondary" onClick={() => { setMode('register'); setStatus(''); }} disabled={loading}>
-              Create a new account
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={() => { setMode('magic'); setStatus(''); }} disabled={loading}>
-              Use a Magic Link instead
-            </button>
-          </>
-        )}
-
-        {mode === 'register' && (
-          <button type="button" className="btn btn-secondary" onClick={() => { setMode('login'); setStatus(''); }} disabled={loading}>
-            Already have an account? Sign in
-          </button>
-        )}
-
-        {mode === 'magic' && (
-          <button type="button" className="btn btn-secondary" onClick={() => { setMode('login'); setStatus(''); }} disabled={loading}>
-            Sign in with Password instead
-          </button>
+        {status && (
+          <p className="text-[0.88rem] font-medium text-warn">{status}</p>
         )}
       </div>
     </div>

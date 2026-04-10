@@ -17,6 +17,7 @@ export function QuestionsFilters() {
         const params = new URLSearchParams(searchParams.toString());
         if (query) params.set('query', query);
         else params.delete('query');
+        params.delete('page');
         router.push(`/questions?${params.toString()}`);
       }
     }, 400);
@@ -30,6 +31,7 @@ export function QuestionsFilters() {
     } else {
       params.delete(key);
     }
+    params.delete('page');
     router.push(`/questions?${params.toString()}`);
   }
 

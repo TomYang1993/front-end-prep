@@ -5,10 +5,10 @@ import Link from 'next/link';
 import Editor from '@monaco-editor/react';
 import { useToast } from '@/components/toast-provider';
 import {
-  Code2, Lightbulb, HelpCircle, FileCode2,
-  TerminalSquare, ClipboardList, Play, Upload,
-  ArrowLeft
+  Lightbulb, HelpCircle, FileCode2,
+  Play, Upload, ArrowLeft
 } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { CheatsheetModal } from '@/components/cheatsheet-modal';
 import { usePythonRunner } from '@/hooks/use-python-runner';
@@ -50,9 +50,7 @@ interface RunResult {
   logs?: string[];
 }
 
-type SideTab = 'code' | 'solutions' | 'history';
 type LeftTab = 'description' | 'solutions';
-type BottomTab = 'console' | 'testcases';
 
 export function EditorWorkspace({
   questionId,
@@ -117,9 +115,7 @@ export function EditorWorkspace({
   } | null>(null);
   const [consoleLog, setConsoleLog] = useState<string[]>([]);
 
-  const [activeSideTab, setActiveSideTab] = useState<SideTab>('code');
   const [activeLeftTab, setActiveLeftTab] = useState<LeftTab>('description');
-  const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('console');
   const [monacoTheme, setMonacoTheme] = useState<'vs-dark' | 'light'>('vs-dark');
 
   useEffect(() => {
@@ -334,19 +330,14 @@ export function EditorWorkspace({
       {/* ─── Side Nav ─── */}
       <aside className="w-[64px] bg-black border-r border-line flex flex-col items-center justify-between py-4 z-10">
         <div className="flex flex-col gap-4">
-          <Link href="/questions" className={`w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink [&.active]:bg-brand/15 [&.active]:text-brand mb-4`} title="Back to Questions">
+          <Link href="/questions" className="w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink" title="Back to Questions">
             <ArrowLeft size={24} strokeWidth={1.5} />
           </Link>
-          <button
-            className={`w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink [&.active]:bg-brand/15 [&.active]:text-brand ${activeSideTab === 'code' ? 'active' : ''}`}
-            onClick={() => setActiveSideTab('code')}
-            title="Code"
-          ><Code2 size={24} strokeWidth={1.5} /></button>
-
-          <CheatsheetModal type={isPython ? 'python' : 'js'} />
         </div>
         <div className="flex flex-col gap-4">
-          <button className="w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink [&.active]:bg-brand/15 [&.active]:text-brand" title="Help"><HelpCircle size={24} strokeWidth={1.5} /></button>
+          <CheatsheetModal type={isPython ? 'python' : 'js'} />
+          <ThemeToggle className="w-10 h-10 rounded-md border-none bg-transparent text-muted cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink" />
+          <button className="w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink" title="Help"><HelpCircle size={24} strokeWidth={1.5} /></button>
         </div>
       </aside>
 
@@ -361,22 +352,6 @@ export function EditorWorkspace({
                 <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${diffClass === 'easy' ? 'bg-good-subtle text-good' : diffClass === 'medium' ? 'bg-accent-tertiary/12 text-accent-tertiary' : 'bg-warn-subtle text-warn'}`}>{difficulty}</span>
               </div>
 
-              <div className="flex items-center justify-end gap-3">
-                <button
-                  className="inline-flex items-center justify-center gap-2 bg-transparent border border-brand text-brand py-[0.4rem] px-[1.4rem] rounded-md text-[0.75rem] font-bold cursor-pointer transition-all duration-200 hover:bg-brand/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={running || (isPython && pythonRunner.loading)}
-                  onClick={runPublicTests}
-                >
-                  <Play size={14} fill="currentColor" /> {running ? 'Running…' : 'Run'}
-                </button>
-                <button
-                  className="bg-brand text-white border-none py-[0.4rem] px-[1.5rem] rounded-md text-[0.75rem] font-bold cursor-pointer transition-all duration-200 shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={submitting || (isPython && pythonRunner.loading)}
-                  onClick={submitHiddenTests}
-                >
-                  <Upload size={14} /> {submitting ? 'Judging…' : 'Submit'}
-                </button>
-              </div>
             </div>
             <div className="flex gap-6">
               <button
@@ -457,12 +432,12 @@ export function EditorWorkspace({
                 <span className="ml-3 text-[0.7rem] text-accent-tertiary animate-pulse">Loading Python runtime…</span>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               {isPython ? (
                 <span className="font-mono text-[0.7rem] font-semibold text-accent-tertiary bg-accent-tertiary/10 px-3 py-1 rounded-md">Python 3.11</span>
               ) : (
                 <select
-                  className="appearance-none bg-surface-raised border border-[#444] text-ink font-mono text-[0.75rem] font-semibold py-[0.35rem] pr-[1.8rem] pl-3 ml-4 rounded-md outline-none cursor-pointer transition-all duration-200 shadow-sm hover:border-brand hover:bg-brand/10 focus:border-brand focus:ring-2 focus:ring-brand/20 bg-no-repeat"
+                  className="appearance-none bg-surface-raised border border-[#444] text-ink font-mono text-[0.75rem] font-semibold py-[0.35rem] pr-[1.8rem] pl-3 rounded-md outline-none cursor-pointer transition-all duration-200 shadow-sm hover:border-brand hover:bg-brand/10 focus:border-brand focus:ring-2 focus:ring-brand/20 bg-no-repeat"
                   value={language}
                   onChange={(e) => setLanguage(e.target.value as 'javascript' | 'typescript')}
                 >
@@ -470,6 +445,21 @@ export function EditorWorkspace({
                   <option value="typescript">TypeScript</option>
                 </select>
               )}
+              <span className="mx-1 h-5 w-px bg-line" />
+              <button
+                className="inline-flex items-center gap-1.5 bg-transparent border border-brand text-brand py-[0.3rem] px-[1rem] rounded-md text-[0.7rem] font-bold cursor-pointer transition-all duration-200 hover:bg-brand/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={running || (isPython && pythonRunner.loading)}
+                onClick={runPublicTests}
+              >
+                <Play size={12} fill="currentColor" /> {running ? 'Running…' : 'Run'}
+              </button>
+              <button
+                className="inline-flex items-center gap-1.5 bg-brand text-white border-none py-[0.3rem] px-[1.2rem] rounded-md text-[0.7rem] font-bold cursor-pointer transition-all duration-200 shadow-[0_0_12px_rgba(37,99,235,0.25)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={submitting || (isPython && pythonRunner.loading)}
+                onClick={submitHiddenTests}
+              >
+                <Upload size={12} /> {submitting ? 'Judging…' : 'Submit'}
+              </button>
             </div>
           </div>
 
@@ -492,62 +482,6 @@ export function EditorWorkspace({
             />
           </div>
 
-          <div className="h-[30%] min-h-[150px] bg-surface border-t border-line flex flex-col">
-            <div className="h-10 bg-surface-raised flex px-4">
-              <button
-                className={`px-6 text-[0.75rem] font-bold bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer flex items-center gap-2 [&.active]:text-brand [&.active]:border-brand flex-shrink-0 ${activeBottomTab === 'console' ? 'active' : ''}`}
-                onClick={() => setActiveBottomTab('console')}
-              ><TerminalSquare size={16} className="inline-block mr-1" /> Console</button>
-              <button
-                className={`px-6 text-[0.75rem] font-bold bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer flex items-center gap-2 [&.active]:text-brand [&.active]:border-brand flex-shrink-0 ${activeBottomTab === 'testcases' ? 'active' : ''}`}
-                onClick={() => setActiveBottomTab('testcases')}
-              ><ClipboardList size={16} className="inline-block mr-1" /> Test Cases</button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 bg-surface-raised dark:bg-black focus-mode:bg-black">
-              {activeBottomTab === 'console' ? (
-                <div className="font-mono text-[0.75rem] text-ink flex flex-col gap-1">
-                  {consoleLog.length === 0 ? (
-                    <span className="text-muted">Run or submit to see output here.</span>
-                  ) : (
-                    consoleLog.map((line, i) => (
-                      <div key={i} className={`flex ${line.includes('ERROR') ? 'error' : line.includes('#') ? 'comment' : ''}`}>
-                        {line}
-                      </div>
-                    ))
-                  )}
-
-                  {results.length > 0 && (
-                    <div>
-                      {results.map((r) => (
-                        <div key={r.id} className={`inline-block py-1 px-2 rounded-sm text-[0.75rem] font-bold ${r.passed ? 'pass' : 'fail'}`}>
-                          Case {r.id}: {r.passed ? 'Accepted' : 'Failed'} {r.output !== null ? `(${JSON.stringify(r.output)})` : ''}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {hiddenSummary && (
-                    <div className={`inline-block py-1 px-2 rounded-sm text-[0.75rem] font-bold ${hiddenSummary.status === 'PASSED' ? 'pass' : 'fail'} mt-2`}>
-                      Judge: {hiddenSummary.status} | Score: {hiddenSummary.score}% | {hiddenSummary.passedCount}/{hiddenSummary.total}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {publicTests.map((test, i) => (
-                    <div key={test.id}>
-                      <span className="text-[0.75rem] font-bold text-muted mb-1 block">Case {i + 1}</span>
-                      <div className="bg-surface p-3 rounded-md font-mono text-[0.8rem] text-ink-secondary flex flex-col gap-1">
-                        <span>Input: {JSON.stringify((test.input as { args?: unknown[] })?.args)}</span>
-                        <span>Expected: {JSON.stringify(test.expected)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
         </section>
       </div>
     </div>

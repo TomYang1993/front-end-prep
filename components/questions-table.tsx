@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import clsx from 'clsx';
-import { Check, AlertCircle, Minus, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Award, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface QuestionRow {
   id: string;
@@ -14,13 +14,34 @@ export interface QuestionRow {
   locked: boolean;
   /** 'solved' | 'attempted' | 'unattempted' */
   status: string;
+  /** Number of successful (PASSED) submissions */
+  passedCount: number;
 }
 
 interface QuestionsTableProps {
   questions: QuestionRow[];
+  isLoggedIn: boolean;
+  page: number;
+  totalPages: number;
+  totalFiltered: number;
+  searchParams: Record<string, string>;
 }
 
-export function QuestionsTable({ questions }: QuestionsTableProps) {
+function pageHref(params: Record<string, string>, page: number) {
+  const p = new URLSearchParams(params);
+  if (page > 1) p.set('page', String(page));
+  const qs = p.toString();
+  return `/questions${qs ? `?${qs}` : ''}`;
+}
+
+function getPageNumbers(current: number, total: number): (number | '...')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (current <= 3) return [1, 2, 3, 4, '...', total];
+  if (current >= total - 2) return [1, '...', total - 3, total - 2, total - 1, total];
+  return [1, '...', current - 1, current, current + 1, '...', total];
+}
+
+export function QuestionsTable({ questions, isLoggedIn, page, totalPages, totalFiltered, searchParams }: QuestionsTableProps) {
   return (
     <div className="bg-surface rounded-lg border border-line shadow-sm overflow-hidden flex flex-col">
       <table className="w-full border-collapse text-left">
@@ -36,19 +57,29 @@ export function QuestionsTable({ questions }: QuestionsTableProps) {
           {questions.map((q) => (
             <tr key={q.id} className={clsx("transition-colors duration-200 border-b border-line last:border-b-0 hover:bg-bg-subtle group", q.locked && "opacity-70 grayscale-[30%]")}>
               {/* Status */}
-              <td className="w-[65px] pr-0 align-top py-4 text-center">
-                <div
-                  className={clsx(
-                    "inline-flex items-center justify-center h-6 w-6 rounded-full",
-                    q.status === 'solved' ? 'text-good bg-good-subtle' : q.status === 'attempted' ? 'text-warn bg-warn-subtle' : 'text-line shadow-inner bg-bg-subtle'
-                  )}
-                  title={q.status === 'solved' ? 'Finished' : q.status === 'attempted' ? 'Attempted' : 'Untouched'}
-                  aria-label={q.status === 'solved' ? 'Finished' : q.status === 'attempted' ? 'Attempted' : 'Untouched'}
-                >
-                  {q.status === 'solved' && <Check size={14} strokeWidth={3} />}
-                  {q.status === 'attempted' && <AlertCircle size={14} strokeWidth={2.5} />}
-                  {q.status === 'unattempted' && <Minus size={14} strokeWidth={3} />}
-                </div>
+              <td className="w-[65px] pr-0 py-4 text-center align-middle">
+                {isLoggedIn ? (
+                  <div className="flex items-center justify-center">
+                    {q.status === 'solved' ? (
+                      q.passedCount >= 2 ? (
+                        <div className="inline-flex items-center" title={`Solved ${q.passedCount} times`}>
+                          <Award size={18} strokeWidth={2} className="text-good drop-shadow-[0_0_3px_var(--good-subtle)] -mr-[7px] relative z-10" />
+                          <Award size={18} strokeWidth={2} className="text-good/85 drop-shadow-[0_0_3px_var(--good-subtle)]" />
+                        </div>
+                      ) : (
+                        <span title="Solved">
+                          <Award size={20} strokeWidth={2} className="text-good drop-shadow-[0_0_3px_var(--good-subtle)]" />
+                        </span>
+                      )
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-muted/45" aria-label={q.status === 'attempted' ? 'In progress' : 'Not started'}>
+                        <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" strokeDasharray="1.5 2.75" strokeLinecap="round" />
+                      </svg>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-muted/40 text-sm font-medium">—</span>
+                )}
               </td>
 
               {/* Title + tags + attempts */}
@@ -62,7 +93,7 @@ export function QuestionsTable({ questions }: QuestionsTableProps) {
                     {q.tags.map((tag) => (
                       <span key={tag} className="text-[10px] px-2 py-[2px] bg-surface rounded shadow-sm border border-line text-muted uppercase font-bold tracking-wider">{tag}</span>
                     ))}
-                    <span className="text-[10px] px-2 py-[2px] bg-brand-subtle text-brand rounded shadow-sm border border-brand/20 uppercase font-bold tracking-wider">{q.type === 'REACT_APP' ? 'React' : 'JS'}</span>
+                    <span className="text-[10px] px-2 py-[2px] bg-brand-subtle text-brand rounded shadow-sm border border-brand/20 uppercase font-bold tracking-wider">{q.type === 'REACT_APP' ? 'React' : q.type === 'FUNCTION_PYTHON' ? 'Python' : 'JS'}</span>
                   </div>
                 </div>
               </td>
@@ -93,13 +124,50 @@ export function QuestionsTable({ questions }: QuestionsTableProps) {
 
       <div className="flex items-center justify-between px-5 py-3 border-t border-line bg-bg-subtle/50 mt-auto">
         <span className="text-[0.85rem] text-muted font-medium">
-          Showing {questions.length} question{questions.length !== 1 ? 's' : ''}
+          {totalPages > 1
+            ? `Showing ${(page - 1) * 25 + 1}–${Math.min(page * 25, totalFiltered)} of ${totalFiltered}`
+            : `Showing ${totalFiltered} question${totalFiltered !== 1 ? 's' : ''}`}
         </span>
-        <div className="flex items-center gap-1.5">
-          <button className="h-8 w-8 flex items-center justify-center rounded-md border border-line bg-surface text-ink text-sm font-medium hover:bg-line-soft transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm" disabled><ChevronLeft size={16} /></button>
-          <button className="h-8 min-w-[32px] px-2 flex items-center justify-center rounded-md border border-brand bg-brand text-white shadow-sm text-sm font-semibold transition-colors">1</button>
-          <button className="h-8 w-8 flex items-center justify-center rounded-md border border-line bg-surface text-ink text-sm font-medium hover:bg-line-soft transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm" disabled><ChevronRight size={16} /></button>
-        </div>
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1.5">
+            {page > 1 ? (
+              <Link href={pageHref(searchParams, page - 1)} className="h-8 w-8 flex items-center justify-center rounded-md border border-line bg-surface text-ink text-sm font-medium hover:bg-line-soft transition-colors shadow-sm">
+                <ChevronLeft size={16} />
+              </Link>
+            ) : (
+              <span className="h-8 w-8 flex items-center justify-center rounded-md border border-line bg-surface text-ink text-sm font-medium opacity-40 shadow-sm">
+                <ChevronLeft size={16} />
+              </span>
+            )}
+            {getPageNumbers(page, totalPages).map((p, i) =>
+              p === '...' ? (
+                <span key={`ellipsis-${i}`} className="h-8 min-w-[32px] px-1 flex items-center justify-center text-muted text-sm">…</span>
+              ) : (
+                <Link
+                  key={p}
+                  href={pageHref(searchParams, p)}
+                  className={clsx(
+                    'h-8 min-w-[32px] px-2 flex items-center justify-center rounded-md text-sm font-semibold transition-colors shadow-sm',
+                    p === page
+                      ? 'border border-brand bg-brand text-white'
+                      : 'border border-line bg-surface text-ink hover:bg-line-soft'
+                  )}
+                >
+                  {p}
+                </Link>
+              )
+            )}
+            {page < totalPages ? (
+              <Link href={pageHref(searchParams, page + 1)} className="h-8 w-8 flex items-center justify-center rounded-md border border-line bg-surface text-ink text-sm font-medium hover:bg-line-soft transition-colors shadow-sm">
+                <ChevronRight size={16} />
+              </Link>
+            ) : (
+              <span className="h-8 w-8 flex items-center justify-center rounded-md border border-line bg-surface text-ink text-sm font-medium opacity-40 shadow-sm">
+                <ChevronRight size={16} />
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

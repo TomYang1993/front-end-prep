@@ -9,3 +9,6 @@ prisma/dev.db
 prisma/dev.db-journal
 tsconfig.tsbuildinfo
 backups/
+
+progress.md
+CLAUDE.md

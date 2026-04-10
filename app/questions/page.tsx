@@ -24,18 +24,22 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
   t.summary();
 
   // Build question rows with computed fields
-  const questionRows: QuestionRow[] = allQuestions.map((q) => ({
-    id: q.id,
-    slug: q.slug,
-    title: q.title,
-    description: q.description,
-    difficulty: q.difficulty,
-    type: q.type,
-    accessTier: q.accessTier,
-    tags: q.tags,
-    locked: q.locked,
-    status: submissionStatsByQuestion[q.id] || 'unattempted',
-  }));
+  const questionRows: QuestionRow[] = allQuestions.map((q) => {
+    const stat = submissionStatsByQuestion[q.id];
+    return {
+      id: q.id,
+      slug: q.slug,
+      title: q.title,
+      description: q.description,
+      difficulty: q.difficulty,
+      type: q.type,
+      accessTier: q.accessTier,
+      tags: q.tags,
+      locked: q.locked,
+      status: stat?.status ?? 'unattempted',
+      passedCount: stat?.passedCount ?? 0,
+    };
+  });
 
   // Apply filters from search params
   let filtered = questionRows;
@@ -55,6 +59,19 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
   }
 
   const solvedCount = questionRows.filter((q) => q.status === 'solved').length;
+
+  // Pagination — client-side slicing of filtered results
+  const PAGE_SIZE = 25;
+  const totalFiltered = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
+  const page = Math.max(1, Math.min(parseInt(searchParams.page || '1', 10) || 1, totalPages));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Serialize current search params for pagination links
+  const currentParams: Record<string, string> = {};
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (value && key !== 'page') currentParams[key] = value;
+  }
 
   // Categorise questions by tags for the stats bar
   const categorise = (q: QuestionRow) => {
@@ -77,6 +94,7 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
       <div className="grid gap-5 py-8">
         {/* Stats bar */}
         <QuestionsStatsBar
+          isLoggedIn={!!user}
           totalQuestions={questionRows.length}
           solvedCount={solvedCount}
           js={cats.js}
@@ -93,14 +111,21 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
         </div>
 
         {/* Table */}
-        <QuestionsTable questions={filtered} />
+        <QuestionsTable
+          questions={paginated}
+          isLoggedIn={!!user}
+          page={page}
+          totalPages={totalPages}
+          totalFiltered={totalFiltered}
+          searchParams={currentParams}
+        />
       </div>
     </div>
   );
 }
 
 async function getSubmissionStats(userId?: string) {
-  const stats: Record<string, 'solved' | 'attempted'> = {};
+  const stats: Record<string, { status: 'solved' | 'attempted'; passedCount: number }> = {};
   if (!userId) return stats;
 
   const submissions = await prisma.submission.findMany({
@@ -108,10 +133,12 @@ async function getSubmissionStats(userId?: string) {
     select: { questionId: true, status: true },
   });
   for (const sub of submissions) {
+    if (!stats[sub.questionId]) {
+      stats[sub.questionId] = { status: 'attempted', passedCount: 0 };
+    }
     if (sub.status === 'PASSED') {
-      stats[sub.questionId] = 'solved';
-    } else if (!stats[sub.questionId]) {
-      stats[sub.questionId] = 'attempted';
+      stats[sub.questionId].status = 'solved';
+      stats[sub.questionId].passedCount += 1;
     }
   }
   return stats;

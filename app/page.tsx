@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Atom, Zap, Timer, Microscope, ArrowRight, Youtube, Twitter } from 'lucide-react';
+import { Atom, Zap, Timer, ArrowRight, Youtube, Twitter } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -86,58 +86,6 @@ export default function HomePage() {
           </div>
         </div>
 
-      </section>
-
-      {/* ─── Live Playground ─── */}
-      <section className="py-24 px-8 max-w-[1200px] mx-auto max-w-none bg-bg-subtle border-y border-line-soft focus-mode:bg-[#15140f] w-full">
-        <div className="max-w-[1200px] mx-auto">
-          <div className="flex flex-col md:flex-row justify-between md:items-end mb-10 gap-4">
-            <div>
-              <h2 className="text-[2rem] font-extrabold tracking-tight mb-2">Code in a Live Playground</h2>
-              <p className="text-ink-secondary max-w-[540px] m-0 leading-[1.7] text-[0.95rem] mt-2">
-                No local setup needed. Write your solution in a real editor with syntax highlighting,
-                run it against test cases, and see results instantly — all in your browser.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col md:flex-row rounded-lg overflow-hidden shadow-lg ring-1 ring-line transition-all duration-300 hover:ring-brand/30 hover:shadow-brand/5 hover:-translate-y-1">
-            {/* Editor pane */}
-            <div className="flex-1 bg-surface min-h-[360px]">
-              <div className="flex justify-between items-center py-2 px-5 bg-surface-raised border-b border-line">
-                <span className="text-[0.65rem] uppercase tracking-widest font-mono text-muted">solution.tsx</span>
-                <div className="flex gap-[6px]">
-                  <span className="w-[10px] h-[10px] rounded-full bg-[#ff5f57]" />
-                  <span className="w-[10px] h-[10px] rounded-full bg-[#febc2e]" />
-                  <span className="w-[10px] h-[10px] rounded-full bg-[#28c840]" />
-                </div>
-              </div>
-              <div className="p-6">
-                <pre className="text-[0.85rem] leading-[1.7] text-ink-secondary font-mono">{`function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-
-  useEffect(() => {
-    const timer = setTimeout(
-      () => setDebounced(value),
-      delay
-    );
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-
-  return debounced;
-}`}</pre>
-              </div>
-            </div>
-
-            {/* Preview pane */}
-            <div className="w-full md:w-[260px] min-h-[200px] bg-bg dark:bg-surface flex flex-col items-center justify-center text-center p-8 relative border-t md:border-t-0 md:border-l border-line">
-              <div className="absolute inset-0 bg-good/5 animate-pulse pointer-events-none" />
-              <span className="flex items-center justify-center w-14 h-14 rounded-xl bg-brand-subtle text-brand mb-4 relative z-10"><Microscope size={32} /></span>
-              <h4 className="m-0 mb-1 text-[0.95rem] font-bold relative z-10">Test Results</h4>
-              <p className="text-[0.6rem] font-mono text-good tracking-widest uppercase m-0 relative z-10 mt-1">ALL TESTS PASSING</p>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* ─── Footer ─── */}

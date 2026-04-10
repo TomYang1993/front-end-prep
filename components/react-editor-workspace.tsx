@@ -6,10 +6,10 @@ import Editor from '@monaco-editor/react';
 import { SandpackProvider, SandpackPreview } from '@codesandbox/sandpack-react';
 import { useToast } from '@/components/toast-provider';
 import {
-  Code2, Lightbulb, HelpCircle, FileCode2,
-  TerminalSquare, ClipboardList, Play, Upload,
-  ArrowLeft, Eye, Palette
+  Lightbulb, HelpCircle, FileCode2,
+  Upload, ArrowLeft, Eye, Palette
 } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { CheatsheetModal } from '@/components/cheatsheet-modal';
 
@@ -50,7 +50,6 @@ interface RunResult {
 
 type ActiveFile = 'app' | 'styles';
 type LeftTab = 'description' | 'solutions';
-type BottomTab = 'console' | 'testcases' | 'preview';
 
 const DEFAULT_APP_CODE = `import React from 'react';
 
@@ -114,7 +113,6 @@ export function ReactEditorWorkspace({
   const [consoleLog, setConsoleLog] = useState<string[]>([]);
 
   const [activeLeftTab, setActiveLeftTab] = useState<LeftTab>('description');
-  const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('preview');
   const [monacoTheme, setMonacoTheme] = useState<'vs-dark' | 'light'>('vs-dark');
 
   // Lazy-load solutions
@@ -280,16 +278,14 @@ export function ReactEditorWorkspace({
       {/* ─── Side Nav ─── */}
       <aside className="w-[64px] bg-black border-r border-line flex flex-col items-center justify-between py-4 z-10">
         <div className="flex flex-col gap-4">
-          <Link href="/questions" className={`w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink [&.active]:bg-brand/15 [&.active]:text-brand mb-4`} title="Back to Questions">
+          <Link href="/questions" className="w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink" title="Back to Questions">
             <ArrowLeft size={24} strokeWidth={1.5} />
           </Link>
-          <button className={`w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink [&.active]:bg-brand/15 [&.active]:text-brand active`} title="Code">
-            <Code2 size={24} strokeWidth={1.5} />
-          </button>
-          <CheatsheetModal type="react" />
         </div>
         <div className="flex flex-col gap-4">
-          <button className="w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink [&.active]:bg-brand/15 [&.active]:text-brand" title="Help">
+          <CheatsheetModal type="react" />
+          <ThemeToggle className="w-10 h-10 rounded-md border-none bg-transparent text-muted cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink" />
+          <button className="w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink" title="Help">
             <HelpCircle size={24} strokeWidth={1.5} />
           </button>
         </div>
@@ -304,14 +300,6 @@ export function ReactEditorWorkspace({
               <div className="flex items-center gap-3">
                 <h1 className="text-[1.25rem] font-bold m-0">{title}</h1>
                 <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${diffClass === 'easy' ? 'bg-good-subtle text-good' : diffClass === 'medium' ? 'bg-accent-tertiary/12 text-accent-tertiary' : 'bg-warn-subtle text-warn'}`}>{difficulty}</span>
-              </div>
-              <div className="flex items-center justify-end gap-3">
-                <button className="inline-flex items-center justify-center gap-2 bg-transparent border border-brand text-brand py-[0.4rem] px-[1.4rem] rounded-md text-[0.75rem] font-bold cursor-pointer transition-all duration-200 hover:bg-brand/10 disabled:opacity-50 disabled:cursor-not-allowed" disabled={running} onClick={runPublicTests}>
-                  <Play size={14} fill="currentColor" /> {running ? 'Running…' : 'Run'}
-                </button>
-                <button className="bg-brand text-white border-none py-[0.4rem] px-[1.5rem] rounded-md text-[0.75rem] font-bold cursor-pointer transition-all duration-200 shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed" disabled={submitting} onClick={submitHiddenTests}>
-                  <Upload size={14} /> {submitting ? 'Judging…' : 'Submit'}
-                </button>
               </div>
             </div>
             <div className="flex gap-6">
@@ -378,8 +366,8 @@ export function ReactEditorWorkspace({
           className="w-2 bg-transparent cursor-col-resize z-10 -mx-1 relative shrink-0"
         />
 
-        {/* Right Pane: Editor + Console/Preview */}
-        <section className="flex-1 flex flex-col bg-surface-raised min-w-[400px] dark:bg-black focus-mode:bg-black">
+        {/* Editor Pane */}
+        <section className="flex-1 flex flex-col bg-surface-raised min-w-[300px] dark:bg-black focus-mode:bg-black">
           <div className="h-10 bg-surface border-b border-line flex justify-between items-center px-4">
             <div className="flex items-center h-full">
               <button
@@ -419,80 +407,30 @@ export function ReactEditorWorkspace({
             />
           </div>
 
-          <div className="h-[30%] min-h-[150px] bg-surface border-t border-line flex flex-col">
-            <div className="h-10 bg-surface-raised flex px-4">
-              <button
-                className={`px-6 text-[0.75rem] font-bold bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer flex items-center gap-2 [&.active]:text-brand [&.active]:border-brand flex-shrink-0 ${activeBottomTab === 'console' ? 'active' : ''}`}
-                onClick={() => setActiveBottomTab('console')}
-              ><TerminalSquare size={16} className="inline-block mr-1" /> Console</button>
-              <button
-                className={`px-6 text-[0.75rem] font-bold bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer flex items-center gap-2 [&.active]:text-brand [&.active]:border-brand flex-shrink-0 ${activeBottomTab === 'testcases' ? 'active' : ''}`}
-                onClick={() => setActiveBottomTab('testcases')}
-              ><ClipboardList size={16} className="inline-block mr-1" /> Test Cases</button>
-              <button
-                className={`px-6 text-[0.75rem] font-bold bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer flex items-center gap-2 [&.active]:text-brand [&.active]:border-brand flex-shrink-0 ${activeBottomTab === 'preview' ? 'active' : ''}`}
-                onClick={() => setActiveBottomTab('preview')}
-              ><Eye size={16} className="inline-block mr-1" /> Preview</button>
-            </div>
+        </section>
 
-            <div className="flex-1 overflow-y-auto p-4 bg-surface-raised dark:bg-black focus-mode:bg-black">
-              {/* Console output */}
-              <div className={`h-full ${activeBottomTab === 'console' ? 'block' : 'hidden'}`}>
-                <div className="font-mono text-[0.75rem] text-ink flex flex-col gap-1">
-                  {consoleLog.length === 0 ? (
-                    <span className="text-muted">Run or submit to see output here.</span>
-                  ) : (
-                    consoleLog.map((line, i) => (
-                      <div key={i} className={`flex ${line.includes('ERROR') ? 'error' : line.includes('#') ? 'comment' : ''}`}>
-                        {line}
-                      </div>
-                    ))
-                  )}
-                  {results.length > 0 && (
-                    <div>
-                      {results.map((r) => (
-                        <div key={r.id} className={`inline-block py-1 px-2 rounded-sm text-[0.75rem] font-bold ${r.passed ? 'pass' : 'fail'}`}>
-                          Case {r.id}: {r.passed ? 'Accepted' : 'Failed'}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {hiddenSummary && (
-                    <div className={`inline-block py-1 px-2 rounded-sm text-[0.75rem] font-bold ${hiddenSummary.status === 'PASSED' ? 'pass' : 'fail'} mt-2`}>
-                      Judge: {hiddenSummary.status} | Score: {hiddenSummary.score}% | {hiddenSummary.passedCount}/{hiddenSummary.total}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Test Cases */}
-              <div className={`h-full ${activeBottomTab === 'testcases' ? 'block' : 'hidden'}`}>
-                <div className="flex flex-col gap-4">
-                  {publicTests.map((test, i) => (
-                    <div key={test.id}>
-                      <span className="text-[0.75rem] font-bold text-muted mb-1 block">Case {i + 1}</span>
-                      <div className="bg-surface p-3 rounded-md font-mono text-[0.8rem] text-ink-secondary flex flex-col gap-1">
-                        <span>Expected: {JSON.stringify(test.expected)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Preview — always mounted so Sandpack stays bundled */}
-              <div className={`w-full h-full bg-[#f9fafb] border border-line rounded-sm overflow-hidden dark:bg-white dark:border-none ${activeBottomTab === 'preview' ? 'flex' : 'hidden'}`}>
-                <SandpackProvider
-                  template="react-ts"
-                  files={sandpackFiles}
-                >
-                  <SandpackPreview
-                    style={{ height: '100%', width: '100%' }}
-                    showOpenInCodeSandbox={false}
-                    showRefreshButton={true}
-                  />
-                </SandpackProvider>
-              </div>
-            </div>
+        {/* Preview Column */}
+        <section className="flex-1 flex flex-col border-l border-line min-w-[300px]">
+          <div className="h-10 bg-surface border-b border-line flex items-center justify-between px-4">
+            <span className="text-[0.75rem] font-bold text-muted uppercase tracking-wider flex items-center gap-2">
+              <Eye size={16} /> Preview
+            </span>
+            <button
+              className="inline-flex items-center gap-1.5 bg-brand text-white border-none py-[0.3rem] px-[1.2rem] rounded-md text-[0.7rem] font-bold cursor-pointer transition-all duration-200 shadow-[0_0_12px_rgba(37,99,235,0.25)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={submitting}
+              onClick={submitHiddenTests}
+            >
+              <Upload size={12} /> {submitting ? 'Judging…' : 'Submit'}
+            </button>
+          </div>
+          <div className="flex-1 bg-[#f9fafb] dark:bg-white overflow-hidden">
+            <SandpackProvider template="react-ts" files={sandpackFiles}>
+              <SandpackPreview
+                style={{ height: '100%', width: '100%' }}
+                showOpenInCodeSandbox={false}
+                showRefreshButton={true}
+              />
+            </SandpackProvider>
           </div>
         </section>
       </div>

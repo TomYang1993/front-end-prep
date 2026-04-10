@@ -6,6 +6,7 @@ interface CategoryStat {
 }
 
 interface QuestionsStatsBarProps {
+  isLoggedIn: boolean;
   solvedCount: number;
   totalQuestions: number;
   js: CategoryStat;
@@ -14,16 +15,17 @@ interface QuestionsStatsBarProps {
   concepts: CategoryStat;
 }
 
-function MiniProgress({ solved, total, colorClass }: { solved: number; total: number; colorClass: string }) {
+function MiniProgress({ solved, total, colorClass, muted }: { solved: number; total: number; colorClass: string; muted?: boolean }) {
   const pct = total > 0 ? (solved / total) * 100 : 0;
   return (
     <div className="h-1 w-full bg-bg-subtle rounded-full overflow-hidden mt-1">
-      <div className={`h-full rounded-full transition-all duration-500 ease-in-out ${colorClass}`} style={{ width: `${pct}%` }} />
+      <div className={`h-full rounded-full transition-all duration-500 ease-in-out ${muted ? 'bg-muted/30' : colorClass}`} style={{ width: muted ? '0%' : `${pct}%` }} />
     </div>
   );
 }
 
 export function QuestionsStatsBar({
+  isLoggedIn,
   solvedCount,
   totalQuestions,
   js,
@@ -31,13 +33,15 @@ export function QuestionsStatsBar({
   backend,
   concepts,
 }: QuestionsStatsBarProps) {
+  const dim = !isLoggedIn;
+
   return (
-    <div className="flex flex-wrap items-center gap-4 mb-8">
+    <div className={`flex flex-wrap items-center gap-4 mb-8 ${dim ? 'opacity-40 saturate-0 pointer-events-none select-none' : ''}`}>
       {/* Hero Chip: Streak */}
       <div className="flex items-center bg-surface border border-line-soft rounded-md px-4 py-3 gap-3 shadow-sm min-w-[140px]">
         <Flame size={20} className="text-orange-500 drop-shadow-sm" />
         <div className="flex flex-col">
-          <span className="text-ink font-semibold leading-tight">1 day</span>
+          <span className="text-ink font-semibold leading-tight">{dim ? '—' : '1 day'}</span>
           <span className="text-muted text-[0.8rem] mt-[1px]">Streak</span>
         </div>
       </div>
@@ -47,7 +51,7 @@ export function QuestionsStatsBar({
         <Trophy size={20} className="text-yellow-400 drop-shadow-sm" />
         <div className="flex flex-col">
           <span className="text-ink font-semibold leading-tight">
-            {solvedCount}<span className="text-muted text-[0.85em] font-medium ml-1">/{totalQuestions}</span>
+            {dim ? '—' : <>{solvedCount}<span className="text-muted text-[0.85em] font-medium ml-1">/{totalQuestions}</span></>}
           </span>
           <span className="text-muted text-[0.8rem] mt-[1px]">Solved</span>
         </div>
@@ -56,49 +60,23 @@ export function QuestionsStatsBar({
       <div className="hidden sm:block h-10 w-px bg-line-soft mx-2" />
 
       {/* Category Chips */}
-      <div className="flex flex-col justify-between bg-surface border border-line-soft rounded-md px-3 py-[0.6rem] gap-1.5 shadow-sm min-w-[120px] flex-1 sm:flex-none">
-        <div className="flex items-center gap-1.5 w-full">
-          <Code2 size={14} className="text-yellow-400" />
-          <span className="text-[0.75rem] font-medium text-ink-secondary tracking-wide uppercase">JS</span>
-          <span className="font-semibold text-[0.85rem] text-ink ml-auto">
-            {js.solved}<span className="text-muted text-[0.85em] font-medium ml-[1px]">/{js.total}</span>
-          </span>
+      {[
+        { label: 'JS', icon: Code2, color: 'text-yellow-400', bar: 'bg-yellow-400', stat: js },
+        { label: 'UI', icon: Layout, color: 'text-blue-400', bar: 'bg-blue-400', stat: ui },
+        { label: 'Backend', icon: Server, color: 'text-green-400', bar: 'bg-green-400', stat: backend },
+        { label: 'Concepts', icon: BookOpen, color: 'text-purple-400', bar: 'bg-purple-400', stat: concepts },
+      ].map(({ label, icon: Icon, color, bar, stat }) => (
+        <div key={label} className="flex flex-col justify-between bg-surface border border-line-soft rounded-md px-3 py-[0.6rem] gap-1.5 shadow-sm min-w-[120px] flex-1 sm:flex-none">
+          <div className="flex items-center gap-1.5 w-full">
+            <Icon size={14} className={color} />
+            <span className="text-[0.75rem] font-medium text-ink-secondary tracking-wide uppercase">{label}</span>
+            <span className="font-semibold text-[0.85rem] text-ink ml-auto">
+              {dim ? '—' : <>{stat.solved}<span className="text-muted text-[0.85em] font-medium ml-[1px]">/{stat.total}</span></>}
+            </span>
+          </div>
+          <MiniProgress solved={stat.solved} total={stat.total} colorClass={bar} muted={dim} />
         </div>
-        <MiniProgress solved={js.solved} total={js.total} colorClass="bg-yellow-400" />
-      </div>
-
-      <div className="flex flex-col justify-between bg-surface border border-line-soft rounded-md px-3 py-[0.6rem] gap-1.5 shadow-sm min-w-[120px] flex-1 sm:flex-none">
-        <div className="flex items-center gap-1.5 w-full">
-          <Layout size={14} className="text-blue-400" />
-          <span className="text-[0.75rem] font-medium text-ink-secondary tracking-wide uppercase">UI</span>
-          <span className="font-semibold text-[0.85rem] text-ink ml-auto">
-            {ui.solved}<span className="text-muted text-[0.85em] font-medium ml-[1px]">/{ui.total}</span>
-          </span>
-        </div>
-        <MiniProgress solved={ui.solved} total={ui.total} colorClass="bg-blue-400" />
-      </div>
-
-      <div className="flex flex-col justify-between bg-surface border border-line-soft rounded-md px-3 py-[0.6rem] gap-1.5 shadow-sm min-w-[120px] flex-1 sm:flex-none">
-        <div className="flex items-center gap-1.5 w-full">
-          <Server size={14} className="text-green-400" />
-          <span className="text-[0.75rem] font-medium text-ink-secondary tracking-wide uppercase">Backend</span>
-          <span className="font-semibold text-[0.85rem] text-ink ml-auto">
-            {backend.solved}<span className="text-muted text-[0.85em] font-medium ml-[1px]">/{backend.total}</span>
-          </span>
-        </div>
-        <MiniProgress solved={backend.solved} total={backend.total} colorClass="bg-green-400" />
-      </div>
-
-      <div className="flex flex-col justify-between bg-surface border border-line-soft rounded-md px-3 py-[0.6rem] gap-1.5 shadow-sm min-w-[120px] flex-1 sm:flex-none">
-        <div className="flex items-center gap-1.5 w-full">
-          <BookOpen size={14} className="text-purple-400" />
-          <span className="text-[0.75rem] font-medium text-ink-secondary tracking-wide uppercase">Concepts</span>
-          <span className="font-semibold text-[0.85rem] text-ink ml-auto">
-            {concepts.solved}<span className="text-muted text-[0.85em] font-medium ml-[1px]">/{concepts.total}</span>
-          </span>
-        </div>
-        <MiniProgress solved={concepts.solved} total={concepts.total} colorClass="bg-purple-400" />
-      </div>
+      ))}
     </div>
   );
 }

@@ -29,7 +29,7 @@ function getSystemTheme(): Theme {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string } = {}) {
   const [theme, setTheme] = useState<Theme>('dark'); // Matches initial server render
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export function ThemeToggle() {
 
   return (
     <button
-      className="w-8 h-8 inline-grid place-items-center border border-line rounded-lg bg-surface text-muted cursor-pointer transition-all duration-200 text-base hover:bg-bg-subtle hover:text-brand hover:border-brand hover:rotate-[15deg]"
+      className={className || "w-8 h-8 inline-grid place-items-center border border-line rounded-lg bg-surface text-muted cursor-pointer transition-all duration-200 text-base hover:bg-bg-subtle hover:text-brand hover:border-brand hover:rotate-[15deg]"}
       type="button"
       onClick={cycle}
       aria-label={`Switch to ${THEME_LABELS[nextTheme]} mode`}
