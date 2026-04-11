@@ -18,7 +18,7 @@ export default function HomePage() {
           <p className="text-ink-secondary max-w-[580px] mx-auto mb-11 text-[1.08rem] leading-[1.75]">
             Sharpen your fullstack skills with hands-on challenges.
             Questions are updated regularly to keep up with current trends in the job market.
-            Completely free — and if you&apos;re feeling generous, <a href="#" className="text-brand underline underline-offset-2 font-semibold hover:text-brand-hover transition-colors">buy me a coffee</a>!
+            Completely free — and if you&apos;re feeling generous, <Link href="/coffee" className="text-brand underline underline-offset-2 font-semibold hover:text-brand-hover transition-colors">buy me a coffee</Link>!
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
@@ -67,7 +67,7 @@ export default function HomePage() {
 
           {/* Supported languages — wide */}
           <div className="bg-surface border border-line rounded-xl p-8 relative overflow-hidden md:col-span-8 transition-all duration-300 hover:border-brand/30 hover:shadow-md group flex items-center justify-evenly flex-wrap">
-            <h3 className="w-full text-center text-[0.78rem] font-semibold text-muted mb-3 tracking-wide">Supported Languages and Frameworks for Now</h3>
+            <h3 className="w-full text-center text-[1rem] font-semibold text-muted mb-3 tracking-wide">Supported Languages and Frameworks for Now</h3>
             <div className="text-center flex-1">
               <span className="block text-[1.3rem] font-extrabold tracking-tight bg-gradient-to-br from-ink to-muted bg-clip-text text-transparent">JavaScript</span>
             </div>
@@ -98,7 +98,6 @@ export default function HomePage() {
           <div className="flex flex-col gap-2">
             <h5 className="text-[0.65rem] font-bold uppercase tracking-widest text-ink-secondary m-0 mb-1">Platform</h5>
             <Link href="/questions" className="text-[0.8rem] text-muted transition-colors hover:text-brand">Questions</Link>
-            <Link href="/discuss" className="text-[0.8rem] text-muted transition-colors hover:text-brand">Discussions</Link>
           </div>
           <div className="flex flex-col gap-2">
             <h5 className="text-[0.65rem] font-bold uppercase tracking-widest text-ink-secondary m-0 mb-1">Legal</h5>
@@ -106,7 +105,7 @@ export default function HomePage() {
             <Link href="/privacy" className="text-[0.8rem] text-muted transition-colors hover:text-brand">Privacy Policy</Link>
           </div>
           <div className="flex flex-col gap-2">
-            <h5 className="text-[0.65rem] font-bold uppercase tracking-widest text-ink-secondary m-0 mb-1">Connect</h5>
+            <h5 className="text-[0.65rem] font-bold uppercase tracking-widest text-ink-secondary m-0 mb-1">Connect(In Planning)</h5>
             <div className="flex gap-2">
               <span className="flex items-center justify-center w-8 h-8 rounded-sm bg-surface border border-line text-muted cursor-pointer transition-all hover:text-brand hover:border-brand hover:bg-brand-subtle"><Youtube size={18} /></span>
               <span className="flex items-center justify-center w-8 h-8 rounded-sm bg-surface border border-line text-muted cursor-pointer transition-all hover:text-brand hover:border-brand hover:bg-brand-subtle"><Twitter size={18} /></span>

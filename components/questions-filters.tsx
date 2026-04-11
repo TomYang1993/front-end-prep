@@ -2,7 +2,10 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
+
+const selectClass =
+  'appearance-none bg-surface-raised border border-line text-ink text-xs font-semibold py-[0.35rem] pr-7 pl-3 rounded-md outline-none cursor-pointer transition-all duration-200 shadow-sm hover:border-brand hover:bg-brand/10 focus:border-brand focus:ring-2 focus:ring-brand/20';
 
 export function QuestionsFilters() {
   const searchParams = useSearchParams();
@@ -53,41 +56,50 @@ export function QuestionsFilters() {
       <span className="flex items-center text-muted"><SlidersHorizontal size={18} /></span>
 
       {/* Dropdowns */}
-      <select
-        className="ide-lang-select px-[0.8rem] py-[0.5rem] rounded-sm border border-line bg-surface text-ink text-[0.85rem] outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand"
-        value={searchParams.get('type') || ''}
-        onChange={(e) => updateParam('type', e.target.value)}
-      >
-        <option value="">Category: All</option>
-        <option value="REACT_APP">React UI</option>
-        <option value="FUNCTION_JS">JS/TS Logic</option>
-        <option value="FUNCTION_PYTHON">Python</option>
-        <option value="concepts">FE Concepts</option>
-        <option value="system">System Design</option>
-        <option value="performance">Performance</option>
-      </select>
+      <div className="relative">
+        <select
+          className={selectClass}
+          value={searchParams.get('type') || ''}
+          onChange={(e) => updateParam('type', e.target.value)}
+        >
+          <option value="">Category: All</option>
+          <option value="REACT_APP">React UI</option>
+          <option value="FUNCTION_JS">JS/TS Logic</option>
+          <option value="FUNCTION_PYTHON">Python</option>
+          <option value="concepts">FE Concepts</option>
+          <option value="system">System Design</option>
+          <option value="performance">Performance</option>
+        </select>
+        <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted" />
+      </div>
 
-      <select
-        className="ide-lang-select px-[0.8rem] py-[0.5rem] rounded-sm border border-line bg-surface text-ink text-[0.85rem] outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand"
-        value={searchParams.get('difficulty') || ''}
-        onChange={(e) => updateParam('difficulty', e.target.value)}
-      >
-        <option value="">Difficulty: All</option>
-        <option value="EASY">Easy</option>
-        <option value="MEDIUM">Medium</option>
-        <option value="HARD">Hard</option>
-      </select>
+      <div className="relative">
+        <select
+          className={selectClass}
+          value={searchParams.get('difficulty') || ''}
+          onChange={(e) => updateParam('difficulty', e.target.value)}
+        >
+          <option value="">Difficulty: All</option>
+          <option value="EASY">Easy</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="HARD">Hard</option>
+        </select>
+        <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted" />
+      </div>
 
-      <select
-        className="ide-lang-select px-[0.8rem] py-[0.5rem] rounded-sm border border-line bg-surface text-ink text-[0.85rem] outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand"
-        value={searchParams.get('status') || ''}
-        onChange={(e) => updateParam('status', e.target.value)}
-      >
-        <option value="">Status: All</option>
-        <option value="solved">Completed</option>
-        <option value="attempted">Attempted</option>
-        <option value="unattempted">Not Started</option>
-      </select>
+      <div className="relative">
+        <select
+          className={selectClass}
+          value={searchParams.get('status') || ''}
+          onChange={(e) => updateParam('status', e.target.value)}
+        >
+          <option value="">Status: All</option>
+          <option value="solved">Completed</option>
+          <option value="attempted">Attempted</option>
+          <option value="unattempted">Not Started</option>
+        </select>
+        <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted" />
+      </div>
     </div>
   );
 }

@@ -6,7 +6,7 @@ import Editor from '@monaco-editor/react';
 import { useToast } from '@/components/toast-provider';
 import {
   Lightbulb, HelpCircle, FileCode2,
-  Play, Upload, ArrowLeft
+  Play, Upload, ArrowLeft, ChevronDown
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useDebounce } from '@/lib/hooks/use-debounce';
@@ -386,14 +386,17 @@ export function EditorWorkspace({
               {isPython ? (
                 <span className="font-mono text-[0.7rem] font-semibold text-accent-tertiary bg-accent-tertiary/10 px-3 py-1 rounded-md">Python 3.11</span>
               ) : (
-                <select
-                  className="appearance-none bg-surface-raised border border-[#444] text-ink font-mono text-[0.75rem] font-semibold py-[0.35rem] pr-[1.8rem] pl-3 rounded-md outline-none cursor-pointer transition-all duration-200 shadow-sm hover:border-brand hover:bg-brand/10 focus:border-brand focus:ring-2 focus:ring-brand/20 bg-no-repeat"
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value as 'javascript' | 'typescript')}
-                >
-                  <option value="javascript">JavaScript</option>
-                  <option value="typescript">TypeScript</option>
-                </select>
+                <div className="relative">
+                  <select
+                    className="appearance-none bg-surface-raised border border-line text-ink font-mono text-xs font-semibold py-[0.35rem] pr-7 pl-3 rounded-md outline-none cursor-pointer transition-all duration-200 shadow-sm hover:border-brand hover:bg-brand/10 focus:border-brand focus:ring-2 focus:ring-brand/20"
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value as 'javascript' | 'typescript')}
+                  >
+                    <option value="javascript">JavaScript</option>
+                    <option value="typescript">TypeScript</option>
+                  </select>
+                  <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted" />
+                </div>
               )}
               <span className="mx-1 h-5 w-px bg-line" />
               <button

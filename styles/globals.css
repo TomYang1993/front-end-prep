@@ -1635,35 +1635,7 @@ code {
   border-bottom-color: var(--brand);
 }
 
-.ide-lang-select {
-  appearance: none;
-  background: var(--surface-raised);
-  border: 1px solid var(--line-strong, #444);
-  color: var(--ink);
-  font-family: var(--font-mono), monospace;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.35rem 1.8rem 0.35rem 0.75rem;
-  margin-left: 1rem;
-  border-radius: var(--radius-md);
-  outline: none;
-  cursor: pointer;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%23888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>');
-  background-repeat: no-repeat;
-  background-position: right 0.5rem center;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
 
-.ide-lang-select:hover {
-  border-color: var(--brand);
-  background: color-mix(in srgb, var(--brand) 10%, var(--surface-raised));
-}
-
-.ide-lang-select:focus {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 20%, transparent);
-}
 
 .ide-editor-actions {
   display: flex;
