@@ -22,6 +22,8 @@
   --color-warn-subtle: var(--warn-subtle);
   --color-good: var(--good);
   --color-good-subtle: var(--good-subtle);
+  --color-caution: var(--caution);
+  --color-caution-subtle: var(--caution-subtle);
 
   --color-overlay: var(--overlay);
   --color-accent-secondary: var(--accent-secondary);
@@ -50,6 +52,8 @@
   --warn-subtle: #fef2f2;
   --good: #16a34a;
   --good-subtle: #f0fdf4;
+  --caution: #b45309;
+  --caution-subtle: #fffbeb;
   --accent-secondary: #7c3aed;
   --accent-tertiary: #0891b2;
   --overlay: rgba(15, 20, 25, 0.45);
@@ -84,6 +88,8 @@
   --warn-subtle: rgba(248, 113, 113, 0.1);
   --good: #4ade80;
   --good-subtle: rgba(74, 222, 128, 0.1);
+  --caution: #fbbf24;
+  --caution-subtle: rgba(251, 191, 36, 0.12);
   --overlay: rgba(0, 0, 0, 0.65);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.15);
@@ -609,6 +615,8 @@ code {
   --warn-subtle: rgba(201, 122, 107, 0.12);
   --good: #8ab87a;
   --good-subtle: rgba(138, 184, 122, 0.1);
+  --caution: #c27a40;
+  --caution-subtle: rgba(194, 122, 64, 0.14);
   --accent-secondary: #b0956e;
   --accent-tertiary: #9a8e6e;
   --overlay: rgba(10, 10, 8, 0.75);

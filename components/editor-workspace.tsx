@@ -6,12 +6,15 @@ import Editor from '@monaco-editor/react';
 import { useToast } from '@/components/toast-provider';
 import {
   Lightbulb, HelpCircle, FileCode2,
-  Play, Upload, ArrowLeft, ChevronDown
+  Play, Upload, ArrowLeft, ChevronDown, Terminal, X, ChevronUp
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { CheatsheetModal } from '@/components/cheatsheet-modal';
 import { usePythonRunner } from '@/hooks/use-python-runner';
+import { MarkdownProse } from '@/components/markdown-prose';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface PublicTest {
   id: string;
@@ -107,6 +110,16 @@ export function EditorWorkspace({
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState<RunResult[]>([]);
   const [summary, setSummary] = useState<{ passedCount: number; total: number } | null>(null);
+  const [consoleHeight, setConsoleHeight] = useState(280);
+  const consoleHeightRef = useRef(280);
+  const lastOpenConsoleHeightRef = useRef(280);
+  const consoleDragStart = useRef<{ y: number; h: number } | null>(null);
+  const COLLAPSED_CONSOLE_HEIGHT = 46;
+  const isConsoleCollapsed = consoleHeight < 80;
+
+  useEffect(() => {
+    consoleHeightRef.current = consoleHeight;
+  }, [consoleHeight]);
 
   const [activeLeftTab, setActiveLeftTab] = useState<LeftTab>('description');
   const [monacoTheme, setMonacoTheme] = useState<'vs-dark' | 'light'>('vs-dark');
@@ -128,15 +141,31 @@ export function EditorWorkspace({
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging.current) return;
-      const newWidth = Math.max(300, Math.min(e.clientX - 65, window.innerWidth * 0.7));
-      setLeftWidth(newWidth);
+      if (isDragging.current) {
+        const newWidth = Math.max(300, Math.min(e.clientX - 65, window.innerWidth * 0.7));
+        setLeftWidth(newWidth);
+      }
+      if (consoleDragStart.current) {
+        const delta = consoleDragStart.current.y - e.clientY;
+        const next = Math.max(
+          COLLAPSED_CONSOLE_HEIGHT,
+          Math.min(consoleDragStart.current.h + delta, window.innerHeight * 0.8)
+        );
+        setConsoleHeight(next);
+      }
     };
 
     const handleMouseUp = () => {
       if (isDragging.current) {
         isDragging.current = false;
         document.body.style.cursor = '';
+      }
+      if (consoleDragStart.current) {
+        consoleDragStart.current = null;
+        document.body.style.cursor = '';
+        if (consoleHeightRef.current >= 80) {
+          lastOpenConsoleHeightRef.current = consoleHeightRef.current;
+        }
       }
     };
 
@@ -151,6 +180,26 @@ export function EditorWorkspace({
   const handleMouseDown = () => {
     isDragging.current = true;
     document.body.style.cursor = 'col-resize';
+  };
+
+  const handleConsoleMouseDown = (e: React.MouseEvent) => {
+    consoleDragStart.current = { y: e.clientY, h: consoleHeight };
+    document.body.style.cursor = 'row-resize';
+  };
+
+  const toggleConsole = () => {
+    if (isConsoleCollapsed) {
+      setConsoleHeight(lastOpenConsoleHeightRef.current || 280);
+    } else {
+      lastOpenConsoleHeightRef.current = consoleHeight;
+      setConsoleHeight(COLLAPSED_CONSOLE_HEIGHT);
+    }
+  };
+
+  const ensureConsoleOpen = () => {
+    if (consoleHeightRef.current < 80) {
+      setConsoleHeight(lastOpenConsoleHeightRef.current || 280);
+    }
   };
 
   useEffect(() => {
@@ -180,6 +229,7 @@ export function EditorWorkspace({
 
   async function runPublicTests() {
     setRunning(true);
+    ensureConsoleOpen();
 
     try {
       let testResults: RunResult[];
@@ -219,6 +269,7 @@ export function EditorWorkspace({
 
   async function submitHiddenTests() {
     setSubmitting(true);
+    ensureConsoleOpen();
 
     try {
       if (isPython) {
@@ -299,7 +350,7 @@ export function EditorWorkspace({
             <div className={`flex items-center gap-4 mb-4 flex items-center justify-between w-full`}>
               <div className="flex items-center gap-3">
                 <h1 className="text-[1.25rem] font-bold m-0">{title}</h1>
-                <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${diffClass === 'easy' ? 'bg-good-subtle text-good' : diffClass === 'medium' ? 'bg-accent-tertiary/12 text-accent-tertiary' : 'bg-warn-subtle text-warn'}`}>{difficulty}</span>
+                <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${diffClass === 'easy' ? 'bg-good-subtle text-good' : diffClass === 'medium' ? 'bg-caution-subtle text-caution' : 'bg-warn-subtle text-warn'}`}>{difficulty}</span>
               </div>
 
             </div>
@@ -325,21 +376,53 @@ export function EditorWorkspace({
                 </div>
 
                 <div className="text-[0.95rem] leading-[1.6] text-ink mb-8">
-                  <p>{prompt}</p>
+                  <MarkdownProse>{prompt}</MarkdownProse>
                 </div>
 
-                {publicTests.map((test, i) => (
+                {publicTests.map((test, i) => {
+                  const inp = test.input as {
+                    args?: unknown[];
+                    setup?: string;
+                    assertions?: { expr: string; desc: string }[];
+                  } | null;
+                  const isAssertionTest = Array.isArray(inp?.assertions);
+                  return (
                   <div key={test.id} className="mb-6">
                     <h3 className="text-[0.75rem] uppercase tracking-[0.1em] font-bold text-muted m-0 mb-2">Example {i + 1}:</h3>
-                    <div className="bg-surface-raised border-l-[3px] border-brand p-4 rounded-r-md font-mono text-[0.85rem] text-ink-secondary flex flex-col gap-2">
-                      <div><span className="text-muted">Input:</span> {JSON.stringify((test.input as { args?: unknown[] })?.args)}</div>
-                      <div><span className="text-muted">Output:</span> {JSON.stringify(test.expected)}</div>
+                    <div className="bg-surface-raised border-l-[3px] border-brand p-4 rounded-r-md font-mono text-[0.85rem] text-ink-secondary flex flex-col gap-3">
+                      {isAssertionTest ? (
+                        <>
+                          {inp?.setup && (
+                            <div>
+                              <span className="text-muted text-[0.7rem] uppercase tracking-wider block mb-1">Setup</span>
+                              <pre className="m-0 whitespace-pre-wrap break-words text-ink">{inp.setup}</pre>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-muted text-[0.7rem] uppercase tracking-wider block mb-1">Expects</span>
+                            <ul className="list-none pl-0 m-0 space-y-1">
+                              {inp!.assertions!.map((a, idx) => (
+                                <li key={idx} className="flex items-start gap-2">
+                                  <span className="text-muted shrink-0 mt-[1px]">•</span>
+                                  <span className="text-ink">{a.desc}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div><span className="text-muted">Input:</span> {JSON.stringify(inp?.args)}</div>
+                          <div><span className="text-muted">Output:</span> {JSON.stringify(test.expected)}</div>
+                        </>
+                      )}
                       {test.explanation && (
-                        <div>{test.explanation}</div>
+                        <div className="text-muted text-[0.8rem]">{test.explanation}</div>
                       )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </>
             ) : (
               <div className="flex flex-col gap-6">
@@ -354,8 +437,16 @@ export function EditorWorkspace({
                         <span>{sol.language}</span>
                         {sol.complexity && <span>{sol.complexity}</span>}
                       </div>
-                      <p>{sol.explanation}</p>
-                      <pre className="bg-surface p-4 rounded-md overflow-x-auto font-mono text-[0.8rem] text-ink-secondary mt-4 dark:bg-black"><code>{sol.code}</code></pre>
+                      <MarkdownProse className="text-[0.9rem]">{sol.explanation}</MarkdownProse>
+                      <div className="mt-4 rounded-md overflow-hidden">
+                        <SyntaxHighlighter
+                          style={oneDark}
+                          language={sol.language === 'typescript' ? 'typescript' : 'javascript'}
+                          customStyle={{ margin: 0, borderRadius: '0.375rem', fontSize: '0.82rem', lineHeight: '1.6' }}
+                        >
+                          {sol.code}
+                        </SyntaxHighlighter>
+                      </div>
                     </article>
                   ))
                 )}
@@ -372,7 +463,7 @@ export function EditorWorkspace({
 
         {/* Right Pane: Editor + Console */}
         <section className="flex-1 flex flex-col bg-surface-raised min-w-[400px] dark:bg-black focus-mode:bg-black">
-          <div className="h-10 bg-surface border-b border-line flex justify-between items-center px-4">
+          <div className="h-10 bg-surface border-b border-line flex justify-between items-center px-4 shrink-0">
             <div className="flex items-center h-full">
               <span className={`font-mono text-[0.75rem] font-bold text-muted h-full flex items-center px-4 bg-transparent border-none border-b-2 border-transparent cursor-pointer transition-colors duration-200 hover:text-ink-secondary [&.active]:text-brand [&.active]:border-brand active`}>
                 <FileCode2 size={16} className="inline-block mr-1" />
@@ -416,23 +507,165 @@ export function EditorWorkspace({
             </div>
           </div>
 
-          <div className="flex-1 relative min-h-[200px]">
-            <Editor
-              height="100%"
-              language={language}
-              theme={monacoTheme}
-              value={code}
-              onChange={(value) => setCode(value || '')}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 13,
-                padding: { top: 12 },
-                lineNumbersMinChars: 3,
-                scrollBeyondLastLine: false,
-                renderLineHighlight: 'gutter',
-                fontFamily: 'var(--font-mono), JetBrains Mono, monospace',
-              }}
-            />
+          <div className="flex-1 relative flex flex-col min-h-0">
+            <div className="relative flex-1 min-h-0">
+              <Editor
+                height="100%"
+                language={language}
+                theme={monacoTheme}
+                value={code}
+                onChange={(value) => setCode(value || '')}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 13,
+                  padding: { top: 12, bottom: 0 },
+                  lineNumbersMinChars: 3,
+                  scrollBeyondLastLine: false,
+                  renderLineHighlight: 'gutter',
+                  fontFamily: 'var(--font-mono), JetBrains Mono, monospace',
+                }}
+              />
+            </div>
+
+            {/* Console: resizable drawer with draggable top border */}
+            <div className="bg-surface flex flex-col shrink-0" style={{ height: consoleHeight }}>
+              <div
+                onMouseDown={handleConsoleMouseDown}
+                className="h-1.5 shrink-0 bg-line hover:bg-brand/50 cursor-row-resize transition-colors"
+                title="Drag to resize console"
+              />
+              <div
+                className="h-10 flex items-center justify-between px-4 cursor-pointer hover:bg-bg-subtle/50 transition-colors shrink-0"
+                onClick={toggleConsole}
+              >
+                <div className="flex items-center gap-2 text-muted font-bold tracking-wider text-[0.7rem] uppercase">
+                  <Terminal size={14} /> Console
+                  {results.length > 0 && isConsoleCollapsed && (
+                    <span className={`ml-2 px-1.5 py-0.5 rounded-sm text-[0.6rem] ${summary?.passedCount === summary?.total ? 'bg-good-subtle text-good' : 'bg-warn-subtle text-warn'}`}>
+                      {summary?.passedCount}/{summary?.total}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-muted">
+                   <span className="p-1 hover:bg-line rounded-md transition-colors">
+                     {isConsoleCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                   </span>
+                </div>
+              </div>
+
+              {!isConsoleCollapsed && (
+                <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 bg-bg">
+                  {running ? (
+                    <div className="flex items-center justify-center h-full text-muted text-sm font-mono animate-pulse">Running tests...</div>
+                  ) : results.length > 0 ? (
+                    <>
+                      {summary && (
+                        <div className={`text-sm font-bold flex items-center gap-2 border-b border-line pb-4 ${summary.passedCount === summary.total ? 'text-good' : 'text-warn'}`}>
+                          <span className={`w-2 h-2 rounded-full ${summary.passedCount === summary.total ? 'bg-good' : 'bg-warn'}`}></span>
+                          {summary.passedCount} / {summary.total} Tests Passed
+                        </div>
+                      )}
+                      {results.map((r, i) => {
+                        const testInput = publicTests[i]?.input as {
+                          args?: unknown[];
+                          setup?: string;
+                          assertions?: { expr: string; desc: string }[];
+                        } | undefined;
+                        const isAssertionResult = Array.isArray(testInput?.assertions);
+                        const assertionOutputs = Array.isArray(r.output)
+                          ? (r.output as { desc: string; passed: boolean; error?: string }[])
+                          : null;
+                        return (
+                        <div key={r.id || i} className="bg-surface-raised border border-line rounded-md p-4 text-sm font-mono shadow-sm">
+                          <div className={`font-bold mb-3 flex items-center gap-2 ${r.passed ? 'text-good' : 'text-warn'}`}>
+                             {r.passed ? (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                             ) : (
+                                <X size={14} strokeWidth={3} />
+                             )}
+                             Test {i + 1}
+                             <span className="text-muted font-normal text-xs ml-auto bg-surface px-1.5 py-0.5 rounded border border-line">{Math.round(r.runtimeMs)}ms</span>
+                          </div>
+                          <div className="space-y-3">
+                            {isAssertionResult && assertionOutputs ? (
+                              <>
+                                {testInput?.setup && (
+                                  <div>
+                                    <span className="text-muted text-xs block mb-1">Setup:</span>
+                                    <pre className="m-0 text-ink text-[13px] bg-surface px-3 py-2 rounded border border-line whitespace-pre-wrap break-words">{testInput.setup}</pre>
+                                  </div>
+                                )}
+                                <ul className="list-none pl-0 m-0 space-y-1">
+                                  {assertionOutputs.map((a, idx) => (
+                                    <li key={idx} className="flex items-start gap-2 text-[13px]">
+                                      {a.passed ? (
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-good shrink-0 mt-[3px]"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                      ) : (
+                                        <X size={12} strokeWidth={3} className="text-warn shrink-0 mt-[3px]" />
+                                      )}
+                                      <span className={a.passed ? 'text-ink-secondary' : 'text-ink'}>
+                                        {a.desc}
+                                        {a.error && <span className="text-warn ml-2">— {a.error}</span>}
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </>
+                            ) : (
+                              <>
+                            {!r.passed && publicTests[i] && (
+                              <div>
+                                <span className="text-muted text-xs block mb-1">Input:</span>
+                                <div className="text-ink text-[13px] bg-surface px-3 py-2 rounded border border-line break-all">
+                                  {JSON.stringify(testInput?.args || testInput)}
+                                </div>
+                              </div>
+                            )}
+                            {!r.passed && publicTests[i] && (
+                             <div>
+                                <span className="text-muted text-xs block mb-1">Expected:</span>
+                                <div className="text-good text-[13px] bg-surface px-3 py-2 rounded border border-line break-all">
+                                  {JSON.stringify(publicTests[i].expected)}
+                                </div>
+                              </div>
+                            )}
+                            {!r.passed && (r.error || r.output !== undefined) && (
+                              <div>
+                                <span className="text-muted text-xs block mb-1">Actual:</span>
+                                {r.error ? (
+                                  <div className="text-warn text-[13px] bg-warn-subtle/30 px-3 py-2 rounded border border-warn/20 whitespace-pre-wrap break-all">
+                                    {String(r.error)}
+                                  </div>
+                                ) : (
+                                  <div className="text-warn text-[13px] bg-surface px-3 py-2 rounded border border-line break-all">
+                                    {String(r.output)}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                              </>
+                            )}
+                            {r.logs && r.logs.length > 0 && (
+                              <div>
+                                <span className="text-muted text-xs block mb-1">Stdout:</span>
+                                <div className="text-ink-secondary text-[13px] bg-surface px-3 py-2 rounded border border-line whitespace-pre-wrap break-all">
+                                  {r.logs.join('\\n')}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        );
+                      })}
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted text-sm font-mono">
+                      Run your code to see results
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
         </section>

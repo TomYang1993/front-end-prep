@@ -12,6 +12,9 @@ import {
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { CheatsheetModal } from '@/components/cheatsheet-modal';
+import { MarkdownProse } from '@/components/markdown-prose';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface PublicTest {
   id: string;
@@ -216,7 +219,7 @@ export function ReactEditorWorkspace({
             <div className={`flex items-center gap-4 mb-4 flex items-center justify-between w-full`}>
               <div className="flex items-center gap-3">
                 <h1 className="text-[1.25rem] font-bold m-0">{title}</h1>
-                <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${diffClass === 'easy' ? 'bg-good-subtle text-good' : diffClass === 'medium' ? 'bg-accent-tertiary/12 text-accent-tertiary' : 'bg-warn-subtle text-warn'}`}>{difficulty}</span>
+                <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${diffClass === 'easy' ? 'bg-good-subtle text-good' : diffClass === 'medium' ? 'bg-caution-subtle text-caution' : 'bg-warn-subtle text-warn'}`}>{difficulty}</span>
               </div>
             </div>
             <div className="flex gap-6">
@@ -240,7 +243,7 @@ export function ReactEditorWorkspace({
                   ))}
                 </div>
                 <div className="text-[0.95rem] leading-[1.6] text-ink mb-8">
-                  <p>{prompt}</p>
+                  <MarkdownProse>{prompt}</MarkdownProse>
                 </div>
                 {publicTests.map((test, i) => (
                   <div key={test.id} className="mb-6">
@@ -267,8 +270,16 @@ export function ReactEditorWorkspace({
                         <span>{sol.language}</span>
                         {sol.complexity && <span>{sol.complexity}</span>}
                       </div>
-                      <p>{sol.explanation}</p>
-                      <pre className="bg-surface p-4 rounded-md overflow-x-auto font-mono text-[0.8rem] text-ink-secondary mt-4 dark:bg-black"><code>{sol.code}</code></pre>
+                      <MarkdownProse className="text-[0.9rem]">{sol.explanation}</MarkdownProse>
+                      <div className="mt-4 rounded-md overflow-hidden">
+                        <SyntaxHighlighter
+                          style={oneDark}
+                          language={sol.language === 'typescript' ? 'typescript' : 'javascript'}
+                          customStyle={{ margin: 0, borderRadius: '0.375rem', fontSize: '0.82rem', lineHeight: '1.6' }}
+                        >
+                          {sol.code}
+                        </SyntaxHighlighter>
+                      </div>
                     </article>
                   ))
                 )}
