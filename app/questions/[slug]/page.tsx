@@ -1,12 +1,15 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { EditorWorkspace } from '@/components/editor-workspace';
 import { ReactEditorWorkspace } from '@/components/react-editor-workspace';
 import { PremiumUpsell } from '@/components/premium-upsell';
+import { QuestionStartScreen } from '@/components/question-start-screen';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { getQuestionDetailBySlug } from '@/lib/questions';
+import { getDefaultTimeLimitMinutes } from '@/lib/question-timer';
 import { prisma } from '@/lib/db/prisma';
 import { createTimer } from '@/lib/server-timing';
+import type { Difficulty, QuestionType } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +22,12 @@ interface PageProps {
 export default async function QuestionDetailPage({ params }: PageProps) {
   const t = createTimer(`GET /questions/${params.slug}`);
   const user = await t.time('auth', getCurrentServerUser());
-  const question = await t.time('query', getQuestionDetailBySlug(params.slug, user?.id));
+
+  if (!user) {
+    redirect(`/auth?next=/questions/${encodeURIComponent(params.slug)}`);
+  }
+
+  const question = await t.time('query', getQuestionDetailBySlug(params.slug, user.id));
   t.summary();
 
   if (!question) {
@@ -40,31 +48,63 @@ export default async function QuestionDetailPage({ params }: PageProps) {
     );
   }
 
-  const publicTests = question.publicTests.map((t) => ({
-    id: t.id,
-    input: t.input,
-    expected: t.expected,
-    explanation: t.explanation ?? undefined,
+  // ─── Timer check ───
+  const existingTimer = await prisma.questionTimer.findUnique({
+    where: { userId_questionId: { userId: user.id, questionId: question.id } },
+  });
+
+  let expiresAt: string | null = null;
+
+  if (existingTimer) {
+    const expiry = new Date(existingTimer.startedAt.getTime() + existingTimer.timeLimitMinutes * 60_000);
+    if (expiry > new Date()) {
+      expiresAt = expiry.toISOString();
+    } else {
+      // Expired — delete so user sees start screen again
+      await prisma.questionTimer.delete({ where: { id: existingTimer.id } });
+    }
+  }
+
+  // No active timer → show start screen
+  if (!expiresAt) {
+    const timeLimitMinutes = question.timeLimitMinutes
+      ?? getDefaultTimeLimitMinutes(question.type as QuestionType, question.difficulty as Difficulty);
+
+    return (
+      <QuestionStartScreen
+        slug={params.slug}
+        title={question.title}
+        difficulty={question.difficulty}
+        tags={question.tags}
+        timeLimitMinutes={timeLimitMinutes}
+      />
+    );
+  }
+
+  // ─── Active timer → show workspace ───
+  const publicTests = question.publicTests.map((tc) => ({
+    id: tc.id,
+    input: tc.input,
+    expected: tc.expected,
+    explanation: tc.explanation ?? undefined,
   }));
 
   const starterCode: Record<string, string> = { ...((question.starterCode as Record<string, string>) || {}) };
 
-  if (user) {
-    const drafts = await prisma.codeDraft.findMany({
-      where: { userId: user.id, questionId: question.id }
-    });
-    for (const d of drafts) {
-      if (d.framework === 'react') {
-        try {
-          const parsed = JSON.parse(d.code);
-          if (parsed.app) starterCode.react = parsed.app;
-          if (parsed.styles) starterCode.css = parsed.styles;
-        } catch {
-          // ignore parsing error
-        }
-      } else {
-        starterCode[d.framework] = d.code;
+  const drafts = await prisma.codeDraft.findMany({
+    where: { userId: user.id, questionId: question.id }
+  });
+  for (const d of drafts) {
+    if (d.framework === 'react') {
+      try {
+        const parsed = JSON.parse(d.code);
+        if (parsed.app) starterCode.react = parsed.app;
+        if (parsed.styles) starterCode.css = parsed.styles;
+      } catch {
+        // ignore parsing error
       }
+    } else {
+      starterCode[d.framework] = d.code;
     }
   }
 
@@ -79,11 +119,11 @@ export default async function QuestionDetailPage({ params }: PageProps) {
         tags={question.tags}
         starterCode={starterCode}
         publicTests={publicTests}
+        expiresAt={expiresAt}
       />
     );
   }
 
-  // REACT_APP and other types
   return (
     <ReactEditorWorkspace
       questionId={question.id}
@@ -93,6 +133,7 @@ export default async function QuestionDetailPage({ params }: PageProps) {
       tags={question.tags}
       starterCode={question.starterCode || undefined}
       publicTests={publicTests}
+      expiresAt={expiresAt}
     />
   );
 }

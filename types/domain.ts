@@ -21,6 +21,12 @@ export interface RunnerAdapter {
   run(code: string, testInput: unknown, expected: unknown): Promise<RunnerExecutionResult>;
 }
 
+export const DIFFICULTY_LABEL: Record<string, string> = {
+  EASY: 'Entry',
+  MEDIUM: 'Mid',
+  HARD: 'Senior+',
+};
+
 export interface QuestionListItem {
   id: string;
   slug: string;

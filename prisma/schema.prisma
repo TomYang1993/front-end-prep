@@ -90,7 +90,8 @@ model User {
   entitlements Entitlement[]
   auditLogs    AuditLog[]           @relation("AuditActor")
   createdQuestions Question[]       @relation("QuestionCreator")
-  codeDrafts   CodeDraft[]
+  codeDrafts      CodeDraft[]
+  questionTimers  QuestionTimer[]
 
   @@map("users")
 }
@@ -129,27 +130,29 @@ model UserRole {
 }
 
 model Question {
-  id              String                 @id @default(cuid())
-  slug            String                 @unique
-  title           String
-  prompt          String
-  type            QuestionType
-  difficulty      Difficulty
-  accessTier      AccessTier             @default(FREE)
-  isPublished     Boolean                @default(false)
-  renderData      Json?
-  createdById     String?
-  createdAt       DateTime               @default(now())
-  updatedAt       DateTime               @updatedAt
-  versions        QuestionVersion[]
-  tags            QuestionTagOnQuestion[]
-  testCases       TestCase[]
+  id               String                 @id @default(cuid())
+  slug             String                 @unique
+  title            String
+  prompt           String
+  type             QuestionType
+  difficulty       Difficulty
+  accessTier       AccessTier             @default(FREE)
+  isPublished      Boolean                @default(false)
+  timeLimitMinutes Int?
+  renderData       Json?
+  createdById      String?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  versions         QuestionVersion[]
+  tags             QuestionTagOnQuestion[]
+  testCases        TestCase[]
   officialSolutions OfficialSolution[]
-  submissions     Submission[]
-  packLinks       ContentPackQuestion[]
-  threads         DiscussionThread[]
-  codeDrafts      CodeDraft[]
-  createdBy       User?                  @relation("QuestionCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  submissions      Submission[]
+  packLinks        ContentPackQuestion[]
+  threads          DiscussionThread[]
+  codeDrafts       CodeDraft[]
+  questionTimers   QuestionTimer[]
+  createdBy        User?                  @relation("QuestionCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@map("questions")
 }
@@ -432,4 +435,17 @@ model CodeDraft {
 
   @@unique([userId, questionId, framework])
   @@map("code_drafts")
+}
+
+model QuestionTimer {
+  id               String   @id @default(cuid())
+  userId           String
+  questionId       String
+  startedAt        DateTime @default(now())
+  timeLimitMinutes Int
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question         Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@map("question_timers")
 }

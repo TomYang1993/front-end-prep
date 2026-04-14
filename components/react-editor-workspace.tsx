@@ -6,15 +6,17 @@ import Editor from '@monaco-editor/react';
 import { SandpackProvider, SandpackPreview } from '@codesandbox/sandpack-react';
 import { useToast } from '@/components/toast-provider';
 import {
-  Lightbulb, HelpCircle, FileCode2,
-  Upload, ArrowLeft, Eye, Palette
+  Lightbulb, FileCode2,
+  Upload, ArrowLeft, Eye, Palette, History
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { CheatsheetModal } from '@/components/cheatsheet-modal';
 import { MarkdownProse } from '@/components/markdown-prose';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useSyntaxTheme } from '@/lib/hooks/use-syntax-theme';
+import { CountdownTimer } from '@/components/countdown-timer';
+import { DIFFICULTY_LABEL } from '@/types/domain';
 
 interface PublicTest {
   id: string;
@@ -40,10 +42,11 @@ interface ReactEditorWorkspaceProps {
   tags: string[];
   starterCode?: Record<string, string>;
   publicTests: PublicTest[];
+  expiresAt?: string;
 }
 
 type ActiveFile = 'app' | 'styles';
-type LeftTab = 'description' | 'solutions';
+type LeftTab = 'description' | 'solutions' | 'submissions';
 
 const DEFAULT_APP_CODE = `import React from 'react';
 
@@ -62,10 +65,16 @@ export function ReactEditorWorkspace({
   tags,
   starterCode,
   publicTests,
+  expiresAt,
 }: ReactEditorWorkspaceProps) {
   const { toast } = useToast();
+  const syntaxTheme = useSyntaxTheme();
   const [solutions, setSolutions] = useState<SolutionView[]>([]);
   const [loadingSolutions, setLoadingSolutions] = useState(false);
+
+  const [submissions, setSubmissions] = useState<{ id: string; status: string; score: number | null; framework: string; code: string; createdAt: string }[]>([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+  const [expandedSubmission, setExpandedSubmission] = useState<string | null>(null);
 
   const [activeFile, setActiveFile] = useState<ActiveFile>('app');
   const [codes, setCodes] = useState({
@@ -109,6 +118,18 @@ export function ReactEditorWorkspace({
         .finally(() => setLoadingSolutions(false));
     }
   }, [activeLeftTab, questionId, solutions.length, loadingSolutions]);
+
+  useEffect(() => {
+    if (activeLeftTab === 'submissions' && submissions.length === 0 && !loadingSubmissions) {
+      setLoadingSubmissions(true);
+      fetch(`/api/questions/${questionId}/submissions`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) setSubmissions(data);
+        })
+        .finally(() => setLoadingSubmissions(false));
+    }
+  }, [activeLeftTab, questionId, submissions.length, loadingSubmissions]);
 
   // Resizable left pane
   const [leftWidth, setLeftWidth] = useState(450);
@@ -205,9 +226,7 @@ export function ReactEditorWorkspace({
         <div className="flex flex-col gap-4">
           <CheatsheetModal type="react" />
           <ThemeToggle className="w-10 h-10 rounded-md border-none bg-transparent text-muted cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink" />
-          <button className="w-10 h-10 rounded-md border-none bg-transparent text-muted text-[1.2rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink" title="Help">
-            <HelpCircle size={24} strokeWidth={1.5} />
-          </button>
+
         </div>
       </aside>
 
@@ -219,8 +238,9 @@ export function ReactEditorWorkspace({
             <div className={`flex items-center gap-4 mb-4 flex items-center justify-between w-full`}>
               <div className="flex items-center gap-3">
                 <h1 className="text-[1.25rem] font-bold m-0">{title}</h1>
-                <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${diffClass === 'easy' ? 'bg-good-subtle text-good' : diffClass === 'medium' ? 'bg-caution-subtle text-caution' : 'bg-warn-subtle text-warn'}`}>{difficulty}</span>
+                <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${diffClass === 'easy' ? 'bg-good-subtle text-good' : diffClass === 'medium' ? 'bg-caution-subtle text-caution' : 'bg-warn-subtle text-warn'}`}>{DIFFICULTY_LABEL[difficulty] ?? difficulty}</span>
               </div>
+              {expiresAt && <CountdownTimer expiresAt={expiresAt} />}
             </div>
             <div className="flex gap-6">
               <button
@@ -231,6 +251,10 @@ export function ReactEditorWorkspace({
                 className={`py-2 text-[0.75rem] font-bold uppercase tracking-[0.05em] bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer transition-all duration-200 hover:text-ink [&.active]:text-ink [&.active]:border-brand ${activeLeftTab === 'solutions' ? 'active' : ''}`}
                 onClick={() => setActiveLeftTab('solutions')}
               ><Lightbulb size={16} className="inline-block mr-1" /> Solutions</button>
+              <button
+                className={`py-2 text-[0.75rem] font-bold uppercase tracking-[0.05em] bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer transition-all duration-200 hover:text-ink [&.active]:text-ink [&.active]:border-brand ${activeLeftTab === 'submissions' ? 'active' : ''}`}
+                onClick={() => setActiveLeftTab('submissions')}
+              ><History size={16} className="inline-block mr-1" /> Submissions</button>
             </div>
           </div>
 
@@ -257,7 +281,7 @@ export function ReactEditorWorkspace({
                   </div>
                 ))}
               </>
-            ) : (
+            ) : activeLeftTab === 'solutions' ? (
               <div className="flex flex-col gap-6">
                 {loadingSolutions ? (
                   <p className="text-muted text-center py-8">Loading official solutions...</p>
@@ -273,7 +297,7 @@ export function ReactEditorWorkspace({
                       <MarkdownProse className="text-[0.9rem]">{sol.explanation}</MarkdownProse>
                       <div className="mt-4 rounded-md overflow-hidden">
                         <SyntaxHighlighter
-                          style={oneDark}
+                          style={syntaxTheme}
                           language={sol.language === 'typescript' ? 'typescript' : 'javascript'}
                           customStyle={{ margin: 0, borderRadius: '0.375rem', fontSize: '0.82rem', lineHeight: '1.6' }}
                         >
@@ -284,7 +308,53 @@ export function ReactEditorWorkspace({
                   ))
                 )}
               </div>
-            )}
+            ) : activeLeftTab === 'submissions' ? (
+              <div className="flex flex-col gap-2">
+                {loadingSubmissions ? (
+                  <p className="text-muted text-center py-8">Loading submissions...</p>
+                ) : submissions.length === 0 ? (
+                  <p className="text-muted text-center py-8">No submissions yet.</p>
+                ) : (
+                  submissions.map((sub) => {
+                    const isExpanded = expandedSubmission === sub.id;
+                    const passed = sub.status === 'PASSED';
+                    const lang = sub.framework === 'typescript' ? 'typescript' : 'javascript';
+                    return (
+                      <div key={sub.id} className="border border-line rounded-md overflow-hidden">
+                        <button
+                          onClick={() => setExpandedSubmission(isExpanded ? null : sub.id)}
+                          className="w-full flex items-center justify-between px-4 py-3 bg-surface-raised hover:bg-surface text-left transition-colors cursor-pointer border-none"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className={`text-[0.7rem] font-bold uppercase ${passed ? 'text-good' : 'text-warn'}`}>
+                              {sub.status}
+                            </span>
+                            {sub.score !== null && (
+                              <span className="text-[0.7rem] text-muted">{sub.score}%</span>
+                            )}
+                            <span className="text-[0.65rem] text-muted uppercase">{sub.framework}</span>
+                          </div>
+                          <span className="text-[0.7rem] text-muted">
+                            {new Date(sub.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </button>
+                        {isExpanded && (
+                          <div className="border-t border-line">
+                            <SyntaxHighlighter
+                              style={syntaxTheme}
+                              language={lang}
+                              customStyle={{ margin: 0, borderRadius: 0, fontSize: '0.82rem', lineHeight: '1.6' }}
+                            >
+                              {sub.code}
+                            </SyntaxHighlighter>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            ) : null}
           </div>
         </section>
 

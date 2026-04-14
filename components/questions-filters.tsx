@@ -65,10 +65,7 @@ export function QuestionsFilters() {
           <option value="">Category: All</option>
           <option value="REACT_APP">React UI</option>
           <option value="FUNCTION_JS">JS/TS Logic</option>
-          <option value="FUNCTION_PYTHON">Python</option>
-          <option value="concepts">FE Concepts</option>
-          <option value="system">System Design</option>
-          <option value="performance">Performance</option>
+          <option value="FUNCTION_PYTHON">Backend</option>
         </select>
         <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted" />
       </div>
@@ -80,9 +77,9 @@ export function QuestionsFilters() {
           onChange={(e) => updateParam('difficulty', e.target.value)}
         >
           <option value="">Difficulty: All</option>
-          <option value="EASY">Easy</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="HARD">Hard</option>
+          <option value="EASY">Entry</option>
+          <option value="MEDIUM">Mid</option>
+          <option value="HARD">Senior+</option>
         </select>
         <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted" />
       </div>

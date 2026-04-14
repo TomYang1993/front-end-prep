@@ -1,4 +1,4 @@
-import { Flame, Trophy, Code2, Layout, Server, BookOpen } from 'lucide-react';
+import { Flame, Trophy, Code2, Layout, Server } from 'lucide-react';
 
 interface CategoryStat {
   solved: number;
@@ -31,7 +31,6 @@ export function QuestionsStatsBar({
   js,
   ui,
   backend,
-  concepts,
 }: QuestionsStatsBarProps) {
   const dim = !isLoggedIn;
 
@@ -64,7 +63,6 @@ export function QuestionsStatsBar({
         { label: 'JS', icon: Code2, color: 'text-yellow-400', bar: 'bg-yellow-400', stat: js },
         { label: 'UI', icon: Layout, color: 'text-blue-400', bar: 'bg-blue-400', stat: ui },
         { label: 'Backend', icon: Server, color: 'text-green-400', bar: 'bg-green-400', stat: backend },
-        { label: 'Concepts', icon: BookOpen, color: 'text-purple-400', bar: 'bg-purple-400', stat: concepts },
       ].map(({ label, icon: Icon, color, bar, stat }) => (
         <div key={label} className="flex flex-col justify-between bg-surface border border-line-soft rounded-md px-3 py-[0.6rem] gap-1.5 shadow-sm min-w-[120px] flex-1 sm:flex-none">
           <div className="flex items-center gap-1.5 w-full">

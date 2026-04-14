@@ -2,6 +2,13 @@ import { PrismaClient, AccessTier, Difficulty, QuestionType, QuestionVersionStat
 
 const prisma = new PrismaClient();
 
+function defaultTimeLimit(type: QuestionType, difficulty: Difficulty): number {
+  if (type === 'REACT_APP') return 60;
+  if (difficulty === 'EASY') return 30;
+  if (difficulty === 'HARD') return 60;
+  return 45;
+}
+
 async function main() {
   await prisma.role.upsert({
     where: { key: 'USER' },
@@ -55,6 +62,7 @@ async function main() {
       type: QuestionType.FUNCTION_JS,
       difficulty: Difficulty.EASY,
       accessTier: AccessTier.FREE,
+      timeLimitMinutes: defaultTimeLimit(QuestionType.FUNCTION_JS, Difficulty.EASY),
       isPublished: true,
       createdById: starterUser.id
     }
@@ -293,6 +301,7 @@ async function main() {
         type: eq.type,
         difficulty: eq.difficulty,
         accessTier: eq.accessTier,
+        timeLimitMinutes: defaultTimeLimit(eq.type, eq.difficulty),
       },
       create: {
         slug: eq.slug,
@@ -301,6 +310,7 @@ async function main() {
         type: eq.type,
         difficulty: eq.difficulty,
         accessTier: eq.accessTier,
+        timeLimitMinutes: defaultTimeLimit(eq.type, eq.difficulty),
         isPublished: true,
         createdById: starterUser.id,
       },

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import clsx from 'clsx';
+import { DIFFICULTY_LABEL } from '@/types/domain';
 import { Award, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface QuestionRow {
@@ -103,7 +104,7 @@ export function QuestionsTable({ questions, isLoggedIn, page, totalPages, totalF
               {/* Difficulty */}
               <td className="py-4 align-top text-center">
                 <span className={clsx('inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none', q.difficulty.toLowerCase() === 'easy' ? 'bg-good-subtle text-good' : q.difficulty.toLowerCase() === 'medium' ? 'bg-caution-subtle text-caution' : 'bg-warn-subtle text-warn')}>
-                  {q.difficulty}
+                  {DIFFICULTY_LABEL[q.difficulty] ?? q.difficulty}
                 </span>
               </td>
             </tr>

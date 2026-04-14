@@ -2,7 +2,7 @@
 
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useSyntaxTheme } from '@/lib/hooks/use-syntax-theme';
 
 interface MarkdownProseProps {
   children: string;
@@ -14,6 +14,7 @@ interface MarkdownProseProps {
  * Used for question descriptions and solution explanations.
  */
 export function MarkdownProse({ children, className = '' }: MarkdownProseProps) {
+  const syntaxTheme = useSyntaxTheme();
   return (
     <div className={`markdown-prose ${className}`}>
       <ReactMarkdown
@@ -24,7 +25,7 @@ export function MarkdownProse({ children, className = '' }: MarkdownProseProps) 
             if (match) {
               return (
                 <SyntaxHighlighter
-                  style={oneDark}
+                  style={syntaxTheme}
                   language={match[1]}
                   PreTag="div"
                   customStyle={{

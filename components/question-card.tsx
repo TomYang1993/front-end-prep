@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import clsx from 'clsx';
+import { DIFFICULTY_LABEL } from '@/types/domain';
 
 interface QuestionCardProps {
   slug: string;
@@ -19,7 +20,7 @@ export function QuestionCard(props: QuestionCardProps) {
           <h3 className="m-0">{props.title}</h3>
           <p className="meta-row">
             <span>{props.type}</span>
-            <span className={clsx('font-semibold', props.difficulty.toLowerCase() === 'easy' ? 'text-good' : props.difficulty.toLowerCase() === 'medium' ? 'text-caution' : 'text-warn')}>{props.difficulty}</span>
+            <span className={clsx('font-semibold', props.difficulty.toLowerCase() === 'easy' ? 'text-good' : props.difficulty.toLowerCase() === 'medium' ? 'text-caution' : 'text-warn')}>{DIFFICULTY_LABEL[props.difficulty] ?? props.difficulty}</span>
             <span>{props.accessTier}</span>
           </p>
         </div>
