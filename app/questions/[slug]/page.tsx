@@ -57,10 +57,12 @@ export default async function QuestionDetailPage({ params }: PageProps) {
 
   if (existingTimer) {
     const expiry = new Date(existingTimer.startedAt.getTime() + existingTimer.timeLimitMinutes * 60_000);
-    if (expiry > new Date()) {
+    const remainingMs = expiry.getTime() - Date.now();
+    if (remainingMs > 5_000) {
+      // More than 5s left — show workspace
       expiresAt = expiry.toISOString();
     } else {
-      // Expired — delete so user sees start screen again
+      // Expired or about to expire — delete so user sees start screen
       await prisma.questionTimer.delete({ where: { id: existingTimer.id } });
     }
   }
@@ -82,13 +84,6 @@ export default async function QuestionDetailPage({ params }: PageProps) {
   }
 
   // ─── Active timer → show workspace ───
-  const publicTests = question.publicTests.map((tc) => ({
-    id: tc.id,
-    input: tc.input,
-    expected: tc.expected,
-    explanation: tc.explanation ?? undefined,
-  }));
-
   const starterCode: Record<string, string> = { ...((question.starterCode as Record<string, string>) || {}) };
 
   const drafts = await prisma.codeDraft.findMany({
@@ -118,7 +113,7 @@ export default async function QuestionDetailPage({ params }: PageProps) {
         difficulty={question.difficulty}
         tags={question.tags}
         starterCode={starterCode}
-        publicTests={publicTests}
+        publicTestCode={question.publicTestCode || ''}
         expiresAt={expiresAt}
       />
     );
@@ -132,7 +127,7 @@ export default async function QuestionDetailPage({ params }: PageProps) {
       difficulty={question.difficulty}
       tags={question.tags}
       starterCode={question.starterCode || undefined}
-      publicTests={publicTests}
+      publicTestCode={question.publicTestCode || ''}
       expiresAt={expiresAt}
     />
   );

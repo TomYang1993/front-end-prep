@@ -1,14 +1,19 @@
 export type RunnerFramework = 'javascript' | 'react' | 'python';
 
+export interface TestResult {
+  name: string;
+  passed: boolean;
+  error?: string;
+}
+
 export interface RunnerExecutionResult {
   passed: boolean;
-  output: unknown;
+  results: TestResult[];
   runtimeMs: number;
-  error?: string;
-  logs?: string[];
+  logs: string[];
 }
 
 export interface RunnerAdapter {
   framework: RunnerFramework;
-  run(code: string, input: unknown, expected: unknown): Promise<RunnerExecutionResult>;
+  run(code: string, testCode: string): Promise<RunnerExecutionResult>;
 }

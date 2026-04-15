@@ -41,7 +41,7 @@ export async function getQuestionDetailBySlug(slug: string, userId?: string) {
     ...question,
     tags: rd?.tags ?? [],
     starterCode: rd?.starterCode,
-    publicTests: rd?.publicTests ?? [],
+    publicTestCode: question.publicTestCode ?? rd?.publicTestCode ?? null,
     packId: rd?.packId ?? null,
     locked
   };

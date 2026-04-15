@@ -4,7 +4,7 @@ import { requireUser } from '@/lib/auth/current-user';
 import { unauthorized } from '@/lib/api';
 
 /**
- * Returns hidden test cases for client-side execution (Python/Pyodide).
+ * Returns hidden test code for client-side execution (Python/Pyodide).
  * The slug param here is actually the question ID (passed from the client).
  * Requires authentication.
  */
@@ -17,11 +17,10 @@ export async function GET(
     return unauthorized();
   }
 
-  const tests = await prisma.testCase.findMany({
-    where: { questionId: params.slug, visibility: 'HIDDEN' },
-    orderBy: { sortOrder: 'asc' },
-    select: { id: true, input: true, expected: true },
+  const question = await prisma.question.findUnique({
+    where: { id: params.slug },
+    select: { hiddenTestCode: true },
   });
 
-  return NextResponse.json(tests);
+  return NextResponse.json({ testCode: question?.hiddenTestCode || '' });
 }

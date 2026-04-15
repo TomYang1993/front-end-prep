@@ -20,7 +20,6 @@ export async function GET(req: NextRequest, { params }: Params) {
     include: {
       tags: { include: { tag: true } },
       versions: { orderBy: { version: 'desc' } },
-      testCases: { orderBy: { sortOrder: 'asc' } },
       officialSolutions: { orderBy: { updatedAt: 'desc' } }
     }
   });

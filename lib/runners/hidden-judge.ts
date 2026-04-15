@@ -1,4 +1,3 @@
-import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db/prisma';
 import { getRunner } from '@/lib/runners/registry';
 import { RunnerFramework } from '@/lib/runners/types';
@@ -9,27 +8,25 @@ export async function judgeHiddenSubmission(params: {
   code: string;
   framework: RunnerFramework;
 }) {
-  const hiddenTests = await prisma.testCase.findMany({
-    where: {
-      questionId: params.questionId,
-      visibility: 'HIDDEN'
-    },
-    orderBy: {
-      sortOrder: 'asc'
-    }
+  const question = await prisma.question.findUniqueOrThrow({
+    where: { id: params.questionId },
+    select: { hiddenTestCode: true },
   });
 
-  const runner = getRunner(params.framework);
-  const results = [];
-
-  for (const testCase of hiddenTests) {
-    const result = await runner.run(params.code, testCase.input, testCase.expected);
-    results.push({ testCase, result });
+  if (!question.hiddenTestCode) {
+    // No hidden tests configured — can't evaluate, mark as attempted
+    await prisma.submission.update({
+      where: { id: params.submissionId },
+      data: { status: 'FAILED', score: 0, runtimeMs: 0 },
+    });
+    return { passedCount: 0, total: 0, score: 0, status: 'FAILED' as const, runtimeMs: 0, hiddenResults: [] };
   }
 
-  const passedCount = results.filter((item) => item.result.passed).length;
-  const total = results.length || 1;
-  const runtimeMs = results.reduce((sum, item) => sum + item.result.runtimeMs, 0);
+  const runner = getRunner(params.framework);
+  const result = await runner.run(params.code, question.hiddenTestCode);
+
+  const passedCount = result.results.filter((r) => r.passed).length;
+  const total = result.results.length || 1;
   const score = Math.round((passedCount / total) * 100);
   const status = passedCount === total ? 'PASSED' : 'FAILED';
 
@@ -40,23 +37,19 @@ export async function judgeHiddenSubmission(params: {
       data: {
         status,
         score,
-        runtimeMs,
-        hiddenResult: {
-          passedCount,
-          total
-        }
-      }
+        runtimeMs: result.runtimeMs,
+        hiddenResult: { passedCount, total },
+      },
     }),
     prisma.submissionResult.createMany({
-      data: results.map((item) => ({
+      data: result.results.map((r) => ({
         submissionId: params.submissionId,
-        testCaseId: item.testCase.id,
-        passed: item.result.passed,
-        runtimeMs: item.result.runtimeMs,
-        output: item.result.output as Prisma.InputJsonValue,
-        error: item.result.error
-      }))
-    })
+        testName: r.name,
+        passed: r.passed,
+        runtimeMs: result.runtimeMs,
+        error: r.error,
+      })),
+    }),
   ]);
 
   return {
@@ -64,6 +57,12 @@ export async function judgeHiddenSubmission(params: {
     total,
     score,
     status,
-    runtimeMs
+    runtimeMs: result.runtimeMs,
+    hiddenResults: result.results.map((r, i) => ({
+      index: i + 1,
+      name: r.name,
+      passed: r.passed,
+      error: r.passed ? undefined : (r.error || 'Wrong answer'),
+    })),
   };
 }

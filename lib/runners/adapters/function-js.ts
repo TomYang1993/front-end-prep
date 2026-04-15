@@ -1,41 +1,27 @@
 import ivm from 'isolated-vm';
 import { RunnerAdapter, RunnerExecutionResult } from '@/lib/runners/types';
-
-function deepEqual(a: unknown, b: unknown): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
-}
+import { TEST_HARNESS_CODE, TEST_COLLECT_CODE } from '@/lib/runners/test-harness';
 
 /**
- * Sandboxed JavaScript function runner using isolated-vm.
+ * Sandboxed JavaScript test runner using isolated-vm.
  *
- * Security mitigations:
- * - Extremely strict V8 heap isolation (memory limits).
- * - No Node APIs available whatsoever (completely isolated context).
- * - Strict timeout (5s max execution time).
- * - Console bridged using explicit string references.
+ * Executes user code + test code inside a V8 isolate with:
+ * - Mini test/expect harness (no Jest dependency)
+ * - Console.log capture via safe bridge
+ * - 128MB heap limit, 5s timeout
+ * - No Node.js APIs available
  */
 export class FunctionJsRunner implements RunnerAdapter {
   framework = 'javascript' as const;
 
-  async run(code: string, input: unknown, expected: unknown): Promise<RunnerExecutionResult> {
+  async run(code: string, testCode: string): Promise<RunnerExecutionResult> {
     const started = Date.now();
     const consoleLogs: string[] = [];
     let isolate: ivm.Isolate | null = null;
     let context: ivm.Context | null = null;
 
-    // Detect input shape. Two supported contracts:
-    //   1. Solve-style:     { args: [...] }          → call a `solve` function with args
-    //   2. Assertion-style: { setup, assertions[] }  → run user code + setup, eval each assertion expression
-    // Assertion-style is used by "fix-the-code" style questions where there is no single function to call.
-    const inputObj = (input ?? {}) as {
-      args?: unknown[];
-      setup?: string;
-      assertions?: { expr: string; desc: string }[];
-    };
-    const isAssertionStyle = Array.isArray(inputObj.assertions);
-
     try {
-      // 1. Transpile TS -> JS
+      // 1. Transpile TS → JS
       const esbuild = await import('esbuild');
       const transformResult = await esbuild.transform(code, {
         loader: 'ts',
@@ -44,16 +30,15 @@ export class FunctionJsRunner implements RunnerAdapter {
       });
       const jsCode = transformResult.code;
 
-      // 2. Initialize the heavily sandboxed V8 Isolate
-      isolate = new ivm.Isolate({ memoryLimit: 128 }); // 128 MB heap limit
+      // 2. Initialize sandboxed V8 Isolate
+      isolate = new ivm.Isolate({ memoryLimit: 128 });
       context = isolate.createContextSync();
       const jail = context.global;
 
-      // Expose the global object
       jail.setSync('global', jail.derefInto());
 
-      // 3. Create a safe console bridge via Reference
-      const logCallback = function(...logs: string[]) {
+      // 3. Console bridge
+      const logCallback = function (...logs: string[]) {
         consoleLogs.push(logs.join(' '));
       };
       jail.setSync('__logCallback', new ivm.Reference(logCallback));
@@ -71,159 +56,69 @@ export class FunctionJsRunner implements RunnerAdapter {
         global.exports = exports;
         global.module = module;
 
-        // Disable eval to match strict node:vm codeGeneration settings
         delete global.eval;
       `;
 
-      let setupCode: string;
+      // 4. Compose: console bridge → test harness → user code → test code → collect
+      const fullScript = `
+        ${consoleBridge}
+        ${TEST_HARNESS_CODE}
 
-      if (isAssertionStyle) {
-        // User code, setup, and assertions all share the script-level lexical scope,
-        // so top-level \`const\` declarations in user code are visible to setup/assertions.
-        const setupStr = inputObj.setup || '';
-        const assertionsExec = inputObj.assertions!
-          .map(
-            (a) => `
-              try {
-                const __r = (${a.expr});
-                __assertionResults.push({ desc: ${JSON.stringify(a.desc)}, passed: !!__r });
-              } catch (__e) {
-                __assertionResults.push({ desc: ${JSON.stringify(a.desc)}, passed: false, error: (__e && __e.message) ? __e.message : String(__e) });
-              }
-            `
-          )
-          .join('\n');
+        // ── User code ──
+        ${jsCode}
 
-        // Everything must share the script-level lexical scope so that top-level
-        // \`const\` declarations in user code are visible to setup/assertion code.
-        // A nested try { } block would create a new scope and hide them, so we
-        // split execution into two phases: user code runs at script top level
-        // (uncaught errors propagate to the outer adapter catch), then setup +
-        // assertions run in a separate guarded phase inside an IIFE that still
-        // closes over the top-level bindings.
-        setupCode = `
-          ${consoleBridge}
-
-          const __assertionResults = [];
-          let __stageError = null;
-
-          ${jsCode}
-
-          (function __runAssertions() {
-            try {
-              ${setupStr}
-              ${assertionsExec}
-            } catch (__e) {
-              __stageError = "Test setup error: " + ((__e && __e.message) ? __e.message : String(__e));
-            }
-          })();
-
-          JSON.stringify({ mode: "assertions", assertions: __assertionResults, stageError: __stageError });
-        `;
-      } else {
-        // Legacy solve()-style contract
-        const args = inputObj.args || [];
-        const serializedArgs = JSON.stringify(args);
-
-        setupCode = `
-          ${consoleBridge}
-
-          try {
-            ${jsCode}
-          } catch (e) {
-            throw e;
+        // Make user exports available as globals for test code
+        if (typeof module.exports === 'function') {
+          global[module.exports.name || 'solve'] = module.exports;
+        } else if (typeof module.exports === 'object' && module.exports !== null) {
+          for (const [k, v] of Object.entries(module.exports)) {
+            if (k !== '__esModule') global[k] = v;
           }
-
-          let targetFn = module.exports.default || module.exports || exports.default || exports;
-
-          if (typeof targetFn !== 'function') {
-            targetFn = typeof solve === 'function' ? solve : undefined;
+        }
+        if (typeof exports === 'object' && exports !== null) {
+          for (const [k, v] of Object.entries(exports)) {
+            if (k !== '__esModule') global[k] = v;
           }
+        }
+        // Top-level function declarations (e.g. function twoSum() {})
+        // are already in global scope via the script evaluation.
 
-          if (!targetFn || typeof targetFn !== 'function') {
-            const possibleNames = Object.getOwnPropertyNames(global).filter(key => {
-              try {
-                const val = global[key];
-                return typeof val === 'function' && !val.toString().includes('[native code]') && key !== 'console' && key !== '__logCallback';
-              } catch {
-                return false;
-              }
-            });
-            if (possibleNames.length > 0) {
-              targetFn = global[possibleNames[possibleNames.length - 1]];
-            }
-          }
+        // ── Test code ──
+        ${testCode}
 
-          let __runnerResult = undefined;
-          if (targetFn && typeof targetFn === 'function') {
-             const parsedArgs = JSON.parse(${JSON.stringify(serializedArgs)});
-             __runnerResult = targetFn(...parsedArgs);
-          } else {
-             throw new Error("Could not find solving function. Make sure to export default your function.");
-          }
+        // ── Collect results ──
+        ${TEST_COLLECT_CODE}
+      `;
 
-          JSON.stringify({ mode: "solve", result: __runnerResult === undefined ? null : __runnerResult });
-        `;
-      }
+      const script = isolate.compileScriptSync(fullScript);
 
-      // Compile script (will throw on SyntaxErrors)
-      const script = isolate.compileScriptSync(setupCode);
-
-      // Execute with a strict 5000ms limit
-      const jsonOutput = script.runSync(context, { timeout: 5000 });
-      const parsedOutput = JSON.parse(jsonOutput);
+      // 5. Execute with timeout
+      const jsonOutput = script.runSync(context, { timeout: 5000 }) as string;
+      const parsed = JSON.parse(jsonOutput);
 
       context.release();
       isolate.dispose();
       isolate = null;
       context = null;
 
-      if (isAssertionStyle) {
-        const assertionResults = (parsedOutput.assertions || []) as {
-          desc: string;
-          passed: boolean;
-          error?: string;
-        }[];
-        const stageError: string | null = parsedOutput.stageError ?? null;
+      const results = (parsed.results || []) as { name: string; passed: boolean; error?: string }[];
+      const allPassed = results.length > 0 && results.every((r) => r.passed);
 
-        // If setup failed before any assertions could run, synthesize failures
-        // so the UI still shows each expected check as a failed line.
-        const finalAssertions =
-          stageError && assertionResults.length === 0
-            ? (inputObj.assertions || []).map((a) => ({
-                desc: a.desc,
-                passed: false,
-                error: stageError,
-              }))
-            : assertionResults;
-
-        const allPassed = finalAssertions.length > 0 && finalAssertions.every((a) => a.passed);
-
-        return {
-          passed: allPassed,
-          output: finalAssertions,
-          runtimeMs: Date.now() - started,
-          error: stageError || undefined,
-          logs: consoleLogs,
-        };
-      }
-
-      const output = parsedOutput.result;
       return {
-        passed: deepEqual(output, expected),
-        output,
+        passed: allPassed,
+        results,
         runtimeMs: Date.now() - started,
         logs: consoleLogs,
       };
     } catch (error) {
       if (context) {
-          try { context.release(); } catch {}
+        try { context.release(); } catch {}
       }
       if (isolate && !isolate.isDisposed) {
-          try { isolate.dispose(); } catch {}
+        try { isolate.dispose(); } catch {}
       }
 
-      const normalizedMessage =
+      const msg =
         error instanceof Error
           ? error.message
           : typeof error === 'string'
@@ -232,15 +127,8 @@ export class FunctionJsRunner implements RunnerAdapter {
 
       return {
         passed: false,
-        output: isAssertionStyle
-          ? (inputObj.assertions || []).map((a) => ({
-              desc: a.desc,
-              passed: false,
-              error: normalizedMessage,
-            }))
-          : null,
+        results: [{ name: 'Execution Error', passed: false, error: msg }],
         runtimeMs: Date.now() - started,
-        error: normalizedMessage,
         logs: consoleLogs,
       };
     }

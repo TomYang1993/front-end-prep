@@ -7,14 +7,6 @@ import { requireAdmin } from '@/lib/auth/current-user';
 import { createAuditLog } from '@/lib/audit';
 import { refreshQuestionRenderData } from '@/lib/questions-snapshot';
 
-const testSchema = z.object({
-  visibility: z.enum(['PUBLIC', 'HIDDEN']),
-  input: z.unknown(),
-  expected: z.unknown(),
-  explanation: z.string().optional(),
-  sortOrder: z.number().int().nonnegative()
-});
-
 const bodySchema = z.object({
   slug: z.string().min(3),
   title: z.string().min(3),
@@ -26,7 +18,8 @@ const bodySchema = z.object({
   tags: z.array(z.string()).default([]),
   content: z.record(z.unknown()).default({}),
   starterCode: z.record(z.string()).default({}),
-  testCases: z.array(testSchema).default([])
+  publicTestCode: z.string().optional(),
+  hiddenTestCode: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -76,6 +69,8 @@ export async function POST(req: NextRequest) {
       accessTier: data.accessTier,
       isPublished: data.isPublished,
       createdById: admin.id,
+      publicTestCode: data.publicTestCode,
+      hiddenTestCode: data.hiddenTestCode,
       versions: {
         create: {
           version: 1,
@@ -85,15 +80,6 @@ export async function POST(req: NextRequest) {
           publishedAt: data.isPublished ? new Date() : null
         }
       },
-      testCases: {
-        create: data.testCases.map((testCase) => ({
-          visibility: testCase.visibility,
-          input: testCase.input as Prisma.InputJsonValue,
-          expected: testCase.expected as Prisma.InputJsonValue,
-          explanation: testCase.explanation,
-          sortOrder: testCase.sortOrder
-        }))
-      },
       tags: {
         create: tagIds.map((tagId) => ({ tagId }))
       }
@@ -101,7 +87,6 @@ export async function POST(req: NextRequest) {
     include: {
       tags: { include: { tag: true } },
       versions: true,
-      testCases: true
     }
   });
 

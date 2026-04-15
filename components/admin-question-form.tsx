@@ -56,21 +56,12 @@ export function AdminQuestionForm() {
               : type === 'FUNCTION_PYTHON'
                 ? { python: starterCode }
                 : { javascript: starterCode },
-          testCases: [
-            {
-              visibility: 'PUBLIC',
-              input: { args: [[1, 2], 3] },
-              expected: [0, 1],
-              sortOrder: 1,
-              explanation: 'Sample test case'
-            },
-            {
-              visibility: 'HIDDEN',
-              input: { args: [[3, 2, 4], 6] },
-              expected: [1, 2],
-              sortOrder: 2
-            }
-          ]
+          publicTestCode: `test('sample test', () => {
+  expect(solve([1, 2], 3)).toEqual([0, 1]);
+});`,
+          hiddenTestCode: `test('hidden test', () => {
+  expect(solve([3, 2, 4], 6)).toEqual([1, 2]);
+});`
         })
       });
 

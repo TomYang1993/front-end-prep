@@ -26,9 +26,12 @@ export function CountdownTimer({ expiresAt }: CountdownTimerProps) {
       const diff = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
       setRemaining(diff);
       if (diff <= 0) {
-        router.push('/questions');
+        router.replace('/questions');
       }
     };
+
+    // Check immediately on mount — don't wait for first interval
+    tick();
 
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);

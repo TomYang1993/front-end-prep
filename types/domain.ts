@@ -2,23 +2,22 @@ export type RunnerFramework = 'javascript' | 'react';
 
 export type ProblemMode = 'FUNCTION_JS' | 'REACT_APP';
 
-export interface PublicTestCase {
-  id: string;
-  input: unknown;
-  expected: unknown;
-  explanation?: string | null;
+export interface TestResult {
+  name: string;
+  passed: boolean;
+  error?: string;
 }
 
 export interface RunnerExecutionResult {
   passed: boolean;
-  output: unknown;
-  error?: string;
+  results: TestResult[];
   runtimeMs: number;
+  logs: string[];
 }
 
 export interface RunnerAdapter {
   framework: RunnerFramework;
-  run(code: string, testInput: unknown, expected: unknown): Promise<RunnerExecutionResult>;
+  run(code: string, testCode: string): Promise<RunnerExecutionResult>;
 }
 
 export const DIFFICULTY_LABEL: Record<string, string> = {

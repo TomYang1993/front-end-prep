@@ -10,13 +10,7 @@ export interface QuestionRenderData {
   description: string | null;
   tags: string[];
   starterCode: Record<string, string>;
-  publicTests: {
-    id: string;
-    input: unknown;
-    expected: unknown;
-    explanation: string | null;
-    sortOrder: number;
-  }[];
+  publicTestCode: string | null;
   packId: string | null;
 }
 
@@ -25,7 +19,7 @@ export interface QuestionRenderData {
  * Called on admin create/update — never on the read path.
  */
 export async function buildQuestionRenderData(questionId: string): Promise<QuestionRenderData> {
-  const [tagLinks, latestVersion, publicTests, packLink] = await Promise.all([
+  const [tagLinks, latestVersion, question, packLink] = await Promise.all([
     prisma.questionTagOnQuestion.findMany({
       where: { questionId },
       include: { tag: true },
@@ -34,9 +28,9 @@ export async function buildQuestionRenderData(questionId: string): Promise<Quest
       where: { questionId, status: 'PUBLISHED' },
       orderBy: { version: 'desc' },
     }),
-    prisma.testCase.findMany({
-      where: { questionId, visibility: 'PUBLIC' },
-      orderBy: { sortOrder: 'asc' },
+    prisma.question.findUnique({
+      where: { id: questionId },
+      select: { publicTestCode: true },
     }),
     prisma.contentPackQuestion.findFirst({
       where: { questionId },
@@ -49,13 +43,7 @@ export async function buildQuestionRenderData(questionId: string): Promise<Quest
     description: versionContent?.description ?? null,
     tags: tagLinks.map((l) => l.tag.name),
     starterCode: (latestVersion?.starterCode ?? {}) as Record<string, string>,
-    publicTests: publicTests.map((t) => ({
-      id: t.id,
-      input: t.input,
-      expected: t.expected,
-      explanation: t.explanation,
-      sortOrder: t.sortOrder,
-    })),
+    publicTestCode: question?.publicTestCode ?? null,
     packId: packLink?.packId ?? null,
   };
 }

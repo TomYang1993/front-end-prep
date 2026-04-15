@@ -4,7 +4,7 @@
  *
  * Outputs to: backups/<timestamp>/
  * - users.json          (users + profiles + roles)
- * - questions.json      (questions + tags + versions + test cases + solutions)
+ * - questions.json      (questions + tags + versions + solutions)
  * - billing.json        (subscriptions, purchases, entitlements, plans, packs)
  * - submissions.json    (submission history — can be large, exported separately)
  */
@@ -34,7 +34,6 @@ async function main() {
     include: {
       tags: { include: { tag: true } },
       versions: { orderBy: { version: 'desc' } },
-      testCases: { orderBy: { sortOrder: 'asc' } },
       officialSolutions: true,
       packLinks: true,
     },

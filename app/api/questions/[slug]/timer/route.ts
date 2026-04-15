@@ -29,11 +29,12 @@ export async function POST(
 
   if (existing) {
     const expiresAt = new Date(existing.startedAt.getTime() + existing.timeLimitMinutes * 60_000);
-    if (expiresAt > new Date()) {
-      // Timer still active — return it
+    const remainingMs = expiresAt.getTime() - Date.now();
+    if (remainingMs > 5_000) {
+      // More than 5s left — return active timer
       return NextResponse.json({ expiresAt: expiresAt.toISOString() });
     }
-    // Expired — delete so user can restart
+    // Expired or about to expire — delete so user can restart
     await prisma.questionTimer.delete({ where: { id: existing.id } });
   }
 

@@ -37,11 +37,6 @@ enum QuestionVersionStatus {
   ARCHIVED
 }
 
-enum TestVisibility {
-  PUBLIC
-  HIDDEN
-}
-
 enum SubmissionStatus {
   QUEUED
   RUNNING
@@ -140,12 +135,13 @@ model Question {
   isPublished      Boolean                @default(false)
   timeLimitMinutes Int?
   renderData       Json?
+  publicTestCode   String?
+  hiddenTestCode   String?
   createdById      String?
   createdAt        DateTime               @default(now())
   updatedAt        DateTime               @updatedAt
   versions         QuestionVersion[]
   tags             QuestionTagOnQuestion[]
-  testCases        TestCase[]
   officialSolutions OfficialSolution[]
   submissions      Submission[]
   packLinks        ContentPackQuestion[]
@@ -191,20 +187,6 @@ model QuestionTagOnQuestion {
   @@map("question_tag_links")
 }
 
-model TestCase {
-  id          String         @id @default(cuid())
-  questionId  String
-  visibility  TestVisibility
-  input       Json
-  expected    Json
-  explanation String?
-  sortOrder   Int            @default(0)
-  question    Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  results     SubmissionResult[]
-
-  @@map("test_cases")
-}
-
 model OfficialSolution {
   id          String   @id @default(cuid())
   questionId  String
@@ -244,13 +226,12 @@ model Submission {
 model SubmissionResult {
   id          String      @id @default(cuid())
   submissionId String
-  testCaseId  String
+  testName    String      @default("")
   passed      Boolean
   runtimeMs   Int?
   output      Json?
   error       String?
   submission  Submission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  testCase    TestCase    @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
 
   @@map("submission_results")
 }

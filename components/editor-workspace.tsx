@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import Editor from '@monaco-editor/react';
+import Editor, { type OnMount } from '@monaco-editor/react';
+import type { editor as monacoEditor } from 'monaco-editor';
 import { useToast } from '@/components/toast-provider';
 import {
   Lightbulb, FileCode2, History,
-  Play, Upload, ArrowLeft, ChevronDown, Terminal, X, ChevronUp
+  Play, Upload, ArrowLeft, ChevronDown,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useDebounce } from '@/lib/hooks/use-debounce';
@@ -17,13 +18,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { useSyntaxTheme } from '@/lib/hooks/use-syntax-theme';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { DIFFICULTY_LABEL } from '@/types/domain';
-
-interface PublicTest {
-  id: string;
-  input: unknown;
-  expected: unknown;
-  explanation?: string | null;
-}
+import { BottomPanel, type BottomTab, type TestResult, type SubmitResult } from '@/components/bottom-panel';
 
 interface SolutionView {
   id: string;
@@ -42,18 +37,8 @@ interface EditorWorkspaceProps {
   difficulty: string;
   tags: string[];
   starterCode?: Record<string, string>;
-  publicTests: PublicTest[];
+  publicTestCode: string;
   expiresAt?: string;
-}
-
-interface RunResult {
-  id: string;
-  passed: boolean;
-  output: unknown;
-  runtimeMs: number;
-  error?: string;
-  explanation?: string | null;
-  logs?: string[];
 }
 
 type LeftTab = 'description' | 'solutions' | 'submissions';
@@ -66,7 +51,7 @@ export function EditorWorkspace({
   difficulty,
   tags,
   starterCode,
-  publicTests,
+  publicTestCode,
   expiresAt,
 }: EditorWorkspaceProps) {
   const { toast } = useToast();
@@ -96,14 +81,21 @@ export function EditorWorkspace({
     } as Record<string, string>;
   });
 
+  const editorRef = useRef<monacoEditor.IStandaloneCodeEditor | null>(null);
+
+  /** Read current code from editor instance (source of truth) or fall back to state */
+  const getCode = useCallback(() => {
+    return editorRef.current?.getValue() ?? codes[language];
+  }, [codes, language]);
+
   const code = codes[language];
   const setCode = (val: string) => {
     setCodes((prev) => ({ ...prev, [language]: val }));
-    localStorage.setItem(`draft-${questionId}-${language}`, val);
   };
   const debouncedCode = useDebounce(code, 2000);
   const initialMount = useRef(true);
 
+  // Persist draft to server (debounced)
   useEffect(() => {
     if (initialMount.current) {
       initialMount.current = false;
@@ -115,10 +107,33 @@ export function EditorWorkspace({
       body: JSON.stringify({ questionId, framework: language, code: debouncedCode })
     }).catch(err => console.error('Autosave failed:', err));
   }, [debouncedCode, questionId, language]);
+
+  // Flush unsaved changes on page leave
+  useEffect(() => {
+    const flush = () => {
+      const currentCode = editorRef.current?.getValue();
+      if (currentCode == null) return;
+      navigator.sendBeacon(
+        '/api/drafts',
+        new Blob(
+          [JSON.stringify({ questionId, framework: language, code: currentCode })],
+          { type: 'application/json' },
+        ),
+      );
+    };
+    window.addEventListener('beforeunload', flush);
+    return () => window.removeEventListener('beforeunload', flush);
+  }, [questionId, language]);
+
+  // ─── Test/Console/Results state ───
   const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [results, setResults] = useState<RunResult[]>([]);
-  const [summary, setSummary] = useState<{ passedCount: number; total: number } | null>(null);
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [consoleLogs, setConsoleLogs] = useState<string[]>([]);
+  const [submitResult, setSubmitResult] = useState<SubmitResult | null>(null);
+  const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('tests');
+
+  // ─── Bottom panel resize ───
   const [consoleHeight, setConsoleHeight] = useState(280);
   const consoleHeightRef = useRef(280);
   const lastOpenConsoleHeightRef = useRef(280);
@@ -157,6 +172,7 @@ export function EditorWorkspace({
     }
   }, [activeLeftTab, questionId, submissions.length, loadingSubmissions]);
 
+  // ─── Drag handles ───
   const [leftWidth, setLeftWidth] = useState(450);
   const isDragging = useRef(false);
 
@@ -223,6 +239,19 @@ export function EditorWorkspace({
     }
   };
 
+  // When language changes, push the stored code into the editor imperatively
+  const prevLanguageRef = useRef(language);
+  useEffect(() => {
+    if (prevLanguageRef.current !== language && editorRef.current) {
+      editorRef.current.setValue(codes[language]);
+      prevLanguageRef.current = language;
+    }
+  }, [language, codes]);
+
+  const handleEditorMount: OnMount = (editor) => {
+    editorRef.current = editor;
+  };
+
   useEffect(() => {
     const updateTheme = () => {
       const theme = document.documentElement.getAttribute('data-theme');
@@ -248,95 +277,73 @@ export function EditorWorkspace({
     };
   }, []);
 
+  // ─── Run public tests ───
   async function runPublicTests() {
     setRunning(true);
     ensureConsoleOpen();
+    const currentCode = getCode();
 
     try {
-      let testResults: RunResult[];
+      const response = await fetch('/api/playground/run-public', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId, framework: isPython ? 'python' : 'javascript', code: currentCode }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Public test run failed');
 
-      if (isPython) {
-        const pyResults = await pythonRunner.runTests(code, publicTests);
-        testResults = pyResults.map((r) => ({
-          id: r.id,
-          passed: r.passed,
-          output: r.output,
-          runtimeMs: r.runtimeMs,
-          error: r.error,
-          logs: r.logs,
-        }));
+      const results: TestResult[] = data.results || [];
+      const logs: string[] = data.logs || [];
+
+      setTestResults(results);
+      setConsoleLogs((prev) => [...prev, ...logs]);
+
+      if (logs.length > 0) {
+        setActiveBottomTab('console');
       } else {
-        const response = await fetch('/api/playground/run-public', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ questionId, framework: 'javascript', code }),
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Public test run failed');
-        testResults = data.results || [];
+        setActiveBottomTab('tests');
       }
-
-      const passedCount = testResults.filter((r) => r.passed).length;
-      setSummary({ passedCount, total: testResults.length });
-      setResults(testResults);
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Unknown error';
-      setResults([{ id: 'runtime-error', passed: false, output: null, runtimeMs: 0, error: msg }]);
+      setTestResults([{ name: 'Execution Error', passed: false, error: msg }]);
+      setActiveBottomTab('tests');
       toast({ title: 'Test run failed', description: msg, type: 'error' });
     } finally {
       setRunning(false);
     }
   }
 
+  // ─── Submit hidden tests ───
   async function submitHiddenTests() {
     setSubmitting(true);
     ensureConsoleOpen();
+    const currentCode = getCode();
 
     try {
-      if (isPython) {
-        const testsRes = await fetch(`/api/questions/${questionId}/hidden-tests`);
-        if (!testsRes.ok) throw new Error('Failed to fetch hidden tests');
-        const hiddenTests: { id: string; input: unknown; expected: unknown }[] = await testsRes.json();
+      const response = await fetch('/api/submissions/judge-hidden', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId, framework: isPython ? 'python' : 'javascript', code: currentCode }),
+      });
 
-        const pyResults = await pythonRunner.runTests(code, hiddenTests);
-        const passedCount = pyResults.filter((r) => r.passed).length;
-        const total = pyResults.length;
-        const score = total > 0 ? Math.round((passedCount / total) * 100) : 0;
-        const status = passedCount === total ? 'PASSED' : 'FAILED';
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Hidden judge failed');
 
-        await fetch('/api/submissions/judge-hidden', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            questionId,
-            framework: 'python',
-            code,
-            publicResult: { summary, results },
-            clientResults: { passedCount, total, score, runtimeMs: pyResults.reduce((s, r) => s + r.runtimeMs, 0) },
-          }),
-        });
+      setSubmitResult({
+        score: data.score,
+        status: data.status,
+        passedCount: data.passedCount,
+        total: data.total,
+        publicResults: testResults,
+        hiddenResults: data.hiddenResults || [],
+      });
+      setActiveBottomTab('results');
 
-        toast({
-          title: status === 'PASSED' ? 'All hidden tests passed!' : `Score: ${score}%`,
-          description: `${passedCount}/${total} hidden tests passed`,
-          type: status === 'PASSED' ? 'success' : 'info',
-        });
-      } else {
-        const response = await fetch('/api/submissions/judge-hidden', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ questionId, framework: 'javascript', code, publicResult: { summary, results } }),
-        });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Hidden judge failed');
-
-        toast({
-          title: data.status === 'PASSED' ? 'All hidden tests passed!' : `Score: ${data.score}%`,
-          description: `${data.passedCount}/${data.total} hidden tests passed`,
-          type: data.status === 'PASSED' ? 'success' : 'info',
-        });
-      }
+      toast({
+        title: data.status === 'PASSED' ? 'All hidden tests passed!' : `Score: ${data.score}%`,
+        description: `${data.passedCount}/${data.total} hidden tests passed`,
+        type: data.status === 'PASSED' ? 'success' : 'info',
+      });
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Unknown error';
       toast({ title: 'Submission failed', description: msg, type: 'error' });
@@ -359,14 +366,13 @@ export function EditorWorkspace({
         <div className="flex flex-col gap-4">
           <CheatsheetModal type={isPython ? 'python' : 'js'} />
           <ThemeToggle className="w-10 h-10 rounded-md border-none bg-transparent text-muted cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-surface-raised hover:text-ink" />
-
         </div>
       </aside>
 
       {/* ─── Main Content ─── */}
       <div className="flex-1 flex min-w-0">
         {/* Left Pane: Problem Description */}
-        <section className={`flex flex-col bg-surface border-r border-line flex-none max-w-[70%] min-w-[300px]`} style={{ width: leftWidth }}>
+        <section className={`flex flex-col bg-surface border-r border-line flex-none max-w-[70%] min-w-[400px]`} style={{ width: leftWidth }}>
           <div className="px-6 pt-4 border-b border-line bg-surface-raised">
             <div className={`flex items-center gap-4 mb-4 flex items-center justify-between w-full`}>
               <div className="flex items-center gap-3">
@@ -403,51 +409,6 @@ export function EditorWorkspace({
                 <div className="text-[0.95rem] leading-[1.6] text-ink mb-8">
                   <MarkdownProse>{prompt}</MarkdownProse>
                 </div>
-
-                {publicTests.map((test, i) => {
-                  const inp = test.input as {
-                    args?: unknown[];
-                    setup?: string;
-                    assertions?: { expr: string; desc: string }[];
-                  } | null;
-                  const isAssertionTest = Array.isArray(inp?.assertions);
-                  return (
-                  <div key={test.id} className="mb-6">
-                    <h3 className="text-[0.75rem] uppercase tracking-[0.1em] font-bold text-muted m-0 mb-2">Example {i + 1}:</h3>
-                    <div className="bg-surface-raised border-l-[3px] border-brand p-4 rounded-r-md font-mono text-[0.85rem] text-ink-secondary flex flex-col gap-3">
-                      {isAssertionTest ? (
-                        <>
-                          {inp?.setup && (
-                            <div>
-                              <span className="text-muted text-[0.7rem] uppercase tracking-wider block mb-1">Setup</span>
-                              <pre className="m-0 whitespace-pre-wrap break-words text-ink">{inp.setup}</pre>
-                            </div>
-                          )}
-                          <div>
-                            <span className="text-muted text-[0.7rem] uppercase tracking-wider block mb-1">Expects</span>
-                            <ul className="list-none pl-0 m-0 space-y-1">
-                              {inp!.assertions!.map((a, idx) => (
-                                <li key={idx} className="flex items-start gap-2">
-                                  <span className="text-muted shrink-0 mt-[1px]">•</span>
-                                  <span className="text-ink">{a.desc}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div><span className="text-muted">Input:</span> {JSON.stringify(inp?.args)}</div>
-                          <div><span className="text-muted">Output:</span> {JSON.stringify(test.expected)}</div>
-                        </>
-                      )}
-                      {test.explanation && (
-                        <div className="text-muted text-[0.8rem]">{test.explanation}</div>
-                      )}
-                    </div>
-                  </div>
-                  );
-                })}
               </>
             ) : activeLeftTab === 'solutions' ? (
               <div className="flex flex-col gap-6">
@@ -532,7 +493,7 @@ export function EditorWorkspace({
           className="w-2 bg-transparent cursor-col-resize z-10 -mx-1 relative shrink-0"
         />
 
-        {/* Right Pane: Editor + Console */}
+        {/* Right Pane: Editor + Bottom Panel */}
         <section className="flex-1 flex flex-col bg-surface-raised min-w-[400px] dark:bg-black focus-mode:bg-black">
           <div className="h-10 bg-surface border-b border-line flex justify-between items-center px-4 shrink-0">
             <div className="flex items-center h-full">
@@ -584,7 +545,8 @@ export function EditorWorkspace({
                 height="100%"
                 language={language}
                 theme={monacoTheme}
-                value={code}
+                defaultValue={code}
+                onMount={handleEditorMount}
                 onChange={(value) => setCode(value || '')}
                 options={{
                   minimap: { enabled: false },
@@ -598,146 +560,24 @@ export function EditorWorkspace({
               />
             </div>
 
-            {/* Console: resizable drawer with draggable top border */}
-            <div className="bg-surface flex flex-col shrink-0" style={{ height: consoleHeight }}>
-              <div
-                onMouseDown={handleConsoleMouseDown}
-                className="h-1.5 shrink-0 bg-line hover:bg-brand/50 cursor-row-resize transition-colors"
-                title="Drag to resize console"
-              />
-              <div
-                className="h-10 flex items-center justify-between px-4 cursor-pointer hover:bg-bg-subtle/50 transition-colors shrink-0"
-                onClick={toggleConsole}
-              >
-                <div className="flex items-center gap-2 text-muted font-bold tracking-wider text-[0.7rem] uppercase">
-                  <Terminal size={14} /> Console
-                  {results.length > 0 && isConsoleCollapsed && (
-                    <span className={`ml-2 px-1.5 py-0.5 rounded-sm text-[0.6rem] ${summary?.passedCount === summary?.total ? 'bg-good-subtle text-good' : 'bg-warn-subtle text-warn'}`}>
-                      {summary?.passedCount}/{summary?.total}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 text-muted">
-                   <span className="p-1 hover:bg-line rounded-md transition-colors">
-                     {isConsoleCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                   </span>
-                </div>
-              </div>
-
-              {!isConsoleCollapsed && (
-                <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 bg-bg">
-                  {running ? (
-                    <div className="flex items-center justify-center h-full text-muted text-sm font-mono animate-pulse">Running tests...</div>
-                  ) : results.length > 0 ? (
-                    <>
-                      {summary && (
-                        <div className={`text-sm font-bold flex items-center gap-2 border-b border-line pb-4 ${summary.passedCount === summary.total ? 'text-good' : 'text-warn'}`}>
-                          <span className={`w-2 h-2 rounded-full ${summary.passedCount === summary.total ? 'bg-good' : 'bg-warn'}`}></span>
-                          {summary.passedCount} / {summary.total} Tests Passed
-                        </div>
-                      )}
-                      {results.map((r, i) => {
-                        const testInput = publicTests[i]?.input as {
-                          args?: unknown[];
-                          setup?: string;
-                          assertions?: { expr: string; desc: string }[];
-                        } | undefined;
-                        const isAssertionResult = Array.isArray(testInput?.assertions);
-                        const assertionOutputs = Array.isArray(r.output)
-                          ? (r.output as { desc: string; passed: boolean; error?: string }[])
-                          : null;
-                        return (
-                        <div key={r.id || i} className="bg-surface-raised border border-line rounded-md p-4 text-sm font-mono shadow-sm">
-                          <div className={`font-bold mb-3 flex items-center gap-2 ${r.passed ? 'text-good' : 'text-warn'}`}>
-                             {r.passed ? (
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                             ) : (
-                                <X size={14} strokeWidth={3} />
-                             )}
-                             Test {i + 1}
-                          </div>
-                          <div className="space-y-3">
-                            {isAssertionResult && assertionOutputs ? (
-                              <>
-                                {testInput?.setup && (
-                                  <div>
-                                    <span className="text-muted text-xs block mb-1">Setup:</span>
-                                    <pre className="m-0 text-ink text-[13px] bg-surface px-3 py-2 rounded border border-line whitespace-pre-wrap break-words">{testInput.setup}</pre>
-                                  </div>
-                                )}
-                                <ul className="list-none pl-0 m-0 space-y-1">
-                                  {assertionOutputs.map((a, idx) => (
-                                    <li key={idx} className="flex items-start gap-2 text-[13px]">
-                                      {a.passed ? (
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-good shrink-0 mt-[3px]"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                      ) : (
-                                        <X size={12} strokeWidth={3} className="text-warn shrink-0 mt-[3px]" />
-                                      )}
-                                      <span className={a.passed ? 'text-ink-secondary' : 'text-ink'}>
-                                        {a.desc}
-                                        {a.error && <span className="text-warn ml-2">— {a.error}</span>}
-                                      </span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </>
-                            ) : (
-                              <>
-                            {!r.passed && publicTests[i] && (
-                              <div>
-                                <span className="text-muted text-xs block mb-1">Input:</span>
-                                <div className="text-ink text-[13px] bg-surface px-3 py-2 rounded border border-line break-all">
-                                  {JSON.stringify(testInput?.args || testInput)}
-                                </div>
-                              </div>
-                            )}
-                            {!r.passed && publicTests[i] && (
-                             <div>
-                                <span className="text-muted text-xs block mb-1">Expected:</span>
-                                <div className="text-good text-[13px] bg-surface px-3 py-2 rounded border border-line break-all">
-                                  {JSON.stringify(publicTests[i].expected)}
-                                </div>
-                              </div>
-                            )}
-                            {!r.passed && (r.error || r.output !== undefined) && (
-                              <div>
-                                <span className="text-muted text-xs block mb-1">Actual:</span>
-                                {r.error ? (
-                                  <div className="text-warn text-[13px] bg-warn-subtle/30 px-3 py-2 rounded border border-warn/20 whitespace-pre-wrap break-all">
-                                    {String(r.error)}
-                                  </div>
-                                ) : (
-                                  <div className="text-warn text-[13px] bg-surface px-3 py-2 rounded border border-line break-all">
-                                    {String(r.output)}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                              </>
-                            )}
-                            {r.logs && r.logs.length > 0 && (
-                              <div>
-                                <span className="text-muted text-xs block mb-1">Stdout:</span>
-                                <div className="text-ink-secondary text-[13px] bg-surface px-3 py-2 rounded border border-line whitespace-pre-wrap break-all">
-                                  {r.logs.join('\\n')}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        );
-                      })}
-                    </>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-muted text-sm font-mono">
-                      Run your code to see results
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            {/* Bottom Panel */}
+            <BottomPanel
+              activeTab={activeBottomTab}
+              onTabChange={setActiveBottomTab}
+              height={consoleHeight}
+              collapsed={isConsoleCollapsed}
+              onToggleCollapse={toggleConsole}
+              onMouseDown={handleConsoleMouseDown}
+              testCode={publicTestCode}
+              testResults={testResults}
+              mode="js"
+              consoleLogs={consoleLogs}
+              onClearConsole={() => setConsoleLogs([])}
+              submitResult={submitResult}
+              isRunning={running}
+              isSubmitting={submitting}
+            />
           </div>
-
         </section>
       </div>
     </div>

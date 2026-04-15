@@ -18,10 +18,6 @@ export async function GET(req: NextRequest, { params }: Params) {
         orderBy: { version: 'desc' },
         take: 1
       },
-      testCases: {
-        where: { visibility: 'PUBLIC' },
-        orderBy: { sortOrder: 'asc' }
-      },
       officialSolutions: {
         orderBy: { updatedAt: 'desc' }
       },
@@ -62,7 +58,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       accessTier: question.accessTier,
       tags: question.tags.map((item) => item.tag.name),
       starterCode,
-      publicTests: question.testCases,
+      publicTestCode: question.publicTestCode,
       officialSolutions: question.officialSolutions,
       discussions: question.threads.map((thread) => ({
         id: thread.id,
