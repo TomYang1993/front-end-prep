@@ -10,15 +10,16 @@ import { unauthorized } from '@/lib/api';
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await params;
   const user = await requireUser(req).catch(() => null);
   if (!user) {
     return unauthorized();
   }
 
   const question = await prisma.question.findUnique({
-    where: { id: params.slug },
+    where: { id: slug },
     select: { hiddenTestCode: true },
   });
 

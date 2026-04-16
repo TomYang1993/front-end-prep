@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   );
 
   if (code && hasSupabaseEnv) {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     // After successful login, resolve DB user and write session cookie

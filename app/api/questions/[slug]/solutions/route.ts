@@ -3,17 +3,18 @@ import { prisma } from '@/lib/db/prisma';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { canAccessQuestion, getEntitlementContext } from '@/lib/auth/entitlement';
 
-export async function GET(request: Request, { params }: { params: { slug: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
+    const { slug } = await params;
     // Run auth, question lookup, and solutions query in parallel
     const [user, question, solutions] = await Promise.all([
       getCurrentServerUser(),
       prisma.question.findUnique({
-        where: { id: params.slug },
+        where: { id: slug },
         select: { id: true, accessTier: true }
       }),
       prisma.officialSolution.findMany({
-        where: { questionId: params.slug },
+        where: { questionId: slug },
         orderBy: { updatedAt: 'desc' }
       }),
     ]);

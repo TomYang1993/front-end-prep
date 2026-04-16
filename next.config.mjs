@@ -1,6 +1,6 @@
 const nextConfig = {
+  serverExternalPackages: ['esbuild', 'isolated-vm'],
   experimental: {
-    serverComponentsExternalPackages: ['esbuild', 'isolated-vm'],
     optimizePackageImports: ['lucide-react'],
   },
 };

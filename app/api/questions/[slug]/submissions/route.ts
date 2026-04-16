@@ -4,15 +4,16 @@ import { prisma } from '@/lib/db/prisma';
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await params;
   const user = await getCurrentServerUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const submissions = await prisma.submission.findMany({
-    where: { userId: user.id, questionId: params.slug },
+    where: { userId: user.id, questionId: slug },
     orderBy: { createdAt: 'desc' },
     take: 25,
     select: {

@@ -63,16 +63,16 @@ export function BottomPanel({
   const syntaxStyle = useSyntaxTheme();
 
   const tabs: { id: BottomTab; label: string; icon: React.ReactNode; badge?: string }[] = [
-    {
-      id: 'tests',
-      label: 'Tests',
-      icon: <FlaskConical size={13} />,
-      badge: testResults.length > 0
-        ? `${testResults.filter((r) => r.passed).length}/${testResults.length}`
-        : undefined,
-    },
     ...(mode === 'js'
       ? [{
+          id: 'tests' as const,
+          label: 'Tests',
+          icon: <FlaskConical size={13} />,
+          badge: testResults.length > 0
+            ? `${testResults.filter((r) => r.passed).length}/${testResults.length}`
+            : undefined,
+        },
+        {
           id: 'console' as const,
           label: 'Console',
           icon: <Terminal size={13} />,

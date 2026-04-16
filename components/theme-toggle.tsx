@@ -17,26 +17,21 @@ const THEME_LABELS: Record<Theme, string> = {
   focus: 'Focus',
 };
 
-function getStoredTheme(): Theme | null {
-  if (typeof window === 'undefined') return null;
-  const stored = localStorage.getItem('theme');
-  if (stored && THEME_ORDER.includes(stored as Theme)) return stored as Theme;
-  return null;
-}
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 
-function getSystemTheme(): Theme {
-  if (typeof window === 'undefined') return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+function writeThemeCookie(theme: Theme) {
+  document.cookie = `theme=${theme}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=lax`;
 }
 
 export function ThemeToggle({ className }: { className?: string } = {}) {
-  const [theme, setTheme] = useState<Theme>('dark'); // Matches initial server render
+  const [theme, setTheme] = useState<Theme>('dark');
 
+  // Sync with whatever server applied to <html data-theme>
   useEffect(() => {
-    const stored = getStoredTheme();
-    const resolved = stored || getSystemTheme();
-    setTheme(resolved);
-    document.documentElement.setAttribute('data-theme', resolved);
+    const applied = document.documentElement.getAttribute('data-theme') as Theme | null;
+    if (applied && THEME_ORDER.includes(applied)) {
+      setTheme(applied);
+    }
   }, []);
 
   function cycle() {
@@ -44,10 +39,8 @@ export function ThemeToggle({ className }: { className?: string } = {}) {
     const next = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
     setTheme(next);
     document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('theme', next);
+    writeThemeCookie(next);
   }
-
-
 
   const nextTheme = THEME_ORDER[(THEME_ORDER.indexOf(theme) + 1) % THEME_ORDER.length];
 

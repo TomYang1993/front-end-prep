@@ -37,7 +37,7 @@ export async function getCurrentUserFromRequest(req: NextRequest): Promise<Sessi
   );
 
   if (bearerToken && hasSupabaseEnv) {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.getUser(bearerToken);
     if (!error && data.user?.id && data.user.email) {
       let user = await prisma.user.findUnique({

@@ -4,10 +4,11 @@ import { requireAdmin } from '@/lib/auth/current-user';
 import { forbidden, notFound, unauthorized } from '@/lib/api';
 
 interface Params {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function GET(req: NextRequest, { params }: Params) {
+  const { id } = await params;
   try {
     await requireAdmin(req);
   } catch (error) {
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   }
 
   const question = await prisma.question.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       tags: { include: { tag: true } },
       versions: { orderBy: { version: 'desc' } },

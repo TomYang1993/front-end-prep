@@ -2,11 +2,12 @@ import { Suspense } from 'react';
 import { AuthForm } from '@/components/auth-form';
 import { AuthGate } from '@/components/auth-gate';
 
-export default function AuthPage({
-  searchParams,
+export default async function AuthPage({
+  searchParams: searchParamsPromise,
 }: {
-  searchParams: { next?: string };
+  searchParams: Promise<{ next?: string }>;
 }) {
+  const searchParams = await searchParamsPromise;
   const fromQuestion = searchParams.next?.startsWith('/questions/');
 
   return (

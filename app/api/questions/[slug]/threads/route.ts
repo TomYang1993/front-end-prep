@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 
-export async function GET(request: Request, { params }: { params: { slug: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
+    const { slug } = await params;
     const question = await prisma.question.findUnique({
-      where: { id: params.slug },
+      where: { id: slug },
       select: { id: true }
     });
 
@@ -13,7 +14,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
     }
 
     const threads = await prisma.discussionThread.findMany({
-      where: { questionId: params.slug, status: 'ACTIVE' },
+      where: { questionId: slug, status: 'ACTIVE' },
       include: {
         _count: { select: { comments: true, likes: true } },
         user: {

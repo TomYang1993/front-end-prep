@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { Space_Grotesk, IBM_Plex_Mono } from 'next/font/google';
 import '@/styles/globals.css';
 import { SiteHeader } from '@/components/site-header';
@@ -6,6 +7,10 @@ import { HeaderWrapper } from '@/components/header-wrapper';
 import { ToastProvider } from '@/components/toast-provider';
 import { UserProvider } from '@/components/user-provider';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
+
+const VALID_THEMES = ['light', 'dark', 'focus'] as const;
+type Theme = typeof VALID_THEMES[number];
+const DEFAULT_THEME: Theme = 'dark';
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -25,26 +30,13 @@ export const metadata: Metadata = {
   description: 'LeetCode + GreatFrontEnd style practice platform for JS and React interviews.',
 };
 
-// Inline script to prevent flash of wrong theme (FOUC)
-const themeScript = `
-(function() {
-  try {
-    var stored = localStorage.getItem('theme');
-    var valid = ['light', 'dark', 'focus'];
-    var theme = (stored && valid.indexOf(stored) !== -1) ? stored : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', theme);
-  } catch(e) {}
-})();
-`;
-
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const user = await getCurrentServerUser();
+  const [user, cookieStore] = await Promise.all([getCurrentServerUser(), cookies()]);
+  const cookieTheme = cookieStore.get('theme')?.value;
+  const theme: Theme = VALID_THEMES.includes(cookieTheme as Theme) ? (cookieTheme as Theme) : DEFAULT_THEME;
 
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${ibmPlexMono.variable}`} suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
+    <html lang="en" data-theme={theme} className={`${spaceGrotesk.variable} ${ibmPlexMono.variable}`}>
       <body>
         <UserProvider user={user}>
           <ToastProvider>

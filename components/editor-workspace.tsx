@@ -58,9 +58,11 @@ export function EditorWorkspace({
   const syntaxTheme = useSyntaxTheme();
   const [solutions, setSolutions] = useState<SolutionView[]>([]);
   const [loadingSolutions, setLoadingSolutions] = useState(false);
+  const [solutionsLoaded, setSolutionsLoaded] = useState(false);
 
   const [submissions, setSubmissions] = useState<{ id: string; status: string; score: number | null; framework: string; code: string; createdAt: string }[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+  const [submissionsLoaded, setSubmissionsLoaded] = useState(false);
   const [expandedSubmission, setExpandedSubmission] = useState<string | null>(null);
 
   const isPython = questionType === 'FUNCTION_PYTHON';
@@ -149,28 +151,32 @@ export function EditorWorkspace({
   const [monacoTheme, setMonacoTheme] = useState<'vs-dark' | 'light'>('vs-dark');
 
   useEffect(() => {
-    if (activeLeftTab === 'solutions' && solutions.length === 0 && !loadingSolutions) {
-      setLoadingSolutions(true);
-      fetch(`/api/questions/${questionId}/solutions`)
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) setSolutions(data);
-        })
-        .finally(() => setLoadingSolutions(false));
-    }
-  }, [activeLeftTab, questionId, solutions.length, loadingSolutions]);
+    if (activeLeftTab !== 'solutions' || solutionsLoaded || loadingSolutions) return;
+    setLoadingSolutions(true);
+    fetch(`/api/questions/${questionId}/solutions`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setSolutions(data);
+      })
+      .finally(() => {
+        setLoadingSolutions(false);
+        setSolutionsLoaded(true);
+      });
+  }, [activeLeftTab, questionId, solutionsLoaded, loadingSolutions]);
 
   useEffect(() => {
-    if (activeLeftTab === 'submissions' && submissions.length === 0 && !loadingSubmissions) {
-      setLoadingSubmissions(true);
-      fetch(`/api/questions/${questionId}/submissions`)
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) setSubmissions(data);
-        })
-        .finally(() => setLoadingSubmissions(false));
-    }
-  }, [activeLeftTab, questionId, submissions.length, loadingSubmissions]);
+    if (activeLeftTab !== 'submissions' || submissionsLoaded || loadingSubmissions) return;
+    setLoadingSubmissions(true);
+    fetch(`/api/questions/${questionId}/submissions`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setSubmissions(data);
+      })
+      .finally(() => {
+        setLoadingSubmissions(false);
+        setSubmissionsLoaded(true);
+      });
+  }, [activeLeftTab, questionId, submissionsLoaded, loadingSubmissions]);
 
   // ─── Drag handles ───
   const [leftWidth, setLeftWidth] = useState(450);

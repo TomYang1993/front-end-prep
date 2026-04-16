@@ -5,12 +5,13 @@ import { getEntitlementContext, canAccessQuestion } from '@/lib/auth/entitlement
 import { notFound, forbidden } from '@/lib/api';
 
 interface Params {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export async function GET(req: NextRequest, { params }: Params) {
+  const { slug } = await params;
   const question = await prisma.question.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     include: {
       tags: { include: { tag: true } },
       versions: {

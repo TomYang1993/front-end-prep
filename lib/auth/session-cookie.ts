@@ -49,7 +49,7 @@ export async function signSessionToken(user: SessionPayload): Promise<string> {
 
 /** Read the session cookie via next/headers. */
 export async function readSessionCookie(): Promise<SessionPayload | null> {
-  const token = cookies().get(SESSION_COOKIE_NAME)?.value;
+  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
   return verifySessionToken(token);
 }
@@ -57,7 +57,7 @@ export async function readSessionCookie(): Promise<SessionPayload | null> {
 /** Write session cookie via next/headers. Only works in Route Handlers / Server Actions. */
 export async function writeSessionCookie(user: SessionPayload) {
   const token = await signSessionToken(user);
-  cookies().set(SESSION_COOKIE_NAME, token, {
+  (await cookies()).set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -67,6 +67,6 @@ export async function writeSessionCookie(user: SessionPayload) {
 }
 
 /** Clear the session cookie. Only works in Route Handlers / Server Actions. */
-export function clearSessionCookie() {
-  cookies().set(SESSION_COOKIE_NAME, '', { path: '/', maxAge: 0 });
+export async function clearSessionCookie() {
+  (await cookies()).set(SESSION_COOKIE_NAME, '', { path: '/', maxAge: 0 });
 }

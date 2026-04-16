@@ -6,15 +6,16 @@ import type { Difficulty, QuestionType } from '@prisma/client';
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await params;
   const user = await getCurrentServerUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const question = await prisma.question.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     select: { id: true, type: true, difficulty: true, timeLimitMinutes: true },
   });
 

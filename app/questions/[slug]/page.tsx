@@ -14,20 +14,21 @@ import type { Difficulty, QuestionType } from '@prisma/client';
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function QuestionDetailPage({ params }: PageProps) {
-  const t = createTimer(`GET /questions/${params.slug}`);
+  const { slug } = await params;
+  const t = createTimer(`GET /questions/${slug}`);
   const user = await t.time('auth', getCurrentServerUser());
 
   if (!user) {
-    redirect(`/auth?next=/questions/${encodeURIComponent(params.slug)}`);
+    redirect(`/auth?next=/questions/${encodeURIComponent(slug)}`);
   }
 
-  const question = await t.time('query', getQuestionDetailBySlug(params.slug, user.id));
+  const question = await t.time('query', getQuestionDetailBySlug(slug, user.id));
   t.summary();
 
   if (!question) {
@@ -74,7 +75,7 @@ export default async function QuestionDetailPage({ params }: PageProps) {
 
     return (
       <QuestionStartScreen
-        slug={params.slug}
+        slug={slug}
         title={question.title}
         difficulty={question.difficulty}
         tags={question.tags}
@@ -127,7 +128,6 @@ export default async function QuestionDetailPage({ params }: PageProps) {
       difficulty={question.difficulty}
       tags={question.tags}
       starterCode={question.starterCode || undefined}
-      publicTestCode={question.publicTestCode || ''}
       expiresAt={expiresAt}
     />
   );

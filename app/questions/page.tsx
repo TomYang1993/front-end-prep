@@ -10,10 +10,11 @@ import { createTimer } from '@/lib/server-timing';
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  searchParams: { [key: string]: string | undefined };
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }
 
-export default async function QuestionsPage({ searchParams }: PageProps) {
+export default async function QuestionsPage({ searchParams: searchParamsPromise }: PageProps) {
+  const searchParams = await searchParamsPromise;
   const t = createTimer('GET /questions');
   const user = await t.time('auth', getCurrentServerUser());
 

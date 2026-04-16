@@ -4,11 +4,11 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import Link from 'next/link';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import type { editor as monacoEditor } from 'monaco-editor';
-import { SandpackProvider, SandpackPreview } from '@codesandbox/sandpack-react';
+import { SandpackProvider, SandpackPreview, SandpackLayout, useSandpack, useSandpackNavigation } from '@codesandbox/sandpack-react';
 import { useToast } from '@/components/toast-provider';
 import {
   Lightbulb, FileCode2,
-  Upload, ArrowLeft, Eye, Palette, History
+  Upload, ArrowLeft, Eye, Palette, History, RotateCw
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useDebounce } from '@/lib/hooks/use-debounce';
@@ -18,7 +18,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { useSyntaxTheme } from '@/lib/hooks/use-syntax-theme';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { DIFFICULTY_LABEL } from '@/types/domain';
-import { BottomPanel, type BottomTab, type TestResult, type SubmitResult } from '@/components/bottom-panel';
+import { BottomPanel, type BottomTab, type SubmitResult } from '@/components/bottom-panel';
 
 interface SolutionView {
   id: string;
@@ -36,7 +36,6 @@ export interface ReactEditorWorkspaceProps {
   difficulty: string;
   tags: string[];
   starterCode?: Record<string, string>;
-  publicTestCode: string;
   expiresAt?: string;
 }
 
@@ -59,16 +58,17 @@ export function ReactEditorWorkspace({
   difficulty,
   tags,
   starterCode,
-  publicTestCode,
   expiresAt,
 }: ReactEditorWorkspaceProps) {
   const { toast } = useToast();
   const syntaxTheme = useSyntaxTheme();
   const [solutions, setSolutions] = useState<SolutionView[]>([]);
   const [loadingSolutions, setLoadingSolutions] = useState(false);
+  const [solutionsLoaded, setSolutionsLoaded] = useState(false);
 
   const [submissions, setSubmissions] = useState<{ id: string; status: string; score: number | null; framework: string; code: string; createdAt: string }[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+  const [submissionsLoaded, setSubmissionsLoaded] = useState(false);
   const [expandedSubmission, setExpandedSubmission] = useState<string | null>(null);
 
   const [activeFile, setActiveFile] = useState<ActiveFile>('app');
@@ -117,11 +117,10 @@ export function ReactEditorWorkspace({
     return () => window.removeEventListener('beforeunload', flush);
   }, [questionId, codes, activeFile]);
 
-  // ─── Test/Results state ───
+  // ─── Results state ───
   const [submitting, setSubmitting] = useState(false);
-  const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [submitResult, setSubmitResult] = useState<SubmitResult | null>(null);
-  const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('tests');
+  const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('results');
 
   // ─── Bottom panel resize ───
   const [consoleHeight, setConsoleHeight] = useState(280);
@@ -130,7 +129,6 @@ export function ReactEditorWorkspace({
   const consoleDragStart = useRef<{ y: number; h: number } | null>(null);
   const COLLAPSED_CONSOLE_HEIGHT = 46;
   const isConsoleCollapsed = consoleHeight < 80;
-  const submitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     consoleHeightRef.current = consoleHeight;
@@ -141,26 +139,30 @@ export function ReactEditorWorkspace({
 
   // Lazy-load solutions
   useEffect(() => {
-    if (activeLeftTab === 'solutions' && solutions.length === 0 && !loadingSolutions) {
-      setLoadingSolutions(true);
-      fetch(`/api/questions/${questionId}/solutions`)
-        .then(res => res.json())
-        .then(data => { if (Array.isArray(data)) setSolutions(data); })
-        .finally(() => setLoadingSolutions(false));
-    }
-  }, [activeLeftTab, questionId, solutions.length, loadingSolutions]);
+    if (activeLeftTab !== 'solutions' || solutionsLoaded || loadingSolutions) return;
+    setLoadingSolutions(true);
+    fetch(`/api/questions/${questionId}/solutions`)
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setSolutions(data); })
+      .finally(() => {
+        setLoadingSolutions(false);
+        setSolutionsLoaded(true);
+      });
+  }, [activeLeftTab, questionId, solutionsLoaded, loadingSolutions]);
 
   useEffect(() => {
-    if (activeLeftTab === 'submissions' && submissions.length === 0 && !loadingSubmissions) {
-      setLoadingSubmissions(true);
-      fetch(`/api/questions/${questionId}/submissions`)
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) setSubmissions(data);
-        })
-        .finally(() => setLoadingSubmissions(false));
-    }
-  }, [activeLeftTab, questionId, submissions.length, loadingSubmissions]);
+    if (activeLeftTab !== 'submissions' || submissionsLoaded || loadingSubmissions) return;
+    setLoadingSubmissions(true);
+    fetch(`/api/questions/${questionId}/submissions`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setSubmissions(data);
+      })
+      .finally(() => {
+        setLoadingSubmissions(false);
+        setSubmissionsLoaded(true);
+      });
+  }, [activeLeftTab, questionId, submissionsLoaded, loadingSubmissions]);
 
   // ─── Drag handles ───
   const [leftWidth, setLeftWidth] = useState(450);
@@ -260,83 +262,51 @@ export function ReactEditorWorkspace({
     };
   }, []);
 
-  // Listen for test results from Sandpack iframe
-  const previewRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleMessage = (e: MessageEvent) => {
-      if (e.data?.type === 'REACT_TEST_RESULTS') {
-        if (submitTimeoutRef.current) {
-          clearTimeout(submitTimeoutRef.current);
-          submitTimeoutRef.current = null;
-        }
-
-        const results: TestResult[] = e.data.results || [];
-        setTestResults(results);
-
-        const passedCount = results.filter(r => r.passed).length;
-        const total = results.length;
-        const allPassed = total > 0 && passedCount === total;
-
-        setSubmitResult({
-          score: total > 0 ? Math.round((passedCount / total) * 100) : 0,
-          status: allPassed ? 'PASSED' : 'FAILED',
-          passedCount,
-          total,
-          publicResults: results,
-          hiddenResults: [],
-        });
-        setActiveBottomTab('results');
-
-        // Record submission on server (best-effort)
-        fetch('/api/submissions/judge-hidden', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            questionId,
-            framework: 'react',
-            code: codes.app,
-            clientResults: results,
-          }),
-        }).catch(() => {});
-
-        toast({
-          title: allPassed ? 'All tests passed!' : `Score: ${total > 0 ? Math.round((passedCount / total) * 100) : 0}%`,
-          description: `${passedCount}/${total} tests passed`,
-          type: allPassed ? 'success' : 'info',
-        });
-
-        setSubmitting(false);
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [questionId, codes.app, toast]);
-
-  // Build Sandpack files
+  // Build Sandpack files — minimal per docs: template 'react' + /App.js
   const sandpackFiles = useMemo(() => ({
-    '/App.tsx': buildTestHarness(publicTestCode),
-    '/UserCode.tsx': codes.app,
+    '/App.js': codes.app,
     '/styles.css': codes.styles,
-  }), [codes.app, codes.styles, publicTestCode]);
+  }), [codes.app, codes.styles]);
 
   async function submitTests() {
     setSubmitting(true);
     ensureConsoleOpen();
     setActiveBottomTab('results');
 
-    const iframe = previewRef.current?.querySelector('iframe') as HTMLIFrameElement | null;
-    if (iframe?.contentWindow) {
-      iframe.contentWindow.postMessage({ type: 'RUN_REACT_TESTS' }, '*');
+    try {
+      const res = await fetch('/api/submissions/judge-hidden', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          questionId,
+          framework: 'react',
+          code: JSON.stringify({ app: codes.app, styles: codes.styles }),
+        }),
+      });
+      const data = await res.json();
 
-      // Timeout after 15 seconds
-      submitTimeoutRef.current = setTimeout(() => {
-        setSubmitting(false);
-        submitTimeoutRef.current = null;
-        toast({ title: 'Test timeout', description: 'Tests did not complete within 15 seconds.', type: 'error' });
-      }, 15000);
-    } else {
-      toast({ title: 'Preview not ready', description: 'Wait for the preview to load and try again.', type: 'error' });
+      const passedCount: number = data.passedCount ?? 0;
+      const total: number = data.total ?? 0;
+      const score: number = data.score ?? 0;
+      const status: 'PASSED' | 'FAILED' = data.status === 'PASSED' ? 'PASSED' : 'FAILED';
+
+      setSubmitResult({
+        score,
+        status,
+        passedCount,
+        total,
+        publicResults: [],
+        hiddenResults: data.hiddenResults ?? [],
+      });
+
+      toast({
+        title: status === 'PASSED' ? 'All tests passed!' : `Score: ${score}%`,
+        description: `${passedCount}/${total} tests passed`,
+        type: status === 'PASSED' ? 'success' : 'info',
+      });
+    } catch {
+      toast({ title: 'Submission failed', description: 'Something went wrong.', type: 'error' });
+    } finally {
       setSubmitting(false);
     }
   }
@@ -500,8 +470,6 @@ export function ReactEditorWorkspace({
               </button>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-[0.65rem] font-semibold text-muted bg-surface-raised border border-line py-[0.2rem] px-[0.6rem] rounded-sm">React v18</span>
-              <span className="mx-1 h-5 w-px bg-line" />
               <button
                 className="inline-flex items-center gap-1.5 bg-brand text-white border-none py-[0.3rem] px-[1.2rem] rounded-md text-[0.7rem] font-bold cursor-pointer transition-all duration-200 shadow-[0_0_12px_rgba(37,99,235,0.25)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={submitting}
@@ -541,8 +509,8 @@ export function ReactEditorWorkspace({
               collapsed={isConsoleCollapsed}
               onToggleCollapse={toggleConsole}
               onMouseDown={handleConsoleMouseDown}
-              testCode={publicTestCode}
-              testResults={testResults}
+              testCode=""
+              testResults={[]}
               mode="react"
               submitResult={submitResult}
               isRunning={false}
@@ -553,110 +521,67 @@ export function ReactEditorWorkspace({
 
         {/* Preview Column */}
         <section className="flex-1 flex flex-col border-l border-line min-w-[300px]">
-          <div className="h-10 bg-surface border-b border-line flex items-center px-4">
-            <span className="text-[0.75rem] font-bold text-muted uppercase tracking-wider flex items-center gap-2">
-              <Eye size={16} /> Preview
-            </span>
-          </div>
-          <div ref={previewRef} className="flex-1 bg-[#f9fafb] dark:bg-white overflow-hidden">
-            <SandpackProvider
-              template="react-ts"
-              files={sandpackFiles}
-              customSetup={{
-                dependencies: {
-                  '@testing-library/react': '^14.0.0',
-                  '@testing-library/dom': '^9.0.0',
-                },
-              }}
-            >
-              <SandpackPreview
-                style={{ height: '100%', width: '100%' }}
-                showOpenInCodeSandbox={false}
-                showRefreshButton={true}
-              />
-            </SandpackProvider>
-          </div>
+          <SandpackProvider template="react" files={sandpackFiles}>
+            <div className="h-10 bg-surface border-b border-line flex items-center justify-between px-4 shrink-0">
+              <span className="text-[0.75rem] font-bold text-muted uppercase tracking-wider flex items-center gap-2">
+                <Eye size={16} /> Preview
+              </span>
+              <PreviewRefreshButton />
+            </div>
+            <SandpackStatusBar />
+            <div className="flex-1 bg-[#f9fafb] dark:bg-white overflow-hidden flex flex-col [&>div]:flex-1 [&>div]:!h-auto">
+              <SandpackLayout style={{ height: '100%', border: 'none' }}>
+                <SandpackPreview
+                  style={{ height: '100%', width: '100%' }}
+                  showOpenInCodeSandbox={false}
+                  showRefreshButton={false}
+                />
+              </SandpackLayout>
+            </div>
+          </SandpackProvider>
         </section>
       </div>
     </div>
   );
 }
 
-/** Generates App.tsx that renders the user component and runs RTL tests on demand via postMessage */
-function buildTestHarness(testCode: string): string {
-  // Use string concatenation in error messages to avoid template literal escaping issues
-  return `import React, { useEffect } from 'react';
-import UserComponent from './UserCode';
-import './styles.css';
-import { render, screen, fireEvent, waitFor, within, cleanup } from '@testing-library/react';
-
-type TestEntry = { name: string; fn: () => void | Promise<void> };
-type TestResultItem = { name: string; passed: boolean; error?: string };
-const __tests: TestEntry[] = [];
-const __results: TestResultItem[] = [];
-
-function test(name: string, fn: () => void | Promise<void>) {
-  __tests.push({ name, fn });
-}
-const it = test;
-function describe(_name: string, fn: () => void) { fn(); }
-
-function expect(val: any) {
-  return {
-    toBe(exp: any) { if (val !== exp) throw new Error('Expected ' + JSON.stringify(exp) + ', got ' + JSON.stringify(val)); },
-    toEqual(exp: any) { if (JSON.stringify(val) !== JSON.stringify(exp)) throw new Error('Expected ' + JSON.stringify(exp) + ', got ' + JSON.stringify(val)); },
-    toBeTruthy() { if (!val) throw new Error('Expected truthy, got ' + JSON.stringify(val)); },
-    toBeFalsy() { if (val) throw new Error('Expected falsy, got ' + JSON.stringify(val)); },
-    toBeNull() { if (val !== null) throw new Error('Expected null, got ' + JSON.stringify(val)); },
-    toBeUndefined() { if (val !== undefined) throw new Error('Expected undefined, got ' + JSON.stringify(val)); },
-    toContain(item: any) {
-      if (typeof val === 'string') { if (!val.includes(item)) throw new Error('Expected string to contain ' + JSON.stringify(item)); }
-      else if (Array.isArray(val)) { if (!val.includes(item)) throw new Error('Expected array to contain ' + JSON.stringify(item)); }
-    },
-    toHaveLength(len: number) { if (val.length !== len) throw new Error('Expected length ' + len + ', got ' + val.length); },
-    toBeGreaterThan(n: number) { if (!(val > n)) throw new Error('Expected ' + val + ' > ' + n); },
-    toBeLessThan(n: number) { if (!(val < n)) throw new Error('Expected ' + val + ' < ' + n); },
-    toBeInTheDocument() { if (!val) throw new Error('Expected element to be in the document'); },
-    toHaveTextContent(text: string) {
-      var content = val?.textContent || '';
-      if (!content.includes(text)) throw new Error('Expected text content to include "' + text + '", got "' + content + '"');
-    },
-    not: {
-      toBe(exp: any) { if (val === exp) throw new Error('Expected not ' + JSON.stringify(exp)); },
-      toBeNull() { if (val === null) throw new Error('Expected not null'); },
-      toBeTruthy() { if (val) throw new Error('Expected falsy, got ' + JSON.stringify(val)); },
-      toBeInTheDocument() { if (val) throw new Error('Expected element NOT to be in the document'); },
-    },
-  };
+function PreviewRefreshButton() {
+  const { refresh } = useSandpackNavigation();
+  return (
+    <button
+      type="button"
+      onClick={() => refresh()}
+      className="w-7 h-7 flex items-center justify-center rounded-md text-muted hover:text-ink hover:bg-surface-raised transition-colors"
+      title="Refresh preview"
+    >
+      <RotateCw size={14} />
+    </button>
+  );
 }
 
-// Register tests from test code
-${testCode}
+function SandpackStatusBar() {
+  const { sandpack } = useSandpack();
+  const { status, error, bundlerState } = sandpack;
 
-export default function App() {
-  useEffect(() => {
-    const handleMessage = async (e: MessageEvent) => {
-      if (e.data?.type === 'RUN_REACT_TESTS') {
-        __results.length = 0;
+  const progress = bundlerState?.transpiledModules
+    ? `${Object.keys(bundlerState.transpiledModules).length} modules`
+    : null;
 
-        for (const t of __tests) {
-          try {
-            await t.fn();
-            __results.push({ name: t.name, passed: true });
-          } catch (err: any) {
-            __results.push({ name: t.name, passed: false, error: err.message || String(err) });
-          } finally {
-            cleanup();
-          }
-        }
-
-        window.parent.postMessage({ type: 'REACT_TEST_RESULTS', results: [...__results] }, '*');
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
-
-  return <UserComponent />;
-}`;
+  return (
+    <div className="px-3 py-1.5 bg-black text-[11px] font-mono border-b border-line shrink-0 flex items-center gap-2 text-white/80">
+      <span className="text-muted">sandpack:</span>
+      <span className={
+        status === 'idle' ? 'text-good'
+        : status === 'timeout' ? 'text-warn'
+        : 'text-caution'
+      }>
+        {status}
+      </span>
+      {progress && <span className="text-muted">· {progress}</span>}
+      {error && (
+        <span className="text-warn truncate">· {error.message}</span>
+      )}
+    </div>
+  );
 }
+
