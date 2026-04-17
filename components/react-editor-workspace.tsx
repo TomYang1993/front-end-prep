@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import Link from 'next/link';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import type { editor as monacoEditor } from 'monaco-editor';
-import { SandpackProvider, SandpackPreview, SandpackLayout, useSandpack, useSandpackNavigation } from '@codesandbox/sandpack-react';
+import { SandpackProvider, SandpackPreview, SandpackLayout, useSandpackNavigation } from '@codesandbox/sandpack-react';
 import { useToast } from '@/components/toast-provider';
 import {
   Lightbulb, FileCode2,
@@ -39,12 +39,19 @@ export interface ReactEditorWorkspaceProps {
   expiresAt?: string;
 }
 
+type ReactLanguage = 'js' | 'ts';
 type ActiveFile = 'app' | 'styles';
 type LeftTab = 'description' | 'solutions' | 'submissions';
 
-const DEFAULT_APP_CODE = `import React from 'react';
+const DEFAULT_APP_JS = `import React from 'react';
 
 export default function App() {
+  return <div>Start building your component.</div>;
+}`;
+
+const DEFAULT_APP_TS = `import React from 'react';
+
+export default function App(): JSX.Element {
   return <div>Start building your component.</div>;
 }`;
 
@@ -71,16 +78,19 @@ export function ReactEditorWorkspace({
   const [submissionsLoaded, setSubmissionsLoaded] = useState(false);
   const [expandedSubmission, setExpandedSubmission] = useState<string | null>(null);
 
+  const [language, setLanguage] = useState<ReactLanguage>('js');
   const [activeFile, setActiveFile] = useState<ActiveFile>('app');
   const [codes, setCodes] = useState({
-    app: starterCode?.react || DEFAULT_APP_CODE,
-    styles: starterCode?.css || DEFAULT_CSS,
+    appJs: starterCode?.react ?? DEFAULT_APP_JS,
+    appTs: starterCode?.reactTypescript ?? starterCode?.react ?? DEFAULT_APP_TS,
+    styles: starterCode?.css ?? DEFAULT_CSS,
   });
 
   const editorRef = useRef<monacoEditor.IStandaloneCodeEditor | null>(null);
-  const code = codes[activeFile];
+  const appKey = language === 'ts' ? 'appTs' : 'appJs';
+  const code = activeFile === 'app' ? codes[appKey] : codes.styles;
   const setCode = (val: string) => {
-    setCodes((prev) => ({ ...prev, [activeFile]: val }));
+    setCodes((prev) => ({ ...prev, [activeFile === 'app' ? appKey : 'styles']: val }));
   };
 
   const debouncedCodes = useDebounce(codes, 2000);
@@ -104,7 +114,8 @@ export function ReactEditorWorkspace({
     const flush = () => {
       const currentCode = editorRef.current?.getValue();
       if (currentCode == null) return;
-      const payload = { ...codes, [activeFile]: currentCode };
+      const currentKey = activeFile === 'app' ? appKey : 'styles';
+      const payload = { ...codes, [currentKey]: currentCode };
       navigator.sendBeacon(
         '/api/drafts',
         new Blob(
@@ -115,7 +126,7 @@ export function ReactEditorWorkspace({
     };
     window.addEventListener('beforeunload', flush);
     return () => window.removeEventListener('beforeunload', flush);
-  }, [questionId, codes, activeFile]);
+  }, [questionId, codes, activeFile, appKey]);
 
   // ─── Results state ───
   const [submitting, setSubmitting] = useState(false);
@@ -166,13 +177,19 @@ export function ReactEditorWorkspace({
 
   // ─── Drag handles ───
   const [leftWidth, setLeftWidth] = useState(450);
+  const [previewWidth, setPreviewWidth] = useState(420);
   const isDragging = useRef(false);
+  const isPreviewDragging = useRef(false);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging.current) {
         const newWidth = Math.max(300, Math.min(e.clientX - 65, window.innerWidth * 0.7));
         setLeftWidth(newWidth);
+      }
+      if (isPreviewDragging.current) {
+        const newWidth = Math.max(200, Math.min(window.innerWidth - e.clientX, window.innerWidth * 0.6));
+        setPreviewWidth(newWidth);
       }
       if (consoleDragStart.current) {
         const delta = consoleDragStart.current.y - e.clientY;
@@ -186,6 +203,10 @@ export function ReactEditorWorkspace({
     const handleMouseUp = () => {
       if (isDragging.current) {
         isDragging.current = false;
+        document.body.style.cursor = '';
+      }
+      if (isPreviewDragging.current) {
+        isPreviewDragging.current = false;
         document.body.style.cursor = '';
       }
       if (consoleDragStart.current) {
@@ -209,6 +230,11 @@ export function ReactEditorWorkspace({
     document.body.style.cursor = 'col-resize';
   };
 
+  const handlePreviewMouseDown = () => {
+    isPreviewDragging.current = true;
+    document.body.style.cursor = 'col-resize';
+  };
+
   const handleConsoleMouseDown = (e: React.MouseEvent) => {
     consoleDragStart.current = { y: e.clientY, h: consoleHeight };
     document.body.style.cursor = 'row-resize';
@@ -229,14 +255,17 @@ export function ReactEditorWorkspace({
     }
   };
 
-  // When active file changes, push stored code into editor
+  // When active file or language changes, push stored code into editor
   const prevFileRef = useRef(activeFile);
+  const prevLangRef = useRef(language);
   useEffect(() => {
-    if (prevFileRef.current !== activeFile && editorRef.current) {
-      editorRef.current.setValue(codes[activeFile]);
+    if ((prevFileRef.current !== activeFile || prevLangRef.current !== language) && editorRef.current) {
+      const key = activeFile === 'app' ? (language === 'ts' ? 'appTs' : 'appJs') : 'styles';
+      editorRef.current.setValue(codes[key]);
       prevFileRef.current = activeFile;
+      prevLangRef.current = language;
     }
-  }, [activeFile, codes]);
+  }, [activeFile, language, codes]);
 
   const handleEditorMount: OnMount = (editor) => {
     editorRef.current = editor;
@@ -262,11 +291,13 @@ export function ReactEditorWorkspace({
     };
   }, []);
 
-  // Build Sandpack files — minimal per docs: template 'react' + /App.js
-  const sandpackFiles = useMemo(() => ({
-    '/App.js': codes.app,
-    '/styles.css': codes.styles,
-  }), [codes.app, codes.styles]);
+  // Build Sandpack files — swap template + filename based on language
+  const sandpackTemplate = language === 'ts' ? 'react-ts' : 'react';
+  const sandpackFiles = useMemo((): Record<string, string> => (
+    language === 'ts'
+      ? { '/App.tsx': codes.appTs, '/styles.css': codes.styles }
+      : { '/App.js': codes.appJs, '/styles.css': codes.styles }
+  ), [language, codes.appJs, codes.appTs, codes.styles]);
 
   async function submitTests() {
     setSubmitting(true);
@@ -280,7 +311,7 @@ export function ReactEditorWorkspace({
         body: JSON.stringify({
           questionId,
           framework: 'react',
-          code: JSON.stringify({ app: codes.app, styles: codes.styles }),
+          code: JSON.stringify({ app: codes[appKey], styles: codes.styles }),
         }),
       });
       const data = await res.json();
@@ -312,7 +343,9 @@ export function ReactEditorWorkspace({
   }
 
   const diffClass = difficulty.toLowerCase();
-  const editorLanguage = activeFile === 'app' ? 'typescript' : 'css';
+  const editorLanguage = activeFile === 'app'
+    ? (language === 'ts' ? 'typescript' : 'javascript')
+    : 'css';
 
   return (
     <div className="flex h-screen w-screen ml-[calc(-50vw+50%)] -mt-8 -mb-16 bg-bg overflow-hidden focus-mode:bg-[#15140f]">
@@ -455,12 +488,12 @@ export function ReactEditorWorkspace({
         {/* Editor Pane + Bottom Panel */}
         <section className="flex-1 flex flex-col bg-surface-raised min-w-[300px] dark:bg-black focus-mode:bg-black">
           <div className="h-10 bg-surface border-b border-line flex justify-between items-center px-4 shrink-0">
-            <div className="flex items-center h-full">
+            <div className="flex items-center h-full gap-2">
               <button
                 className={`font-mono text-[0.75rem] font-bold text-muted h-full flex items-center px-4 bg-transparent border-none border-b-2 border-transparent cursor-pointer transition-colors duration-200 hover:text-ink-secondary [&.active]:text-brand [&.active]:border-brand ${activeFile === 'app' ? 'active' : ''}`}
                 onClick={() => setActiveFile('app')}
               >
-                <FileCode2 size={16} className="inline-block mr-1" /> App.tsx
+                <FileCode2 size={16} className="inline-block mr-1" /> {language === 'ts' ? 'App.tsx' : 'App.jsx'}
               </button>
               <button
                 className={`font-mono text-[0.75rem] font-bold text-muted h-full flex items-center px-4 bg-transparent border-none border-b-2 border-transparent cursor-pointer transition-colors duration-200 hover:text-ink-secondary [&.active]:text-brand [&.active]:border-brand ${activeFile === 'styles' ? 'active' : ''}`}
@@ -468,6 +501,17 @@ export function ReactEditorWorkspace({
               >
                 <Palette size={16} className="inline-block mr-1" /> styles.css
               </button>
+              <div className="h-6 w-px bg-line mx-1" />
+              <div className="flex items-center bg-bg rounded-md overflow-hidden border border-line text-[0.65rem] font-bold">
+                <button
+                  onClick={() => setLanguage('js')}
+                  className={`px-2 py-1 border-none cursor-pointer transition-colors ${language === 'js' ? 'bg-brand text-white' : 'bg-transparent text-muted hover:text-ink'}`}
+                >JS</button>
+                <button
+                  onClick={() => setLanguage('ts')}
+                  className={`px-2 py-1 border-none cursor-pointer transition-colors ${language === 'ts' ? 'bg-brand text-white' : 'bg-transparent text-muted hover:text-ink'}`}
+                >TS</button>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -519,17 +563,22 @@ export function ReactEditorWorkspace({
           </div>
         </section>
 
+        {/* Preview Drag Handle */}
+        <div
+          onMouseDown={handlePreviewMouseDown}
+          className="w-2 bg-transparent cursor-col-resize z-10 -mx-1 relative shrink-0"
+        />
+
         {/* Preview Column */}
-        <section className="flex-1 flex flex-col border-l border-line min-w-[300px]">
-          <SandpackProvider template="react" files={sandpackFiles}>
+        <section className="flex flex-col border-l border-line min-w-[200px] flex-none" style={{ width: previewWidth }}>
+          <SandpackProvider template={sandpackTemplate} files={sandpackFiles}>
             <div className="h-10 bg-surface border-b border-line flex items-center justify-between px-4 shrink-0">
               <span className="text-[0.75rem] font-bold text-muted uppercase tracking-wider flex items-center gap-2">
                 <Eye size={16} /> Preview
               </span>
               <PreviewRefreshButton />
             </div>
-            <SandpackStatusBar />
-            <div className="flex-1 bg-[#f9fafb] dark:bg-white overflow-hidden flex flex-col [&>div]:flex-1 [&>div]:!h-auto">
+            <div className="flex-1 bg-[#f9fafb] dark:bg-white overflow-hidden min-h-0 [&_.sp-layout]:!h-full [&_.sp-layout]:!border-none [&_.sp-preview]:!h-full">
               <SandpackLayout style={{ height: '100%', border: 'none' }}>
                 <SandpackPreview
                   style={{ height: '100%', width: '100%' }}
@@ -559,29 +608,4 @@ function PreviewRefreshButton() {
   );
 }
 
-function SandpackStatusBar() {
-  const { sandpack } = useSandpack();
-  const { status, error, bundlerState } = sandpack;
-
-  const progress = bundlerState?.transpiledModules
-    ? `${Object.keys(bundlerState.transpiledModules).length} modules`
-    : null;
-
-  return (
-    <div className="px-3 py-1.5 bg-black text-[11px] font-mono border-b border-line shrink-0 flex items-center gap-2 text-white/80">
-      <span className="text-muted">sandpack:</span>
-      <span className={
-        status === 'idle' ? 'text-good'
-        : status === 'timeout' ? 'text-warn'
-        : 'text-caution'
-      }>
-        {status}
-      </span>
-      {progress && <span className="text-muted">· {progress}</span>}
-      {error && (
-        <span className="text-warn truncate">· {error.message}</span>
-      )}
-    </div>
-  );
-}
 

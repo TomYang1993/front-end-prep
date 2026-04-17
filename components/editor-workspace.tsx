@@ -74,12 +74,12 @@ export function EditorWorkspace({
   const [codes, setCodes] = useState<Record<string, string>>(() => {
     if (isPython) {
       return {
-        python: starterCode?.python || 'def solve(*args):\n    return None\n',
+        python: starterCode?.python ?? '',
       } as Record<string, string>;
     }
     return {
-      javascript: starterCode?.javascript || 'function solve(...args) {\n  return null;\n}',
-      typescript: starterCode?.typescript || starterCode?.javascript || 'function solve(...args): any {\n  return null;\n}',
+      javascript: starterCode?.javascript ?? '',
+      typescript: starterCode?.typescript ?? starterCode?.javascript ?? '',
     } as Record<string, string>;
   });
 
@@ -335,20 +335,27 @@ export function EditorWorkspace({
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Hidden judge failed');
 
+      const publicPassed = testResults.filter((r) => r.passed).length;
+      const publicTotal = testResults.length;
+      const totalPassed = (data.passedCount ?? 0) + publicPassed;
+      const grandTotal = (data.total ?? 0) + publicTotal;
+      const allPassed = grandTotal > 0 && totalPassed === grandTotal;
+      const mergedScore = grandTotal > 0 ? Math.round((totalPassed / grandTotal) * 100) : 0;
+
       setSubmitResult({
-        score: data.score,
-        status: data.status,
-        passedCount: data.passedCount,
-        total: data.total,
+        score: mergedScore,
+        status: allPassed ? 'PASSED' : 'FAILED',
+        passedCount: totalPassed,
+        total: grandTotal,
         publicResults: testResults,
         hiddenResults: data.hiddenResults || [],
       });
       setActiveBottomTab('results');
 
       toast({
-        title: data.status === 'PASSED' ? 'All hidden tests passed!' : `Score: ${data.score}%`,
-        description: `${data.passedCount}/${data.total} hidden tests passed`,
-        type: data.status === 'PASSED' ? 'success' : 'info',
+        title: allPassed ? 'All tests passed!' : `Score: ${mergedScore}%`,
+        description: `${totalPassed}/${grandTotal} tests passed`,
+        type: allPassed ? 'success' : 'info',
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Unknown error';

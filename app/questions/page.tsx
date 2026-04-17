@@ -6,6 +6,7 @@ import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { listPublishedQuestions } from '@/lib/questions';
 import { prisma } from '@/lib/db/prisma';
 import { createTimer } from '@/lib/server-timing';
+import { getUserStreak } from '@/lib/streak';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,9 +19,10 @@ export default async function QuestionsPage({ searchParams: searchParamsPromise 
   const t = createTimer('GET /questions');
   const user = await t.time('auth', getCurrentServerUser());
 
-  const [allQuestions, submissionStatsByQuestion] = await Promise.all([
+  const [allQuestions, submissionStatsByQuestion, streak] = await Promise.all([
     t.time('questions', listPublishedQuestions(user?.id)),
     t.time('submissions', getSubmissionStats(user?.id)),
+    t.time('streak', user ? getUserStreak(user.id) : Promise.resolve(0)),
   ]);
   t.summary();
 
@@ -96,6 +98,7 @@ export default async function QuestionsPage({ searchParams: searchParamsPromise 
         {/* Stats bar */}
         <QuestionsStatsBar
           isLoggedIn={!!user}
+          streak={streak}
           totalQuestions={questionRows.length}
           solvedCount={solvedCount}
           js={cats.js}

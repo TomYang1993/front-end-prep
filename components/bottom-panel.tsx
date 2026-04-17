@@ -430,27 +430,15 @@ function ResultsTab({
         <span className="text-muted font-normal ml-2">({submitResult.score}%)</span>
       </div>
 
-      {/* Public test results */}
-      {submitResult.publicResults.length > 0 && (
-        <div>
-          <h4 className="text-[0.7rem] uppercase tracking-wider text-muted font-bold mb-2">Public Tests</h4>
-          <div className="space-y-2">
-            {submitResult.publicResults.map((r, i) => (
-              <TestResultRow key={i} name={r.name} passed={r.passed} error={r.error} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Hidden test results */}
-      {submitResult.hiddenResults.length > 0 && (
-        <div>
-          <h4 className="text-[0.7rem] uppercase tracking-wider text-muted font-bold mb-2">Hidden Tests</h4>
-          <div className="space-y-2">
-            {submitResult.hiddenResults.map((r) => (
-              <TestResultRow key={r.index} name={r.name} passed={r.passed} error={r.error} />
-            ))}
-          </div>
+      {/* All test results — no public/hidden distinction shown to user */}
+      {(submitResult.publicResults.length > 0 || submitResult.hiddenResults.length > 0) && (
+        <div className="space-y-2">
+          {submitResult.publicResults.map((r, i) => (
+            <TestResultRow key={`public-${i}`} name={r.name} passed={r.passed} error={r.error} />
+          ))}
+          {submitResult.hiddenResults.map((r) => (
+            <TestResultRow key={`hidden-${r.index}`} name={r.name} passed={r.passed} error={r.error} />
+          ))}
         </div>
       )}
     </div>

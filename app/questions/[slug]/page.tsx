@@ -94,7 +94,11 @@ export default async function QuestionDetailPage({ params }: PageProps) {
     if (d.framework === 'react') {
       try {
         const parsed = JSON.parse(d.code);
-        if (parsed.app) starterCode.react = parsed.app;
+        // New shape: { appJs, appTs, styles }
+        if (parsed.appJs) starterCode.react = parsed.appJs;
+        if (parsed.appTs) starterCode.reactTypescript = parsed.appTs;
+        // Legacy shape: { app, styles }
+        if (parsed.app && !parsed.appJs) starterCode.react = parsed.app;
         if (parsed.styles) starterCode.css = parsed.styles;
       } catch {
         // ignore parsing error

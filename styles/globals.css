@@ -1674,6 +1674,13 @@ code {
   50% { opacity: 0.4; }
 }
 
+@keyframes flame-flicker {
+  0%, 100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+  25% { transform: scale(1.08) rotate(-2deg); filter: brightness(1.15); }
+  50% { transform: scale(1.02) rotate(1deg); filter: brightness(1.05); }
+  75% { transform: scale(1.1) rotate(-1deg); filter: brightness(1.2); }
+}
+
 .ide-toolbar-btn {
   background: none;
   border: none;

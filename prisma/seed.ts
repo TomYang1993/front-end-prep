@@ -12,6 +12,7 @@ import {
   designComponentLibrary,
   rateLimiterButton,
   autocompleteSearch,
+  webCrawler,
 } from './seeds';
 
 const prisma = new PrismaClient();
@@ -28,6 +29,7 @@ const allQuestions = [
   designComponentLibrary,
   rateLimiterButton,
   autocompleteSearch,
+  webCrawler,
 ];
 
 async function main() {
