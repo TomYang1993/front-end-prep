@@ -63,7 +63,7 @@ export function QuestionsFilters() {
           onChange={(e) => updateParam('type', e.target.value)}
         >
           <option value="">Category: All</option>
-          <option value="REACT_APP">React UI</option>
+          <option value="REACT_APP">UI</option>
           <option value="FUNCTION_JS">JS/TS Logic</option>
           <option value="FUNCTION_PYTHON">Backend</option>
         </select>

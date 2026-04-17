@@ -76,12 +76,13 @@ export default async function QuestionsPage({ searchParams: searchParamsPromise 
     if (value && key !== 'page') currentParams[key] = value;
   }
 
-  // Categorise questions by tags for the stats bar
+  // Categorise questions for the stats bar — type is primary signal
   const categorise = (q: QuestionRow) => {
-    const t = q.tags.map(s => s.toLowerCase()).join(' ') + ' ' + q.type.toLowerCase();
-    if (/react|css|html|ui|dom|component|layout|style/i.test(t)) return 'ui';
+    if (q.type === 'REACT_APP') return 'ui';
+    const t = q.tags.map(s => s.toLowerCase()).join(' ');
     if (/node|api|server|backend|database|express|rest/i.test(t)) return 'backend';
     if (/concept|pattern|design|system|architecture|theory/i.test(t)) return 'concepts';
+    if (q.type === 'FUNCTION_PYTHON') return 'backend';
     return 'js';
   };
 

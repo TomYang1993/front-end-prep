@@ -91,7 +91,7 @@ export function QuestionsTable({ questions, isLoggedIn, page, totalPages, totalF
                     {q.locked && <span className="inline-flex items-center gap-[2px] bg-amber-100 text-amber-700 border border-amber-200 px-[6px] py-[1px] rounded-md text-[10px] uppercase font-bold tracking-wider ml-1 drop-shadow-sm"><Lock size={10} className="-mt-[1px]" /> Pro</span>}
                   </Link>
                   <div className="flex flex-wrap gap-1.5">
-                    <span className="text-[10px] px-2 py-[2px] bg-brand-subtle text-brand rounded shadow-sm border border-brand/20 uppercase font-bold tracking-wider">{q.type === 'REACT_APP' ? 'React' : q.type === 'FUNCTION_PYTHON' ? 'Python' : 'JS'}</span>
+                    <span className="text-[10px] px-2 py-[2px] bg-brand-subtle text-brand rounded shadow-sm border border-brand/20 uppercase font-bold tracking-wider">{q.type === 'REACT_APP' ? 'UI' : q.type === 'FUNCTION_PYTHON' ? 'Backend' : 'JS'}</span>
                   </div>
                 </div>
               </td>
