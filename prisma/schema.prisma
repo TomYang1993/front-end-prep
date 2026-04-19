@@ -424,6 +424,7 @@ model QuestionTimer {
   questionId       String
   startedAt        DateTime @default(now())
   timeLimitMinutes Int
+  reactLanguage    String?
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   question         Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 

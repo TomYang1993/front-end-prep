@@ -37,9 +37,9 @@ export interface ReactEditorWorkspaceProps {
   tags: string[];
   starterCode?: Record<string, string>;
   expiresAt?: string;
+  language: 'js' | 'ts';
 }
 
-type ReactLanguage = 'js' | 'ts';
 type ActiveFile = 'app' | 'styles';
 type LeftTab = 'description' | 'solutions' | 'submissions';
 
@@ -66,6 +66,7 @@ export function ReactEditorWorkspace({
   tags,
   starterCode,
   expiresAt,
+  language,
 }: ReactEditorWorkspaceProps) {
   const { toast } = useToast();
   const syntaxTheme = useSyntaxTheme();
@@ -78,7 +79,6 @@ export function ReactEditorWorkspace({
   const [submissionsLoaded, setSubmissionsLoaded] = useState(false);
   const [expandedSubmission, setExpandedSubmission] = useState<string | null>(null);
 
-  const [language, setLanguage] = useState<ReactLanguage>('js');
   const [activeFile, setActiveFile] = useState<ActiveFile>('app');
   const [codes, setCodes] = useState({
     appJs: starterCode?.react ?? DEFAULT_APP_JS,
@@ -134,11 +134,11 @@ export function ReactEditorWorkspace({
   const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('results');
 
   // ─── Bottom panel resize ───
-  const [consoleHeight, setConsoleHeight] = useState(280);
-  const consoleHeightRef = useRef(280);
+  const COLLAPSED_CONSOLE_HEIGHT = 46;
+  const [consoleHeight, setConsoleHeight] = useState(COLLAPSED_CONSOLE_HEIGHT);
+  const consoleHeightRef = useRef(COLLAPSED_CONSOLE_HEIGHT);
   const lastOpenConsoleHeightRef = useRef(280);
   const consoleDragStart = useRef<{ y: number; h: number } | null>(null);
-  const COLLAPSED_CONSOLE_HEIGHT = 46;
   const isConsoleCollapsed = consoleHeight < 80;
 
   useEffect(() => {
@@ -255,17 +255,15 @@ export function ReactEditorWorkspace({
     }
   };
 
-  // When active file or language changes, push stored code into editor
+  // When active file changes, push stored code into editor
   const prevFileRef = useRef(activeFile);
-  const prevLangRef = useRef(language);
   useEffect(() => {
-    if ((prevFileRef.current !== activeFile || prevLangRef.current !== language) && editorRef.current) {
-      const key = activeFile === 'app' ? (language === 'ts' ? 'appTs' : 'appJs') : 'styles';
+    if (prevFileRef.current !== activeFile && editorRef.current) {
+      const key = activeFile === 'app' ? appKey : 'styles';
       editorRef.current.setValue(codes[key]);
       prevFileRef.current = activeFile;
-      prevLangRef.current = language;
     }
-  }, [activeFile, language, codes]);
+  }, [activeFile, codes, appKey]);
 
   const handleEditorMount: OnMount = (editor) => {
     editorRef.current = editor;
@@ -501,17 +499,6 @@ export function ReactEditorWorkspace({
               >
                 <Palette size={16} className="inline-block mr-1" /> styles.css
               </button>
-              <div className="h-6 w-px bg-line mx-1" />
-              <div className="flex items-center bg-bg rounded-md overflow-hidden border border-line text-[0.65rem] font-bold">
-                <button
-                  onClick={() => setLanguage('js')}
-                  className={`px-2 py-1 border-none cursor-pointer transition-colors ${language === 'js' ? 'bg-brand text-white' : 'bg-transparent text-muted hover:text-ink'}`}
-                >JS</button>
-                <button
-                  onClick={() => setLanguage('ts')}
-                  className={`px-2 py-1 border-none cursor-pointer transition-colors ${language === 'ts' ? 'bg-brand text-white' : 'bg-transparent text-muted hover:text-ink'}`}
-                >TS</button>
-              </div>
             </div>
             <div className="flex items-center gap-2">
               <button

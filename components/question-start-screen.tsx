@@ -12,6 +12,7 @@ interface QuestionStartScreenProps {
   difficulty: string;
   tags: string[];
   timeLimitMinutes: number;
+  questionType: string;
 }
 
 export function QuestionStartScreen({
@@ -20,16 +21,23 @@ export function QuestionStartScreen({
   difficulty,
   tags,
   timeLimitMinutes,
+  questionType,
 }: QuestionStartScreenProps) {
   const router = useRouter();
   const [starting, setStarting] = useState(false);
+  const [reactLanguage, setReactLanguage] = useState<'js' | 'ts'>('js');
+  const isReact = questionType === 'REACT_APP';
 
   const diffClass = difficulty === 'EASY' ? 'easy' : difficulty === 'MEDIUM' ? 'medium' : 'hard';
 
   async function handleStart() {
     setStarting(true);
     try {
-      const res = await fetch(`/api/questions/${slug}/timer`, { method: 'POST' });
+      const res = await fetch(`/api/questions/${slug}/timer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(isReact ? { reactLanguage } : {}),
+      });
       if (!res.ok) throw new Error('Failed to start timer');
       router.refresh();
     } catch {
@@ -92,6 +100,22 @@ export function QuestionStartScreen({
             <span className="text-muted">Timer resets automatically after expiry — it&apos;s a soft guide, not a hard cutoff</span>
           </div>
         </div>
+
+        {isReact && (
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-sm text-muted">Language</span>
+            <div className="flex items-center bg-surface-raised rounded-lg overflow-hidden border border-line text-sm font-bold">
+              <button
+                onClick={() => setReactLanguage('js')}
+                className={`px-5 py-2 border-none cursor-pointer transition-colors ${reactLanguage === 'js' ? 'bg-brand text-white' : 'bg-transparent text-muted hover:text-ink'}`}
+              >JavaScript</button>
+              <button
+                onClick={() => setReactLanguage('ts')}
+                className={`px-5 py-2 border-none cursor-pointer transition-colors ${reactLanguage === 'ts' ? 'bg-brand text-white' : 'bg-transparent text-muted hover:text-ink'}`}
+              >TypeScript</button>
+            </div>
+          </div>
+        )}
 
         <button
           onClick={handleStart}

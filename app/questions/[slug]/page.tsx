@@ -80,6 +80,7 @@ export default async function QuestionDetailPage({ params }: PageProps) {
         difficulty={question.difficulty}
         tags={question.tags}
         timeLimitMinutes={timeLimitMinutes}
+        questionType={question.type}
       />
     );
   }
@@ -124,6 +125,8 @@ export default async function QuestionDetailPage({ params }: PageProps) {
     );
   }
 
+  const reactLanguage = (existingTimer?.reactLanguage === 'ts' ? 'ts' : 'js') as 'js' | 'ts';
+
   return (
     <ReactEditorWorkspace
       questionId={question.id}
@@ -133,6 +136,7 @@ export default async function QuestionDetailPage({ params }: PageProps) {
       tags={question.tags}
       starterCode={question.starterCode || undefined}
       expiresAt={expiresAt}
+      language={reactLanguage}
     />
   );
 }

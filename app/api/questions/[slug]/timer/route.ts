@@ -5,7 +5,7 @@ import { getDefaultTimeLimitMinutes } from '@/lib/question-timer';
 import type { Difficulty, QuestionType } from '@prisma/client';
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
@@ -42,11 +42,22 @@ export async function POST(
   const limit = question.timeLimitMinutes
     ?? getDefaultTimeLimitMinutes(question.type as QuestionType, question.difficulty as Difficulty);
 
+  let reactLanguage: string | null = null;
+  try {
+    const body = await req.json();
+    if (body.reactLanguage === 'js' || body.reactLanguage === 'ts') {
+      reactLanguage = body.reactLanguage;
+    }
+  } catch {
+    // No body or invalid JSON — that's fine
+  }
+
   const timer = await prisma.questionTimer.create({
     data: {
       userId: user.id,
       questionId: question.id,
       timeLimitMinutes: limit,
+      reactLanguage,
     },
   });
 
