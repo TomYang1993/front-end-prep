@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
   if (code && hasSupabaseEnv) {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) console.error('[auth/callback] OAuth exchange failed:', error.message, error);
 
     // After successful login, resolve DB user and write session cookie
     if (!error && data.session?.user?.id && data.session?.user?.email) {
