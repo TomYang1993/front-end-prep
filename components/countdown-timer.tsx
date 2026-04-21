@@ -16,12 +16,11 @@ function formatTime(totalSeconds: number): string {
 
 export function CountdownTimer({ expiresAt }: CountdownTimerProps) {
   const router = useRouter();
-  const [remaining, setRemaining] = useState(() => {
-    const diff = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
-    return diff;
-  });
+  const [mounted, setMounted] = useState(false);
+  const [remaining, setRemaining] = useState(0);
 
   useEffect(() => {
+    setMounted(true);
     const tick = () => {
       const diff = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
       setRemaining(diff);
@@ -30,9 +29,7 @@ export function CountdownTimer({ expiresAt }: CountdownTimerProps) {
       }
     };
 
-    // Check immediately on mount — don't wait for first interval
     tick();
-
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [expiresAt, router]);
@@ -48,11 +45,11 @@ export function CountdownTimer({ expiresAt }: CountdownTimerProps) {
 
   return (
     <div
-      className={`flex items-center gap-1.5 font-mono text-sm tabular-nums ${colorClass} ${isCritical ? 'animate-pulse' : ''}`}
+      className={`flex items-center gap-1.5 font-mono text-sm tabular-nums ${mounted ? colorClass : 'text-muted'} ${isCritical && mounted ? 'animate-pulse' : ''}`}
       title="Time remaining"
     >
       <Clock size={14} />
-      <span>{formatTime(remaining)}</span>
+      <span>{mounted ? formatTime(remaining) : '--:--'}</span>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 import { SESSION_COOKIE_NAME, verifySessionToken } from '@/lib/auth/session-cookie';
 import { globalLimiter, authLimiter, anonReadLimiter, userReadLimiter, mutationLimiter } from '@/lib/rate-limit';
 
@@ -18,6 +19,30 @@ function rateLimitResponse() {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // Refresh Supabase auth cookies (critical for PKCE code verifier on OAuth callback)
+  let response = NextResponse.next({ request: req });
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+      {
+        cookies: {
+          getAll() {
+            return req.cookies.getAll();
+          },
+          setAll(cookiesToSet: { name: string; value: string; options: Record<string, unknown> }[]) {
+            cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
+            response = NextResponse.next({ request: req });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2])
+            );
+          },
+        },
+      }
+    );
+    await supabase.auth.getUser();
+  }
   const ip = getIP(req);
 
   // Verify session once — used for both rate limit keying and auth gating.
@@ -59,7 +84,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/questions', req.url));
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
