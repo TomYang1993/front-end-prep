@@ -19,6 +19,19 @@ import {
   rateLimiterButton,
   autocompleteSearch,
   webCrawler,
+  hollowSquare,
+  letterPyramid,
+  userPermissionsCheck,
+  shoppingCartTotal,
+  deduplicateEnrichUsers,
+  buildLookupTable,
+  formValidation,
+  groupTransactions,
+  paginateList,
+  searchFilter,
+  topContributor,
+  flattenNestedComments,
+  customArrayPush,
 } from './seeds';
 
 const prisma = new PrismaClient();
@@ -42,6 +55,19 @@ const allQuestions = [
   rateLimiterButton,
   autocompleteSearch,
   webCrawler,
+  hollowSquare,
+  letterPyramid,
+  userPermissionsCheck,
+  shoppingCartTotal,
+  deduplicateEnrichUsers,
+  buildLookupTable,
+  formValidation,
+  groupTransactions,
+  paginateList,
+  searchFilter,
+  topContributor,
+  flattenNestedComments,
+  customArrayPush,
 ];
 
 async function main() {
