@@ -10,5 +10,7 @@ prisma/dev.db-journal
 tsconfig.tsbuildinfo
 backups/
 
+.claude/
+
 progress.md
 CLAUDE.md

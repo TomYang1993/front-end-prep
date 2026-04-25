@@ -16,11 +16,9 @@ function formatTime(totalSeconds: number): string {
 
 export function CountdownTimer({ expiresAt }: CountdownTimerProps) {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-  const [remaining, setRemaining] = useState(0);
+  const [remaining, setRemaining] = useState<number | null>(null);
 
   useEffect(() => {
-    setMounted(true);
     const tick = () => {
       const diff = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
       setRemaining(diff);
@@ -34,8 +32,10 @@ export function CountdownTimer({ expiresAt }: CountdownTimerProps) {
     return () => clearInterval(id);
   }, [expiresAt, router]);
 
-  const isWarning = remaining <= 300 && remaining > 60;
-  const isCritical = remaining <= 60;
+  const mounted = remaining !== null;
+
+  const isWarning = mounted && remaining! <= 300 && remaining! > 60;
+  const isCritical = mounted && remaining! <= 60;
 
   const colorClass = isCritical
     ? 'text-warn'
@@ -49,7 +49,7 @@ export function CountdownTimer({ expiresAt }: CountdownTimerProps) {
       title="Time remaining"
     >
       <Clock size={14} />
-      <span>{mounted ? formatTime(remaining) : '--:--'}</span>
+      <span>{mounted ? formatTime(remaining!) : '--:--'}</span>
     </div>
   );
 }
