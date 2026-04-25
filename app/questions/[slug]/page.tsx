@@ -13,6 +13,23 @@ import type { Difficulty, QuestionType } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
+async function resolveTimerState(userId: string, questionId: string) {
+  const timer = await prisma.questionTimer.findUnique({
+    where: { userId_questionId: { userId, questionId } },
+  });
+  if (!timer) return null;
+
+  const expiryMs = timer.startedAt.getTime() + timer.timeLimitMinutes * 60_000;
+  const remainingMs = expiryMs - Date.now();
+
+  if (remainingMs > 5_000) {
+    return { expiresAt: new Date(expiryMs).toISOString(), reactLanguage: timer.reactLanguage };
+  }
+
+  await prisma.questionTimer.delete({ where: { id: timer.id } });
+  return null;
+}
+
 interface PageProps {
   params: Promise<{
     slug: string;
@@ -50,23 +67,8 @@ export default async function QuestionDetailPage({ params }: PageProps) {
   }
 
   // ─── Timer check ───
-  const existingTimer = await prisma.questionTimer.findUnique({
-    where: { userId_questionId: { userId: user.id, questionId: question.id } },
-  });
-
-  let expiresAt: string | null = null;
-
-  if (existingTimer) {
-    const expiry = new Date(existingTimer.startedAt.getTime() + existingTimer.timeLimitMinutes * 60_000);
-    const remainingMs = expiry.getTime() - Date.now();
-    if (remainingMs > 5_000) {
-      // More than 5s left — show workspace
-      expiresAt = expiry.toISOString();
-    } else {
-      // Expired or about to expire — delete so user sees start screen
-      await prisma.questionTimer.delete({ where: { id: existingTimer.id } });
-    }
-  }
+  const timerState = await resolveTimerState(user.id, question.id);
+  const expiresAt = timerState?.expiresAt ?? null;
 
   // No active timer → show start screen
   if (!expiresAt) {
@@ -125,7 +127,7 @@ export default async function QuestionDetailPage({ params }: PageProps) {
     );
   }
 
-  const reactLanguage = (existingTimer?.reactLanguage === 'ts' ? 'ts' : 'js') as 'js' | 'ts';
+  const reactLanguage = (timerState?.reactLanguage === 'ts' ? 'ts' : 'js') as 'js' | 'ts';
 
   return (
     <ReactEditorWorkspace
