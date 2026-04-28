@@ -6,42 +6,25 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
 
+const perMinute = (limit: number, prefix: string) =>
+  new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(limit, '1 m'),
+    prefix,
+    analytics: true,
+  });
+
 /** Global catch-all: 200 req/min per IP */
-export const globalLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(200, '1 m'),
-  prefix: 'rl:global',
-  analytics: true,
-});
+export const globalLimiter = perMinute(200, 'rl:global');
 
 /** Auth routes (OAuth, OTP): 10 req/min per IP */
-export const authLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, '1 m'),
-  prefix: 'rl:auth',
-  analytics: true,
-});
+export const authLimiter = perMinute(10, 'rl:auth');
 
 /** API reads (non-logged-in): 60 req/min per IP */
-export const anonReadLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(60, '1 m'),
-  prefix: 'rl:anon-read',
-  analytics: true,
-});
+export const anonReadLimiter = perMinute(60, 'rl:anon-read');
 
 /** API reads (logged-in): 120 req/min per user */
-export const userReadLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(120, '1 m'),
-  prefix: 'rl:user-read',
-  analytics: true,
-});
+export const userReadLimiter = perMinute(120, 'rl:user-read');
 
 /** API mutations (logged-in): 30 req/min per user */
-export const mutationLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(30, '1 m'),
-  prefix: 'rl:mutation',
-  analytics: true,
-});
+export const mutationLimiter = perMinute(30, 'rl:mutation');
