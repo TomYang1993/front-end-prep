@@ -3,6 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { useDebounce } from '@/lib/hooks/use-debounce';
 
 const selectClass =
   'appearance-none bg-surface-raised border border-line text-ink text-xs font-semibold py-[0.35rem] pr-7 pl-3 rounded-md outline-none cursor-pointer transition-all duration-200 shadow-sm hover:border-brand hover:bg-brand/10 focus:border-brand focus:ring-2 focus:ring-brand/20';
@@ -12,20 +13,18 @@ export function QuestionsFilters() {
   const router = useRouter();
 
   const [query, setQuery] = useState(searchParams.get('query') || '');
+  const debouncedQuery = useDebounce(query, 400);
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      const currentQuery = searchParams.get('query') || '';
-      if (query !== currentQuery) {
-        const params = new URLSearchParams(searchParams.toString());
-        if (query) params.set('query', query);
-        else params.delete('query');
-        params.delete('page');
-        router.push(`/questions?${params.toString()}`);
-      }
-    }, 400);
-    return () => clearTimeout(handler);
-  }, [query, searchParams, router]);
+    const currentQuery = searchParams.get('query') || '';
+    if (debouncedQuery === currentQuery) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (debouncedQuery) params.set('query', debouncedQuery);
+    else params.delete('query');
+    params.delete('page');
+    router.push(`/questions?${params.toString()}`);
+  }, [debouncedQuery, searchParams, router]);
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());

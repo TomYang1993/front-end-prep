@@ -1,47 +1,26 @@
-export type RunnerFramework = 'javascript' | 'react';
-
-export type ProblemMode = 'FUNCTION_JS' | 'REACT_APP';
-
-export interface TestResult {
-  name: string;
-  passed: boolean;
-  error?: string;
-}
-
-export interface RunnerExecutionResult {
-  passed: boolean;
-  results: TestResult[];
-  runtimeMs: number;
-  logs: string[];
-}
-
-export interface RunnerAdapter {
-  framework: RunnerFramework;
-  run(code: string, testCode: string): Promise<RunnerExecutionResult>;
-}
-
 export const DIFFICULTY_LABEL: Record<string, string> = {
   EASY: 'Entry',
   MEDIUM: 'Mid',
   HARD: 'Senior+',
 };
 
-export interface QuestionListItem {
-  id: string;
-  slug: string;
-  title: string;
-  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  accessTier: 'FREE' | 'PREMIUM';
-  type: ProblemMode;
-  tags: string[];
-}
+/** Subtle badge background + matching text color (for table/start-screen pills). */
+export const DIFFICULTY_BADGE_CLASS: Record<string, string> = {
+  EASY: 'bg-good-subtle text-good',
+  MEDIUM: 'bg-caution-subtle text-caution',
+  HARD: 'bg-warn-subtle text-warn',
+};
 
-export interface EntitlementContext {
-  hasPro: boolean;
-  unlockedPackQuestionIds: string[];
-}
+/** Text-only color (for inline meta rows). */
+export const DIFFICULTY_TEXT_CLASS: Record<string, string> = {
+  EASY: 'text-good',
+  MEDIUM: 'text-caution',
+  HARD: 'text-warn',
+};
 
-export interface ApiErrorShape {
-  error: string;
-  code?: string;
-}
+/** Display label for question type. */
+export const TYPE_LABEL: Record<string, string> = {
+  REACT_APP: 'UI',
+  FUNCTION_PYTHON: 'Backend',
+  FUNCTION_JS: 'JS',
+};

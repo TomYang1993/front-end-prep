@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import clsx from 'clsx';
-import { DIFFICULTY_LABEL } from '@/types/domain';
+import { DIFFICULTY_LABEL, DIFFICULTY_BADGE_CLASS, TYPE_LABEL } from '@/types/domain';
 import { Award, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface QuestionRow {
@@ -91,7 +91,7 @@ export function QuestionsTable({ questions, isLoggedIn, page, totalPages, totalF
                     {q.locked && <span className="inline-flex items-center gap-[2px] bg-amber-100 text-amber-700 border border-amber-200 px-[6px] py-[1px] rounded-md text-[10px] uppercase font-bold tracking-wider ml-1 drop-shadow-sm"><Lock size={10} className="-mt-[1px]" /> Pro</span>}
                   </Link>
                   <div className="flex flex-wrap gap-1.5">
-                    <span className="text-[10px] px-2 py-[2px] bg-brand-subtle text-brand rounded shadow-sm border border-brand/20 uppercase font-bold tracking-wider">{q.type === 'REACT_APP' ? 'UI' : q.type === 'FUNCTION_PYTHON' ? 'Backend' : 'JS'}</span>
+                    <span className="text-[10px] px-2 py-[2px] bg-brand-subtle text-brand rounded shadow-sm border border-brand/20 uppercase font-bold tracking-wider">{TYPE_LABEL[q.type] ?? q.type}</span>
                   </div>
                 </div>
               </td>
@@ -103,7 +103,7 @@ export function QuestionsTable({ questions, isLoggedIn, page, totalPages, totalF
 
               {/* Difficulty */}
               <td className="py-4 align-top text-center">
-                <span className={clsx('inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none', q.difficulty.toLowerCase() === 'easy' ? 'bg-good-subtle text-good' : q.difficulty.toLowerCase() === 'medium' ? 'bg-caution-subtle text-caution' : 'bg-warn-subtle text-warn')}>
+                <span className={clsx('inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none', DIFFICULTY_BADGE_CLASS[q.difficulty.toUpperCase()])}>
                   {DIFFICULTY_LABEL[q.difficulty] ?? q.difficulty}
                 </span>
               </td>

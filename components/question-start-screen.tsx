@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Clock, Play, Timer, RefreshCw } from 'lucide-react';
-import { DIFFICULTY_LABEL } from '@/types/domain';
+import { DIFFICULTY_LABEL, DIFFICULTY_BADGE_CLASS } from '@/types/domain';
 
 interface QuestionStartScreenProps {
   slug: string;
@@ -27,8 +27,6 @@ export function QuestionStartScreen({
   const [starting, setStarting] = useState(false);
   const [reactLanguage, setReactLanguage] = useState<'js' | 'ts'>('js');
   const isReact = questionType === 'REACT_APP';
-
-  const diffClass = difficulty === 'EASY' ? 'easy' : difficulty === 'MEDIUM' ? 'medium' : 'hard';
 
   async function handleStart() {
     setStarting(true);
@@ -61,12 +59,7 @@ export function QuestionStartScreen({
 
           <div className="flex items-center gap-3">
             <span
-              className={`inline-flex items-center px-2 py-1 rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${diffClass === 'easy'
-                ? 'bg-good-subtle text-good'
-                : diffClass === 'medium'
-                  ? 'bg-caution-subtle text-caution'
-                  : 'bg-warn-subtle text-warn'
-                }`}
+              className={`inline-flex items-center px-2 py-1 rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${DIFFICULTY_BADGE_CLASS[difficulty] ?? ''}`}
             >
               {DIFFICULTY_LABEL[difficulty] ?? difficulty}
             </span>

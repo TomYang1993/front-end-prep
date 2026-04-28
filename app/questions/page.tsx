@@ -81,12 +81,11 @@ export default async function QuestionsPage({ searchParams: searchParamsPromise 
     if (q.type === 'REACT_APP') return 'ui';
     const t = q.tags.map(s => s.toLowerCase()).join(' ');
     if (/node|api|server|backend|database|express|rest/i.test(t)) return 'backend';
-    if (/concept|pattern|design|system|architecture|theory/i.test(t)) return 'concepts';
     if (q.type === 'FUNCTION_PYTHON') return 'backend';
     return 'js';
   };
 
-  const cats = { js: { solved: 0, total: 0 }, ui: { solved: 0, total: 0 }, backend: { solved: 0, total: 0 }, concepts: { solved: 0, total: 0 } };
+  const cats = { js: { solved: 0, total: 0 }, ui: { solved: 0, total: 0 }, backend: { solved: 0, total: 0 } };
   for (const q of questionRows) {
     const cat = categorise(q);
     cats[cat].total++;
@@ -105,7 +104,6 @@ export default async function QuestionsPage({ searchParams: searchParamsPromise 
           js={cats.js}
           ui={cats.ui}
           backend={cats.backend}
-          concepts={cats.concepts}
         />
 
         {/* Filters */}
