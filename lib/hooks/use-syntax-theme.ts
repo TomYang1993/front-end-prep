@@ -1,8 +1,6 @@
 'use client';
 
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { gruvboxDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { oneDark, oneLight, gruvboxDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useTheme } from '@/components/theme-provider';
 
 const THEME_MAP: Record<string, typeof oneDark> = {
