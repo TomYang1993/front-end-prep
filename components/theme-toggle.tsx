@@ -1,9 +1,8 @@
 'use client';
 
 import { Sun, Moon, Focus } from 'lucide-react';
-import { useTheme, type Theme } from '@/components/theme-provider';
+import { useTheme, THEME_ORDER, type Theme } from '@/components/theme-provider';
 
-const THEME_ORDER: Theme[] = ['light', 'dark', 'focus'];
 const THEME_ICONS: Record<Theme, React.ReactNode> = {
   light: <Sun size={18} />,
   dark: <Moon size={18} />,
