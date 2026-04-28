@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
+import { notFound, serverError } from '@/lib/api';
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
@@ -9,9 +10,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       select: { id: true }
     });
 
-    if (!question) {
-      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
-    }
+    if (!question) return notFound('Question not found');
 
     const threads = await prisma.discussionThread.findMany({
       where: { questionId: slug, status: 'ACTIVE' },
@@ -36,6 +35,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
 
     return NextResponse.json(formatted);
   } catch {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    return serverError();
   }
 }

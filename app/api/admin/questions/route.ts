@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
-import { badRequest, unauthorized, forbidden } from '@/lib/api';
-import { requireAdmin } from '@/lib/auth/current-user';
+import { badRequest } from '@/lib/api';
+import { authorizeAdmin } from '@/lib/auth/current-user';
 import { createAuditLog } from '@/lib/audit';
 import { refreshQuestionRenderData } from '@/lib/questions-snapshot';
 
@@ -23,20 +23,9 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const admin = await requireAdmin(req).catch((error) => {
-    if (error instanceof Error && error.message === 'FORBIDDEN') {
-      return 'FORBIDDEN' as const;
-    }
-    return null;
-  });
+  const admin = await authorizeAdmin(req);
+  if (admin instanceof NextResponse) return admin;
 
-  if (admin === 'FORBIDDEN') {
-    return forbidden();
-  }
-
-  if (!admin) {
-    return unauthorized();
-  }
   const parsed = bodySchema.safeParse(await req.json());
   if (!parsed.success) {
     return badRequest(parsed.error.issues[0]?.message || 'Invalid question payload');

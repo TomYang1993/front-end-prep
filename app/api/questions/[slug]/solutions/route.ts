@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { canAccessQuestion, getEntitlementContext } from '@/lib/auth/entitlement';
+import { forbidden, notFound, serverError } from '@/lib/api';
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
@@ -19,13 +20,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       }),
     ]);
 
-    if (!question) {
-      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
-    }
+    if (!question) return notFound('Question not found');
 
     const entitlement = user ? await getEntitlementContext(user.id) : null;
     if (!canAccessQuestion(question.accessTier, question.id, entitlement)) {
-      return NextResponse.json({ error: 'Upgrade required' }, { status: 403 });
+      return forbidden('Upgrade required');
     }
 
     const formatted = solutions.map(sol => ({
@@ -39,6 +38,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
 
     return NextResponse.json(formatted);
   } catch {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    return serverError();
   }
 }
