@@ -12,12 +12,13 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useDebounce } from '@/lib/hooks/use-debounce';
+import { useLazyFetch } from '@/lib/hooks/use-lazy-fetch';
 import { CheatsheetModal } from '@/components/cheatsheet-modal';
 import { MarkdownProse } from '@/components/markdown-prose';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { useSyntaxTheme } from '@/lib/hooks/use-syntax-theme';
 import { CountdownTimer } from '@/components/countdown-timer';
-import { DIFFICULTY_LABEL } from '@/types/domain';
+import { DIFFICULTY_LABEL, DIFFICULTY_BADGE_CLASS } from '@/types/domain';
 import { BottomPanel, type BottomTab, type SubmitResult } from '@/components/bottom-panel';
 
 interface SolutionView {
@@ -42,6 +43,9 @@ export interface ReactEditorWorkspaceProps {
 
 type ActiveFile = 'app' | 'styles';
 type LeftTab = 'description' | 'solutions' | 'submissions';
+
+const leftTabBtn = 'py-2 text-[0.75rem] font-bold uppercase tracking-[0.05em] bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer transition-all duration-200 hover:text-ink [&.active]:text-ink [&.active]:border-brand';
+const fileTabBtn = 'font-mono text-[0.75rem] font-bold text-muted h-full flex items-center px-4 bg-transparent border-none border-b-2 border-transparent cursor-pointer transition-colors duration-200 hover:text-ink-secondary [&.active]:text-brand [&.active]:border-brand';
 
 const DEFAULT_APP_JS = `import React from 'react';
 
@@ -70,13 +74,20 @@ export function ReactEditorWorkspace({
 }: ReactEditorWorkspaceProps) {
   const { toast } = useToast();
   const syntaxTheme = useSyntaxTheme();
-  const [solutions, setSolutions] = useState<SolutionView[]>([]);
-  const [loadingSolutions, setLoadingSolutions] = useState(false);
-  const [solutionsLoaded, setSolutionsLoaded] = useState(false);
+  const [activeLeftTab, setActiveLeftTab] = useState<LeftTab>('description');
 
-  const [submissions, setSubmissions] = useState<{ id: string; status: string; score: number | null; framework: string; code: string; createdAt: string }[]>([]);
-  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
-  const [submissionsLoaded, setSubmissionsLoaded] = useState(false);
+  const { data: solutionsData, loading: loadingSolutions } = useLazyFetch<SolutionView[]>(
+    activeLeftTab === 'solutions',
+    `/api/questions/${questionId}/solutions`,
+  );
+  const solutions = Array.isArray(solutionsData) ? solutionsData : [];
+
+  type SubmissionRow = { id: string; status: string; score: number | null; framework: string; code: string; createdAt: string };
+  const { data: submissionsData, loading: loadingSubmissions } = useLazyFetch<SubmissionRow[]>(
+    activeLeftTab === 'submissions',
+    `/api/questions/${questionId}/submissions`,
+  );
+  const submissions = Array.isArray(submissionsData) ? submissionsData : [];
   const [expandedSubmission, setExpandedSubmission] = useState<string | null>(null);
 
   const [activeFile, setActiveFile] = useState<ActiveFile>('app');
@@ -145,35 +156,7 @@ export function ReactEditorWorkspace({
     consoleHeightRef.current = consoleHeight;
   }, [consoleHeight]);
 
-  const [activeLeftTab, setActiveLeftTab] = useState<LeftTab>('description');
   const [monacoTheme, setMonacoTheme] = useState<'vs-dark' | 'light'>('vs-dark');
-
-  // Lazy-load solutions
-  useEffect(() => {
-    if (activeLeftTab !== 'solutions' || solutionsLoaded || loadingSolutions) return;
-    setLoadingSolutions(true);
-    fetch(`/api/questions/${questionId}/solutions`)
-      .then(res => res.json())
-      .then(data => { if (Array.isArray(data)) setSolutions(data); })
-      .finally(() => {
-        setLoadingSolutions(false);
-        setSolutionsLoaded(true);
-      });
-  }, [activeLeftTab, questionId, solutionsLoaded, loadingSolutions]);
-
-  useEffect(() => {
-    if (activeLeftTab !== 'submissions' || submissionsLoaded || loadingSubmissions) return;
-    setLoadingSubmissions(true);
-    fetch(`/api/questions/${questionId}/submissions`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) setSubmissions(data);
-      })
-      .finally(() => {
-        setLoadingSubmissions(false);
-        setSubmissionsLoaded(true);
-      });
-  }, [activeLeftTab, questionId, submissionsLoaded, loadingSubmissions]);
 
   // ─── Drag handles ───
   const [leftWidth, setLeftWidth] = useState(450);
@@ -340,7 +323,6 @@ export function ReactEditorWorkspace({
     }
   }
 
-  const diffClass = difficulty.toLowerCase();
   const editorLanguage = activeFile === 'app'
     ? (language === 'ts' ? 'typescript' : 'javascript')
     : 'css';
@@ -368,21 +350,21 @@ export function ReactEditorWorkspace({
             <div className={`flex items-center gap-4 mb-4 flex items-center justify-between w-full`}>
               <div className="flex items-center gap-3">
                 <h1 className="text-[1.25rem] font-bold m-0">{title}</h1>
-                <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${diffClass === 'easy' ? 'bg-good-subtle text-good' : diffClass === 'medium' ? 'bg-caution-subtle text-caution' : 'bg-warn-subtle text-warn'}`}>{DIFFICULTY_LABEL[difficulty] ?? difficulty}</span>
+                <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${DIFFICULTY_BADGE_CLASS[difficulty] ?? ''}`}>{DIFFICULTY_LABEL[difficulty] ?? difficulty}</span>
               </div>
               {expiresAt && <CountdownTimer expiresAt={expiresAt} />}
             </div>
             <div className="flex gap-6">
               <button
-                className={`py-2 text-[0.75rem] font-bold uppercase tracking-[0.05em] bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer transition-all duration-200 hover:text-ink [&.active]:text-ink [&.active]:border-brand ${activeLeftTab === 'description' ? 'active' : ''}`}
+                className={`${leftTabBtn} ${activeLeftTab === 'description' ? 'active' : ''}`}
                 onClick={() => setActiveLeftTab('description')}
               >Description</button>
               <button
-                className={`py-2 text-[0.75rem] font-bold uppercase tracking-[0.05em] bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer transition-all duration-200 hover:text-ink [&.active]:text-ink [&.active]:border-brand ${activeLeftTab === 'solutions' ? 'active' : ''}`}
+                className={`${leftTabBtn} ${activeLeftTab === 'solutions' ? 'active' : ''}`}
                 onClick={() => setActiveLeftTab('solutions')}
               ><Lightbulb size={16} className="inline-block mr-1" /> Solutions</button>
               <button
-                className={`py-2 text-[0.75rem] font-bold uppercase tracking-[0.05em] bg-transparent border-none border-b-2 border-transparent text-muted cursor-pointer transition-all duration-200 hover:text-ink [&.active]:text-ink [&.active]:border-brand ${activeLeftTab === 'submissions' ? 'active' : ''}`}
+                className={`${leftTabBtn} ${activeLeftTab === 'submissions' ? 'active' : ''}`}
                 onClick={() => setActiveLeftTab('submissions')}
               ><History size={16} className="inline-block mr-1" /> Submissions</button>
             </div>
@@ -488,13 +470,13 @@ export function ReactEditorWorkspace({
           <div className="h-10 bg-surface border-b border-line flex justify-between items-center px-4 shrink-0">
             <div className="flex items-center h-full gap-2">
               <button
-                className={`font-mono text-[0.75rem] font-bold text-muted h-full flex items-center px-4 bg-transparent border-none border-b-2 border-transparent cursor-pointer transition-colors duration-200 hover:text-ink-secondary [&.active]:text-brand [&.active]:border-brand ${activeFile === 'app' ? 'active' : ''}`}
+                className={`${fileTabBtn} ${activeFile === 'app' ? 'active' : ''}`}
                 onClick={() => setActiveFile('app')}
               >
                 <FileCode2 size={16} className="inline-block mr-1" /> {language === 'ts' ? 'App.tsx' : 'App.jsx'}
               </button>
               <button
-                className={`font-mono text-[0.75rem] font-bold text-muted h-full flex items-center px-4 bg-transparent border-none border-b-2 border-transparent cursor-pointer transition-colors duration-200 hover:text-ink-secondary [&.active]:text-brand [&.active]:border-brand ${activeFile === 'styles' ? 'active' : ''}`}
+                className={`${fileTabBtn} ${activeFile === 'styles' ? 'active' : ''}`}
                 onClick={() => setActiveFile('styles')}
               >
                 <Palette size={16} className="inline-block mr-1" /> styles.css
