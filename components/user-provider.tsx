@@ -1,12 +1,9 @@
 'use client';
 
 import { createContext, useContext } from 'react';
+import type { SessionPayload } from '@/lib/auth/session-cookie';
 
-export interface ClientUser {
-  id: string;
-  email: string;
-  roles: string[];
-}
+export type ClientUser = SessionPayload;
 
 const UserContext = createContext<ClientUser | null>(null);
 
