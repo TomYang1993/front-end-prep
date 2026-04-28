@@ -68,6 +68,7 @@ export function usePythonRunner(enabled: boolean): UsePythonRunnerReturn {
         const results = new Array<PythonRunResult>(tests.length);
         const indexById = new Map(tests.map((t, i) => [t.id, i]));
         let remaining = tests.length;
+        // eslint-disable-next-line prefer-const
         let timeoutId: ReturnType<typeof setTimeout>;
 
         const cleanup = () => {
