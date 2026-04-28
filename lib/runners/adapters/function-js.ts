@@ -96,11 +96,6 @@ export class FunctionJsRunner implements RunnerAdapter {
       const jsonOutput = script.runSync(context, { timeout: 5000 }) as string;
       const parsed = JSON.parse(jsonOutput);
 
-      context.release();
-      isolate.dispose();
-      isolate = null;
-      context = null;
-
       const results = (parsed.results || []) as { name: string; passed: boolean; error?: string }[];
       const allPassed = results.length > 0 && results.every((r) => r.passed);
 
@@ -111,13 +106,6 @@ export class FunctionJsRunner implements RunnerAdapter {
         logs: consoleLogs,
       };
     } catch (error) {
-      if (context) {
-        try { context.release(); } catch {}
-      }
-      if (isolate && !isolate.isDisposed) {
-        try { isolate.dispose(); } catch {}
-      }
-
       const msg =
         error instanceof Error
           ? error.message
@@ -131,6 +119,9 @@ export class FunctionJsRunner implements RunnerAdapter {
         runtimeMs: Date.now() - started,
         logs: consoleLogs,
       };
+    } finally {
+      if (context) try { context.release(); } catch {}
+      if (isolate && !isolate.isDisposed) try { isolate.dispose(); } catch {}
     }
   }
 }

@@ -1,13 +1,9 @@
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { createSupabaseServerClient } from '@/lib/auth/supabase';
-import { readSessionCookie } from '@/lib/auth/session-cookie';
+import { readSessionCookie, type SessionPayload } from '@/lib/auth/session-cookie';
 
-export interface SessionUser {
-  id: string;
-  email: string;
-  roles: string[];
-}
+export type SessionUser = SessionPayload;
 
 export async function getCurrentUserFromRequest(req: NextRequest): Promise<SessionUser | null> {
   // Dev header override
