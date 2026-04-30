@@ -59,8 +59,9 @@ export function QuestionsListClient({ allRows, isLoggedIn }: Props) {
         <div className="relative flex-1 max-w-[289px]">
           <Search size={16} className="absolute left-[10px] top-1/2 -translate-y-1/2 text-muted" />
           <input
-            type="text"
+            type="search"
             placeholder="Search questions..."
+            aria-label="Search questions"
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full py-2 pl-[2.2rem] pr-4 rounded-sm border border-line bg-surface text-ink text-[0.88rem] outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand"
