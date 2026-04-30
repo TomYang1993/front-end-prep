@@ -62,6 +62,8 @@ export function usePythonRunner(enabled: boolean): UsePythonRunnerReturn {
       tests: { id: string; input: unknown; expected: unknown }[]
     ): Promise<PythonRunResult[]> => {
       return new Promise((resolve, reject) => {
+        if (tests.length === 0) return resolve([]);
+
         const worker = workerRef.current;
         if (!worker) return reject(new Error('Python runtime not initialized'));
 
