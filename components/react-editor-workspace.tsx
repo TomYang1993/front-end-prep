@@ -12,23 +12,13 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useDebounce } from '@/lib/hooks/use-debounce';
-import { useLazyFetch } from '@/lib/hooks/use-lazy-fetch';
 import { CheatsheetModal } from '@/components/cheatsheet-modal';
-import { MarkdownProse } from '@/components/markdown-prose';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { useSyntaxTheme } from '@/lib/hooks/use-syntax-theme';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { DIFFICULTY_LABEL, DIFFICULTY_BADGE_CLASS } from '@/types/domain';
 import { BottomPanel, type BottomTab, type SubmitResult } from '@/components/bottom-panel';
-
-interface SolutionView {
-  id: string;
-  language: string;
-  framework: string | null;
-  explanation: string;
-  code: string;
-  complexity: string | null;
-}
+import { DescriptionTab } from '@/components/tabs/description-tab';
+import { SolutionsTab } from '@/components/tabs/solutions-tab';
+import { SubmissionsTab } from '@/components/tabs/submissions-tab';
 
 export interface ReactEditorWorkspaceProps {
   questionId: string;
@@ -73,22 +63,7 @@ export function ReactEditorWorkspace({
   language,
 }: ReactEditorWorkspaceProps) {
   const { toast } = useToast();
-  const syntaxTheme = useSyntaxTheme();
   const [activeLeftTab, setActiveLeftTab] = useState<LeftTab>('description');
-
-  const { data: solutionsData, loading: loadingSolutions } = useLazyFetch<SolutionView[]>(
-    activeLeftTab === 'solutions',
-    `/api/questions/${questionId}/solutions`,
-  );
-  const solutions = Array.isArray(solutionsData) ? solutionsData : [];
-
-  type SubmissionRow = { id: string; status: string; score: number | null; framework: string; code: string; createdAt: string };
-  const { data: submissionsData, loading: loadingSubmissions } = useLazyFetch<SubmissionRow[]>(
-    activeLeftTab === 'submissions',
-    `/api/questions/${questionId}/submissions`,
-  );
-  const submissions = Array.isArray(submissionsData) ? submissionsData : [];
-  const [expandedSubmission, setExpandedSubmission] = useState<string | null>(null);
 
   const [activeFile, setActiveFile] = useState<ActiveFile>('app');
   const [codes, setCodes] = useState({
@@ -371,91 +346,9 @@ export function ReactEditorWorkspace({
           </div>
 
           <div className="flex-1 overflow-y-auto p-6">
-            {activeLeftTab === 'description' ? (
-              <>
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {tags.map((tag) => (
-                    <span key={tag} className="text-[0.65rem] py-1 px-2 bg-surface-raised rounded-sm text-ink-secondary">{tag}</span>
-                  ))}
-                </div>
-                <div className="text-[0.95rem] leading-[1.6] text-ink mb-8">
-                  <MarkdownProse>{prompt}</MarkdownProse>
-                </div>
-              </>
-            ) : activeLeftTab === 'solutions' ? (
-              <div className="flex flex-col gap-6">
-                {loadingSolutions ? (
-                  <p className="text-muted text-center py-8">Loading official solutions...</p>
-                ) : solutions.length === 0 ? (
-                  <p className="text-muted text-center py-8">No official solutions published yet.</p>
-                ) : (
-                  solutions.map((sol) => (
-                    <article key={sol.id} className="bg-surface-raised border border-line rounded-md p-6">
-                      <div className="flex gap-4 text-[0.75rem] text-muted mb-4 uppercase tracking-[0.05em]">
-                        <span>{sol.language}</span>
-                        {sol.complexity && <span>{sol.complexity}</span>}
-                      </div>
-                      <MarkdownProse className="text-[0.9rem]">{sol.explanation}</MarkdownProse>
-                      <div className="mt-4 rounded-md overflow-hidden">
-                        <SyntaxHighlighter
-                          style={syntaxTheme}
-                          language={sol.language === 'typescript' ? 'typescript' : 'javascript'}
-                          customStyle={{ margin: 0, borderRadius: '0.375rem', fontSize: '0.82rem', lineHeight: '1.6' }}
-                        >
-                          {sol.code}
-                        </SyntaxHighlighter>
-                      </div>
-                    </article>
-                  ))
-                )}
-              </div>
-            ) : activeLeftTab === 'submissions' ? (
-              <div className="flex flex-col gap-2">
-                {loadingSubmissions ? (
-                  <p className="text-muted text-center py-8">Loading submissions...</p>
-                ) : submissions.length === 0 ? (
-                  <p className="text-muted text-center py-8">No submissions yet.</p>
-                ) : (
-                  submissions.map((sub) => {
-                    const isExpanded = expandedSubmission === sub.id;
-                    const passed = sub.status === 'PASSED';
-                    const lang = sub.framework === 'typescript' ? 'typescript' : 'javascript';
-                    return (
-                      <div key={sub.id} className="border border-line rounded-md overflow-hidden">
-                        <button
-                          onClick={() => setExpandedSubmission(isExpanded ? null : sub.id)}
-                          className="w-full flex items-center justify-between px-4 py-3 bg-surface-raised hover:bg-surface text-left transition-colors cursor-pointer border-none"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className={`text-[0.7rem] font-bold uppercase ${passed ? 'text-good' : 'text-warn'}`}>
-                              {sub.status}
-                            </span>
-                            {sub.score !== null && (
-                              <span className="text-[0.7rem] text-muted">{sub.score}%</span>
-                            )}
-                            <span className="text-[0.65rem] text-muted uppercase">{sub.framework}</span>
-                          </div>
-                          <span className="text-[0.7rem] text-muted">
-                            {new Date(sub.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </button>
-                        {isExpanded && (
-                          <div className="border-t border-line">
-                            <SyntaxHighlighter
-                              style={syntaxTheme}
-                              language={lang}
-                              customStyle={{ margin: 0, borderRadius: 0, fontSize: '0.82rem', lineHeight: '1.6' }}
-                            >
-                              {sub.code}
-                            </SyntaxHighlighter>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            ) : null}
+            {activeLeftTab === 'description' && <DescriptionTab prompt={prompt} tags={tags} />}
+            {activeLeftTab === 'solutions' && <SolutionsTab questionId={questionId} />}
+            {activeLeftTab === 'submissions' && <SubmissionsTab questionId={questionId} />}
           </div>
         </section>
 
