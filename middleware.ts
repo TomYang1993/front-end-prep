@@ -57,7 +57,7 @@ export async function middleware(req: NextRequest) {
       checks.push(authLimiter.limit(ip));
     }
 
-    if (pathname.startsWith('/api/')) {
+    if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth')) {
       const isMutation = req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS';
       if (session) {
         checks.push((isMutation ? mutationLimiter : userReadLimiter).limit(session.id));
