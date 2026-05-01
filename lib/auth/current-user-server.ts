@@ -1,11 +1,7 @@
 import { cache } from 'react';
-import { readSessionCookie } from '@/lib/auth/session-cookie';
+import { readSessionCookie, type SessionPayload } from '@/lib/auth/session-cookie';
 
-export interface ServerSessionUser {
-  id: string;
-  email: string;
-  roles: string[];
-}
+export type ServerSessionUser = SessionPayload;
 
 /**
  * Read the current user from the session cookie. ~0ms.

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
-import { badRequest, forbidden, unauthorized } from '@/lib/api';
-import { requireAdmin } from '@/lib/auth/current-user';
+import { badRequest } from '@/lib/api';
+import { authorizeAdmin } from '@/lib/auth/current-user';
 import { createAuditLog } from '@/lib/audit';
 
 const bodySchema = z.object({
@@ -15,20 +15,8 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const admin = await requireAdmin(req).catch((error) => {
-    if (error instanceof Error && error.message === 'FORBIDDEN') {
-      return 'FORBIDDEN' as const;
-    }
-    return null;
-  });
-
-  if (admin === 'FORBIDDEN') {
-    return forbidden();
-  }
-
-  if (!admin) {
-    return unauthorized();
-  }
+  const admin = await authorizeAdmin(req);
+  if (admin instanceof NextResponse) return admin;
 
   const parsed = bodySchema.safeParse(await req.json());
   if (!parsed.success) {

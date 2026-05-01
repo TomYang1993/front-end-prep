@@ -1,6 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import clsx from 'clsx';
-import { DIFFICULTY_LABEL } from '@/types/domain';
+import { DIFFICULTY_LABEL, DIFFICULTY_BADGE_CLASS, TYPE_LABEL } from '@/types/domain';
 import { Award, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface QuestionRow {
@@ -25,14 +27,7 @@ interface QuestionsTableProps {
   page: number;
   totalPages: number;
   totalFiltered: number;
-  searchParams: Record<string, string>;
-}
-
-function pageHref(params: Record<string, string>, page: number) {
-  const p = new URLSearchParams(params);
-  if (page > 1) p.set('page', String(page));
-  const qs = p.toString();
-  return `/questions${qs ? `?${qs}` : ''}`;
+  onPageChange: (page: number) => void;
 }
 
 function getPageNumbers(current: number, total: number): (number | '...')[] {
@@ -42,7 +37,11 @@ function getPageNumbers(current: number, total: number): (number | '...')[] {
   return [1, '...', current - 1, current, current + 1, '...', total];
 }
 
-export function QuestionsTable({ questions, isLoggedIn, page, totalPages, totalFiltered, searchParams }: QuestionsTableProps) {
+const pageBtnBase = 'h-8 w-8 flex items-center justify-center rounded-md border border-line bg-surface text-ink text-sm font-medium shadow-sm';
+const pageBtnEnabled = 'hover:bg-line-soft transition-colors';
+const pageBtnDisabled = 'opacity-40 cursor-default';
+
+export function QuestionsTable({ questions, isLoggedIn, page, totalPages, totalFiltered, onPageChange }: QuestionsTableProps) {
   return (
     <div className="bg-surface rounded-lg border border-line shadow-sm overflow-hidden flex flex-col">
       <table className="w-full border-collapse text-left">
@@ -91,7 +90,7 @@ export function QuestionsTable({ questions, isLoggedIn, page, totalPages, totalF
                     {q.locked && <span className="inline-flex items-center gap-[2px] bg-amber-100 text-amber-700 border border-amber-200 px-[6px] py-[1px] rounded-md text-[10px] uppercase font-bold tracking-wider ml-1 drop-shadow-sm"><Lock size={10} className="-mt-[1px]" /> Pro</span>}
                   </Link>
                   <div className="flex flex-wrap gap-1.5">
-                    <span className="text-[10px] px-2 py-[2px] bg-brand-subtle text-brand rounded shadow-sm border border-brand/20 uppercase font-bold tracking-wider">{q.type === 'REACT_APP' ? 'UI' : q.type === 'FUNCTION_PYTHON' ? 'Backend' : 'JS'}</span>
+                    <span className="text-[10px] px-2 py-[2px] bg-brand-subtle text-brand rounded shadow-sm border border-brand/20 uppercase font-bold tracking-wider">{TYPE_LABEL[q.type] ?? q.type}</span>
                   </div>
                 </div>
               </td>
@@ -103,7 +102,7 @@ export function QuestionsTable({ questions, isLoggedIn, page, totalPages, totalF
 
               {/* Difficulty */}
               <td className="py-4 align-top text-center">
-                <span className={clsx('inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none', q.difficulty.toLowerCase() === 'easy' ? 'bg-good-subtle text-good' : q.difficulty.toLowerCase() === 'medium' ? 'bg-caution-subtle text-caution' : 'bg-warn-subtle text-warn')}>
+                <span className={clsx('inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none', DIFFICULTY_BADGE_CLASS[q.difficulty.toUpperCase()])}>
                   {DIFFICULTY_LABEL[q.difficulty] ?? q.difficulty}
                 </span>
               </td>
@@ -128,22 +127,23 @@ export function QuestionsTable({ questions, isLoggedIn, page, totalPages, totalF
         </span>
         {totalPages > 1 && (
           <div className="flex items-center gap-1.5">
-            {page > 1 ? (
-              <Link href={pageHref(searchParams, page - 1)} className="h-8 w-8 flex items-center justify-center rounded-md border border-line bg-surface text-ink text-sm font-medium hover:bg-line-soft transition-colors shadow-sm">
-                <ChevronLeft size={16} />
-              </Link>
-            ) : (
-              <span className="h-8 w-8 flex items-center justify-center rounded-md border border-line bg-surface text-ink text-sm font-medium opacity-40 shadow-sm">
-                <ChevronLeft size={16} />
-              </span>
-            )}
+            <button
+              type="button"
+              onClick={() => onPageChange(page - 1)}
+              disabled={page <= 1}
+              className={clsx(pageBtnBase, page > 1 ? pageBtnEnabled : pageBtnDisabled)}
+              aria-label="Previous page"
+            >
+              <ChevronLeft size={16} />
+            </button>
             {getPageNumbers(page, totalPages).map((p, i) =>
               p === '...' ? (
                 <span key={`ellipsis-${i}`} className="h-8 min-w-[32px] px-1 flex items-center justify-center text-muted text-sm">…</span>
               ) : (
-                <Link
+                <button
+                  type="button"
                   key={p}
-                  href={pageHref(searchParams, p)}
+                  onClick={() => onPageChange(p)}
                   className={clsx(
                     'h-8 min-w-[32px] px-2 flex items-center justify-center rounded-md text-sm font-semibold transition-colors shadow-sm',
                     p === page
@@ -152,18 +152,18 @@ export function QuestionsTable({ questions, isLoggedIn, page, totalPages, totalF
                   )}
                 >
                   {p}
-                </Link>
+                </button>
               )
             )}
-            {page < totalPages ? (
-              <Link href={pageHref(searchParams, page + 1)} className="h-8 w-8 flex items-center justify-center rounded-md border border-line bg-surface text-ink text-sm font-medium hover:bg-line-soft transition-colors shadow-sm">
-                <ChevronRight size={16} />
-              </Link>
-            ) : (
-              <span className="h-8 w-8 flex items-center justify-center rounded-md border border-line bg-surface text-ink text-sm font-medium opacity-40 shadow-sm">
-                <ChevronRight size={16} />
-              </span>
-            )}
+            <button
+              type="button"
+              onClick={() => onPageChange(page + 1)}
+              disabled={page >= totalPages}
+              className={clsx(pageBtnBase, page < totalPages ? pageBtnEnabled : pageBtnDisabled)}
+              aria-label="Next page"
+            >
+              <ChevronRight size={16} />
+            </button>
           </div>
         )}
       </div>

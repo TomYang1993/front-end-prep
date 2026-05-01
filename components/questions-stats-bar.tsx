@@ -13,7 +13,6 @@ interface QuestionsStatsBarProps {
   js: CategoryStat;
   ui: CategoryStat;
   backend: CategoryStat;
-  concepts: CategoryStat;
 }
 
 function MiniProgress({ solved, total, colorClass, muted }: { solved: number; total: number; colorClass: string; muted?: boolean }) {

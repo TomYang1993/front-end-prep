@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import type { QuestionType, Difficulty, AccessTier } from '@prisma/client';
 
 const defaultStarterJs = `function solve(...args) {
   return null;
@@ -17,9 +18,9 @@ export function AdminQuestionForm() {
   const [prompt, setPrompt] = useState('');
   const [tags, setTags] = useState('');
   const [starterCode, setStarterCode] = useState(defaultStarterJs);
-  const [type, setType] = useState<'FUNCTION_JS' | 'REACT_APP' | 'FUNCTION_PYTHON'>('FUNCTION_JS');
-  const [difficulty, setDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('EASY');
-  const [accessTier, setAccessTier] = useState<'FREE' | 'PREMIUM'>('FREE');
+  const [type, setType] = useState<QuestionType>('FUNCTION_JS');
+  const [difficulty, setDifficulty] = useState<Difficulty>('EASY');
+  const [accessTier, setAccessTier] = useState<AccessTier>('FREE');
   const [isPublished, setIsPublished] = useState(true);
   const [status, setStatus] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -103,7 +104,7 @@ export function AdminQuestionForm() {
         <label>
           Type
           <select value={type} onChange={(event) => {
-            const val = event.target.value as 'FUNCTION_JS' | 'REACT_APP' | 'FUNCTION_PYTHON';
+            const val = event.target.value as QuestionType;
             setType(val);
             if (val === 'FUNCTION_PYTHON') setStarterCode(defaultStarterPython);
             else if (val !== 'REACT_APP') setStarterCode(defaultStarterJs);
@@ -117,7 +118,7 @@ export function AdminQuestionForm() {
           Difficulty
           <select
             value={difficulty}
-            onChange={(event) => setDifficulty(event.target.value as 'EASY' | 'MEDIUM' | 'HARD')}
+            onChange={(event) => setDifficulty(event.target.value as Difficulty)}
           >
             <option value="EASY">EASY</option>
             <option value="MEDIUM">MEDIUM</option>
@@ -130,7 +131,7 @@ export function AdminQuestionForm() {
           Access Tier
           <select
             value={accessTier}
-            onChange={(event) => setAccessTier(event.target.value as 'FREE' | 'PREMIUM')}
+            onChange={(event) => setAccessTier(event.target.value as AccessTier)}
           >
             <option value="FREE">FREE</option>
             <option value="PREMIUM">PREMIUM</option>

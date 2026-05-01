@@ -1,13 +1,10 @@
-import type { NextRequest } from 'next/server';
+import type { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { createSupabaseServerClient } from '@/lib/auth/supabase';
-import { readSessionCookie } from '@/lib/auth/session-cookie';
+import { readSessionCookie, type SessionPayload } from '@/lib/auth/session-cookie';
+import { unauthorized, forbidden } from '@/lib/api';
 
-export interface SessionUser {
-  id: string;
-  email: string;
-  roles: string[];
-}
+export type SessionUser = SessionPayload;
 
 export async function getCurrentUserFromRequest(req: NextRequest): Promise<SessionUser | null> {
   // Dev header override
@@ -86,5 +83,13 @@ export async function requireAdmin(req: NextRequest): Promise<SessionUser> {
   if (!user.roles.includes('ADMIN')) {
     throw new Error('FORBIDDEN');
   }
+  return user;
+}
+
+/** Returns the user, or a NextResponse to short-circuit the route on auth failure. */
+export async function authorizeAdmin(req: NextRequest): Promise<SessionUser | NextResponse> {
+  const user = await getCurrentUserFromRequest(req);
+  if (!user) return unauthorized();
+  if (!user.roles.includes('ADMIN')) return forbidden();
   return user;
 }

@@ -62,35 +62,43 @@ export function usePythonRunner(enabled: boolean): UsePythonRunnerReturn {
       tests: { id: string; input: unknown; expected: unknown }[]
     ): Promise<PythonRunResult[]> => {
       return new Promise((resolve, reject) => {
+        if (tests.length === 0) return resolve([]);
+
         const worker = workerRef.current;
         if (!worker) return reject(new Error('Python runtime not initialized'));
 
-        const results: PythonRunResult[] = [];
+        const results = new Array<PythonRunResult>(tests.length);
+        const indexById = new Map(tests.map((t, i) => [t.id, i]));
         let remaining = tests.length;
+        // eslint-disable-next-line prefer-const
+        let timeoutId: ReturnType<typeof setTimeout>;
+
+        const cleanup = () => {
+          worker.removeEventListener('message', handler);
+          clearTimeout(timeoutId);
+        };
 
         const handler = (e: MessageEvent) => {
           if (e.data.type !== 'RESULT') return;
 
-          const test = tests.find((t) => t.id === e.data.testId);
-          const passed =
-            JSON.stringify(e.data.output) === JSON.stringify(test?.expected);
+          const idx = indexById.get(e.data.testId);
+          if (idx === undefined) return;
 
-          results.push({
+          const passed =
+            JSON.stringify(e.data.output) === JSON.stringify(tests[idx].expected);
+
+          results[idx] = {
             id: e.data.testId,
             passed,
             output: e.data.output,
             runtimeMs: e.data.runtimeMs,
             error: e.data.error,
             logs: e.data.logs || [],
-          });
+          };
 
-          remaining--;
-          if (remaining <= 0) {
-            worker.removeEventListener('message', handler);
-            const ordered = tests.map(
-              (t) => results.find((r) => r.id === t.id)!
-            );
-            resolve(ordered);
+          if (--remaining <= 0) {
+            cleanup();
+            resolve(results);
           }
         };
 
@@ -101,9 +109,8 @@ export function usePythonRunner(enabled: boolean): UsePythonRunnerReturn {
           worker.postMessage({ type: 'RUN', code, args, testId: test.id });
         }
 
-        // Timeout after 30s
-        setTimeout(() => {
-          worker.removeEventListener('message', handler);
+        timeoutId = setTimeout(() => {
+          cleanup();
           reject(new Error('Python execution timed out (30s)'));
         }, 30000);
       });

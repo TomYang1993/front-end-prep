@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { LegalBreadcrumb, LegalContact } from '@/components/legal-page';
 
 export const metadata: Metadata = {
   title: 'Terms of Service — Whack The Fullstack Interview',
@@ -9,11 +9,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <div className="legal-page">
-      <nav className="inline-flex items-center gap-1.5 text-[0.78rem] text-muted mb-5">
-        <Link href="/" className="text-muted no-underline transition-colors duration-150 hover:text-brand">Home</Link>
-        <span className="text-line">/</span>
-        <span>Terms of Service</span>
-      </nav>
+      <LegalBreadcrumb current="Terms of Service" />
 
       <h1>Terms of Service</h1>
       <span className="block text-[0.78rem] text-muted mb-8 pb-5 border-b border-line-soft">Last updated: March 30, 2026</span>
@@ -130,11 +126,10 @@ export default function TermsPage() {
       </p>
 
       <h2>11. Contact Us</h2>
-      <div className="bg-surface border border-line rounded-xl p-4 my-6 text-[0.88rem] text-ink-secondary [&_strong]:block [&_strong]:mb-1 [&_strong]:text-ink [&_strong]:font-semibold">
-        <strong>Questions about these Terms?</strong>
+      <LegalContact heading="Questions about these Terms?">
         Reach out to us at{' '}
         <a href="mailto:xy.tomyang@gmail.com">xy.tomyang@gmail.com</a>
-      </div>
+      </LegalContact>
     </div>
   );
 }

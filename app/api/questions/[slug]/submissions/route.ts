@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { prisma } from '@/lib/db/prisma';
+import { unauthorized } from '@/lib/api';
 
 export async function GET(
   _req: NextRequest,
@@ -8,9 +9,7 @@ export async function GET(
 ) {
   const { slug } = await params;
   const user = await getCurrentServerUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (!user) return unauthorized();
 
   const submissions = await prisma.submission.findMany({
     where: { userId: user.id, questionId: slug },

@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
-import { QuestionsFilters } from '@/components/questions-filters';
+import { QuestionsListClient } from '@/components/questions-list-client';
 import { QuestionsStatsBar } from '@/components/questions-stats-bar';
-import { QuestionsTable, type QuestionRow } from '@/components/questions-table';
+import { type QuestionRow } from '@/components/questions-table';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { listPublishedQuestions } from '@/lib/questions';
 import { prisma } from '@/lib/db/prisma';
@@ -44,9 +44,9 @@ export default async function QuestionsPage({ searchParams: searchParamsPromise 
     };
   });
 
-  // Apply filters from search params
+  // Server-side filtering for dropdown filters only.
+  // Search is client-side (instant, no roundtrip), so it does not appear here.
   let filtered = questionRows;
-
   if (searchParams.type) {
     filtered = filtered.filter((q) => q.type === searchParams.type);
   }
@@ -56,37 +56,19 @@ export default async function QuestionsPage({ searchParams: searchParamsPromise 
   if (searchParams.status) {
     filtered = filtered.filter((q) => q.status === searchParams.status);
   }
-  if (searchParams.query) {
-    const qLabel = searchParams.query.toLowerCase();
-    filtered = filtered.filter((q) => q.title.toLowerCase().includes(qLabel) || q.description?.toLowerCase().includes(qLabel) || q.tags.some(t => t.toLowerCase().includes(qLabel)));
-  }
 
   const solvedCount = questionRows.filter((q) => q.status === 'solved').length;
-
-  // Pagination — client-side slicing of filtered results
-  const PAGE_SIZE = 25;
-  const totalFiltered = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
-  const page = Math.max(1, Math.min(parseInt(searchParams.page || '1', 10) || 1, totalPages));
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  // Serialize current search params for pagination links
-  const currentParams: Record<string, string> = {};
-  for (const [key, value] of Object.entries(searchParams)) {
-    if (value && key !== 'page') currentParams[key] = value;
-  }
 
   // Categorise questions for the stats bar — type is primary signal
   const categorise = (q: QuestionRow) => {
     if (q.type === 'REACT_APP') return 'ui';
-    const t = q.tags.map(s => s.toLowerCase()).join(' ');
-    if (/node|api|server|backend|database|express|rest/i.test(t)) return 'backend';
-    if (/concept|pattern|design|system|architecture|theory/i.test(t)) return 'concepts';
+    const tags = q.tags.map((s) => s.toLowerCase()).join(' ');
+    if (/node|api|server|backend|database|express|rest/i.test(tags)) return 'backend';
     if (q.type === 'FUNCTION_PYTHON') return 'backend';
     return 'js';
   };
 
-  const cats = { js: { solved: 0, total: 0 }, ui: { solved: 0, total: 0 }, backend: { solved: 0, total: 0 }, concepts: { solved: 0, total: 0 } };
+  const cats = { js: { solved: 0, total: 0 }, ui: { solved: 0, total: 0 }, backend: { solved: 0, total: 0 } };
   for (const q of questionRows) {
     const cat = categorise(q);
     cats[cat].total++;
@@ -96,7 +78,6 @@ export default async function QuestionsPage({ searchParams: searchParamsPromise 
   return (
     <div className="max-w-[1120px] mx-auto px-4 sm:px-6">
       <div className="grid gap-5 py-8">
-        {/* Stats bar */}
         <QuestionsStatsBar
           isLoggedIn={!!user}
           streak={streak}
@@ -105,25 +86,11 @@ export default async function QuestionsPage({ searchParams: searchParamsPromise 
           js={cats.js}
           ui={cats.ui}
           backend={cats.backend}
-          concepts={cats.concepts}
         />
 
-        {/* Filters */}
-        <div className="flex items-center gap-4 w-full">
-          <Suspense>
-            <QuestionsFilters />
-          </Suspense>
-        </div>
-
-        {/* Table */}
-        <QuestionsTable
-          questions={paginated}
-          isLoggedIn={!!user}
-          page={page}
-          totalPages={totalPages}
-          totalFiltered={totalFiltered}
-          searchParams={currentParams}
-        />
+        <Suspense>
+          <QuestionsListClient allRows={filtered} isLoggedIn={!!user} />
+        </Suspense>
       </div>
     </div>
   );
@@ -148,4 +115,3 @@ async function getSubmissionStats(userId?: string) {
   }
   return stats;
 }
-

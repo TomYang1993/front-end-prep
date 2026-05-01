@@ -28,12 +28,14 @@ export function AuthForm() {
     }
   }
 
+  const oauthBtn = 'btn btn-secondary inline-flex items-center justify-center gap-2.5 [&_svg]:shrink-0';
+
   return (
     <div className="feature-panel max-w-[400px] mx-auto w-full">
       <div className="form-stack">
         <button
           type="button"
-          className="btn btn-secondary inline-flex items-center justify-center gap-2.5 [&_svg]:shrink-0"
+          className={oauthBtn}
           onClick={() => handleOAuth('google')}
           disabled={loading}
         >
@@ -48,7 +50,7 @@ export function AuthForm() {
 
         <button
           type="button"
-          className="btn btn-secondary inline-flex items-center justify-center gap-2.5 [&_svg]:shrink-0"
+          className={oauthBtn}
           onClick={() => handleOAuth('github')}
           disabled={loading}
         >

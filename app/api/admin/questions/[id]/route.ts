@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
-import { requireAdmin } from '@/lib/auth/current-user';
-import { forbidden, notFound, unauthorized } from '@/lib/api';
+import { authorizeAdmin } from '@/lib/auth/current-user';
+import { notFound } from '@/lib/api';
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -9,12 +9,8 @@ interface Params {
 
 export async function GET(req: NextRequest, { params }: Params) {
   const { id } = await params;
-  try {
-    await requireAdmin(req);
-  } catch (error) {
-    if (error instanceof Error && error.message === 'FORBIDDEN') return forbidden();
-    return unauthorized();
-  }
+  const admin = await authorizeAdmin(req);
+  if (admin instanceof NextResponse) return admin;
 
   const question = await prisma.question.findUnique({
     where: { id },

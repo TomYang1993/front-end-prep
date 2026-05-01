@@ -51,29 +51,23 @@ export async function middleware(req: NextRequest) {
 
   // ── Rate limiting (skipped if Upstash is not configured) ──
   if (process.env.UPSTASH_REDIS_REST_URL) {
-    // Global catch-all (all routes, by IP)
-    const globalResult = await globalLimiter.limit(ip);
-    if (!globalResult.success) return rateLimitResponse();
+    const checks: Promise<{ success: boolean }>[] = [globalLimiter.limit(ip)];
 
-    // Tighter limit on auth routes
     if (pathname.startsWith('/auth') || pathname.startsWith('/api/auth')) {
-      const authResult = await authLimiter.limit(ip);
-      if (!authResult.success) return rateLimitResponse();
+      checks.push(authLimiter.limit(ip));
     }
 
-    // API reads vs mutations
-    if (pathname.startsWith('/api/')) {
+    if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth')) {
       const isMutation = req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS';
-
       if (session) {
-        const limiter = isMutation ? mutationLimiter : userReadLimiter;
-        const result = await limiter.limit(session.id);
-        if (!result.success) return rateLimitResponse();
+        checks.push((isMutation ? mutationLimiter : userReadLimiter).limit(session.id));
       } else {
-        const result = await anonReadLimiter.limit(ip);
-        if (!result.success) return rateLimitResponse();
+        checks.push(anonReadLimiter.limit(ip));
       }
     }
+
+    const results = await Promise.all(checks);
+    if (results.some((r) => !r.success)) return rateLimitResponse();
   }
 
   // ── Protected routes: require session ──

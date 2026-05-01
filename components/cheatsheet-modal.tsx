@@ -2,6 +2,7 @@
 
 import * as Dialog from '@radix-ui/react-dialog';
 import { BookOpen, X } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 type CheatsheetType = 'js' | 'react' | 'python';
 
@@ -9,13 +10,37 @@ interface CheatsheetModalProps {
   type?: CheatsheetType;
 }
 
+function Section({ title, children }: { title: ReactNode; children: ReactNode }) {
+  return (
+    <section>
+      <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function Quote({ children }: { children: ReactNode }) {
+  return (
+    <blockquote className="border-l-[3px] border-brand pl-4 mb-3 text-muted italic text-[0.88rem]">
+      {children}
+    </blockquote>
+  );
+}
+
+function CodeBlock({ children }: { children: string }) {
+  return (
+    <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]">
+      <code>{children}</code>
+    </pre>
+  );
+}
+
 function JSCheatsheet() {
   return (
     <>
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink"><code>typeof</code> Operator</h2>
-        <blockquote className="border-l-[3px] border-brand pl-4 mb-3 text-muted italic text-[0.88rem]">Good for testing primitive values, not good for reference types.</blockquote>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`typeof 1           // "number"
+      <Section title={<><code>typeof</code> Operator</>}>
+        <Quote>Good for testing primitive values, not good for reference types.</Quote>
+        <CodeBlock>{`typeof 1           // "number"
 typeof "s"         // "string"
 typeof true        // "boolean"
 typeof null        // "object" (famous bug!)
@@ -23,22 +48,20 @@ typeof undefined   // "undefined"
 typeof Symbol()    // "symbol"
 typeof {}          // "object"
 typeof []          // "object"
-typeof Date        // "function"`}</code></pre>
-      </section>
+typeof Date        // "function"`}</CodeBlock>
+      </Section>
 
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Equality & Coercion</h2>
-        <blockquote className="border-l-[3px] border-brand pl-4 mb-3 text-muted italic text-[0.88rem]">Always use <code>===</code> unless you intentionally want coercion.</blockquote>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`0 == ""       // true  (coercion)
+      <Section title="Equality & Coercion">
+        <Quote>Always use <code>===</code> unless you intentionally want coercion.</Quote>
+        <CodeBlock>{`0 == ""       // true  (coercion)
 0 === ""      // false (strict)
 null == undefined   // true
 null === undefined  // false
-NaN === NaN         // false — use Number.isNaN()`}</code></pre>
-      </section>
+NaN === NaN         // false — use Number.isNaN()`}</CodeBlock>
+      </Section>
 
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Array Methods</h2>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`// Transform
+      <Section title="Array Methods">
+        <CodeBlock>{`// Transform
 arr.map(x => x * 2)         // new array
 arr.filter(x => x > 0)      // new array
 arr.reduce((acc, x) => acc + x, 0)
@@ -52,12 +75,11 @@ arr.includes(val)            // boolean
 arr.push(x) / arr.pop()
 arr.unshift(x) / arr.shift()
 arr.splice(i, count, ...items)
-arr.sort((a, b) => a - b)   // in-place, returns arr`}</code></pre>
-      </section>
+arr.sort((a, b) => a - b)   // in-place, returns arr`}</CodeBlock>
+      </Section>
 
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Closures & Scope</h2>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`function counter() {
+      <Section title="Closures & Scope">
+        <CodeBlock>{`function counter() {
   let count = 0;
   return {
     inc: () => ++count,
@@ -71,12 +93,11 @@ for (var i = 0; i < 3; i++) {
 }
 for (let i = 0; i < 3; i++) {
   setTimeout(() => console.log(i), 0); // 0, 1, 2
-}`}</code></pre>
-      </section>
+}`}</CodeBlock>
+      </Section>
 
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Promises & Async</h2>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`// Promise combinators
+      <Section title="Promises & Async">
+        <CodeBlock>{`// Promise combinators
 Promise.all([p1, p2])      // rejects on first failure
 Promise.allSettled([p1,p2]) // always resolves
 Promise.race([p1, p2])     // first to settle
@@ -90,20 +111,19 @@ async function fetchData() {
   } catch (err) {
     console.error(err);
   }
-}`}</code></pre>
-      </section>
+}`}</CodeBlock>
+      </Section>
 
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Destructuring & Spread</h2>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`const { a, b, ...rest } = obj;
+      <Section title="Destructuring & Spread">
+        <CodeBlock>{`const { a, b, ...rest } = obj;
 const [first, , third] = arr;
 const merged = { ...obj1, ...obj2 };
 const copy = [...arr1, ...arr2];
 
 // Default values
 const { x = 10, y = 20 } = {};
-function fn({ name = "anon" } = {}) {}`}</code></pre>
-      </section>
+function fn({ name = "anon" } = {}) {}`}</CodeBlock>
+      </Section>
     </>
   );
 }
@@ -111,9 +131,8 @@ function fn({ name = "anon" } = {}) {}`}</code></pre>
 function ReactCheatsheet() {
   return (
     <>
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Component Patterns</h2>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`// Function component
+      <Section title="Component Patterns">
+        <CodeBlock>{`// Function component
 function Card({ title, children }) {
   return (
     <div className="card">
@@ -126,12 +145,11 @@ function Card({ title, children }) {
 // Conditional rendering
 {isLoading ? <Spinner /> : <Content />}
 {error && <ErrorBanner msg={error} />}
-{items.length > 0 && <List items={items} />}`}</code></pre>
-      </section>
+{items.length > 0 && <List items={items} />}`}</CodeBlock>
+      </Section>
 
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Hooks</h2>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`// State
+      <Section title="Hooks">
+        <CodeBlock>{`// State
 const [count, setCount] = useState(0);
 setCount(prev => prev + 1);  // functional update
 
@@ -147,13 +165,12 @@ ref.current = someValue;
 
 // Memoization
 const expensive = useMemo(() => calc(a, b), [a, b]);
-const handler = useCallback((e) => {}, [dep]);`}</code></pre>
-      </section>
+const handler = useCallback((e) => {}, [dep]);`}</CodeBlock>
+      </Section>
 
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Custom Hooks</h2>
-        <blockquote className="border-l-[3px] border-brand pl-4 mb-3 text-muted italic text-[0.88rem]">Extract reusable logic into <code>use*</code> functions. Must call hooks at the top level.</blockquote>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`function useDebounce(value, delay) {
+      <Section title="Custom Hooks">
+        <Quote>Extract reusable logic into <code>use*</code> functions. Must call hooks at the top level.</Quote>
+        <CodeBlock>{`function useDebounce(value, delay) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
     const id = setTimeout(() => setDebounced(value), delay);
@@ -171,12 +188,11 @@ function useLocalStorage(key, initial) {
     localStorage.setItem(key, JSON.stringify(val));
   }, [key, val]);
   return [val, setVal];
-}`}</code></pre>
-      </section>
+}`}</CodeBlock>
+      </Section>
 
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Event Handling & Forms</h2>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`function Form() {
+      <Section title="Event Handling & Forms">
+        <CodeBlock>{`function Form() {
   const [value, setValue] = useState("");
 
   const handleSubmit = (e) => {
@@ -193,13 +209,12 @@ function useLocalStorage(key, initial) {
       <button type="submit">Send</button>
     </form>
   );
-}`}</code></pre>
-      </section>
+}`}</CodeBlock>
+      </Section>
 
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Keys & Lists</h2>
-        <blockquote className="border-l-[3px] border-brand pl-4 mb-3 text-muted italic text-[0.88rem]">Keys must be stable, unique, and not array indices (when order can change).</blockquote>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`// Good — stable unique id
+      <Section title="Keys & Lists">
+        <Quote>Keys must be stable, unique, and not array indices (when order can change).</Quote>
+        <CodeBlock>{`// Good — stable unique id
 {items.map(item => (
   <li key={item.id}>{item.name}</li>
 ))}
@@ -207,12 +222,11 @@ function useLocalStorage(key, initial) {
 // Bad — index as key (breaks on reorder/delete)
 {items.map((item, i) => (
   <li key={i}>{item.name}</li>
-))}`}</code></pre>
-      </section>
+))}`}</CodeBlock>
+      </Section>
 
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Performance</h2>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`// Prevent unnecessary re-renders
+      <Section title="Performance">
+        <CodeBlock>{`// Prevent unnecessary re-renders
 const MemoChild = React.memo(function Child({ data }) {
   return <div>{data}</div>;
 });
@@ -221,8 +235,8 @@ const MemoChild = React.memo(function Child({ data }) {
 const HeavyChart = React.lazy(() => import('./Chart'));
 <Suspense fallback={<Spinner />}>
   <HeavyChart />
-</Suspense>`}</code></pre>
-      </section>
+</Suspense>`}</CodeBlock>
+      </Section>
     </>
   );
 }
@@ -230,9 +244,8 @@ const HeavyChart = React.lazy(() => import('./Chart'));
 function PythonCheatsheet() {
   return (
     <>
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Data Structures</h2>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`# Lists
+      <Section title="Data Structures">
+        <CodeBlock>{`# Lists
 nums = [1, 2, 3]
 nums.append(4)          # [1, 2, 3, 4]
 nums.pop()              # removes last
@@ -259,12 +272,11 @@ q.popleft()
 # DefaultDict
 from collections import defaultdict
 dd = defaultdict(list)
-dd["key"].append("val")`}</code></pre>
-      </section>
+dd["key"].append("val")`}</CodeBlock>
+      </Section>
 
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Common Patterns</h2>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`# List comprehension
+      <Section title="Common Patterns">
+        <CodeBlock>{`# List comprehension
 squares = [x**2 for x in range(10)]
 evens = [x for x in nums if x % 2 == 0]
 
@@ -284,12 +296,11 @@ for a, b in zip(list1, list2):
     print(a, b)
 
 # Unpacking
-first, *rest = [1, 2, 3, 4]   # first=1, rest=[2,3,4]`}</code></pre>
-      </section>
+first, *rest = [1, 2, 3, 4]   # first=1, rest=[2,3,4]`}</CodeBlock>
+      </Section>
 
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">String Operations</h2>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`s = "hello world"
+      <Section title="String Operations">
+        <CodeBlock>{`s = "hello world"
 s.split()              # ["hello", "world"]
 " ".join(["a", "b"])   # "a b"
 s.strip()              # remove whitespace
@@ -297,12 +308,11 @@ s.replace("l", "r")    # "herro worrd"
 s[::-1]                # reverse: "dlrow olleh"
 s.startswith("he")     # True
 s.isdigit()            # False
-f"value is {x:.2f}"    # f-string formatting`}</code></pre>
-      </section>
+f"value is {x:.2f}"    # f-string formatting`}</CodeBlock>
+      </Section>
 
-      <section>
-        <h2 className="text-base mb-2 border-b border-line pb-2 font-semibold text-ink">Classes & OOP</h2>
-        <pre className="bg-[#0f172a] text-[#f8fafc] p-3 rounded-sm overflow-x-auto text-[12px]"><code>{`class BankAccount:
+      <Section title="Classes & OOP">
+        <CodeBlock>{`class BankAccount:
     def __init__(self, owner: str, balance: float = 0):
         self.owner = owner
         self.balance = balance
@@ -327,20 +337,25 @@ class SavingsAccount(BankAccount):
         self.rate = rate
 
     def add_interest(self):
-        self.balance *= (1 + self.rate)`}</code></pre>
-      </section>
+        self.balance *= (1 + self.rate)`}</CodeBlock>
+      </Section>
     </>
   );
 }
 
+const META: Record<CheatsheetType, { title: string; btnTitle: string; render: () => ReactNode }> = {
+  js:     { title: 'JavaScript Cheatsheet', btnTitle: 'JS Cheatsheet',     render: () => <JSCheatsheet /> },
+  react:  { title: 'React Cheatsheet',      btnTitle: 'React Cheatsheet',  render: () => <ReactCheatsheet /> },
+  python: { title: 'Python Cheatsheet',     btnTitle: 'Python Cheatsheet', render: () => <PythonCheatsheet /> },
+};
+
 export function CheatsheetModal({ type = 'js' }: CheatsheetModalProps) {
-  const title = type === 'python' ? 'Python Cheatsheet' : type === 'react' ? 'React Cheatsheet' : 'JavaScript Cheatsheet';
-  const btnTitle = type === 'python' ? 'Python Cheatsheet' : type === 'react' ? 'React Cheatsheet' : 'JS Cheatsheet';
+  const meta = META[type];
 
   return (
     <Dialog.Root>
       <Dialog.Trigger asChild>
-        <button className="ide-sidenav-btn" title={btnTitle}>
+        <button className="ide-sidenav-btn" title={meta.btnTitle}>
           <BookOpen size={24} strokeWidth={1.5} />
         </button>
       </Dialog.Trigger>
@@ -349,7 +364,7 @@ export function CheatsheetModal({ type = 'js' }: CheatsheetModalProps) {
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="dialog-content max-w-[750px] w-[90vw] max-h-[85vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-4 flex-nowrap gap-4">
-            <Dialog.Title className="text-[1.15rem] font-semibold m-0">{title}</Dialog.Title>
+            <Dialog.Title className="text-[1.15rem] font-semibold m-0">{meta.title}</Dialog.Title>
             <Dialog.Close asChild>
               <button aria-label="Close" className="bg-transparent border-none cursor-pointer text-muted shrink-0 p-0 hover:text-ink transition-colors">
                 <X size={20} />
@@ -357,9 +372,7 @@ export function CheatsheetModal({ type = 'js' }: CheatsheetModalProps) {
             </Dialog.Close>
           </div>
 
-          <div className="grid gap-5 leading-relaxed">
-            {type === 'python' ? <PythonCheatsheet /> : type === 'react' ? <ReactCheatsheet /> : <JSCheatsheet />}
-          </div>
+          <div className="grid gap-5 leading-relaxed">{meta.render()}</div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

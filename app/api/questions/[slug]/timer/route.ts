@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { prisma } from '@/lib/db/prisma';
+import { notFound, unauthorized } from '@/lib/api';
 import { getDefaultTimeLimitMinutes } from '@/lib/question-timer';
 import type { Difficulty, QuestionType } from '@prisma/client';
 
@@ -10,18 +11,14 @@ export async function POST(
 ) {
   const { slug } = await params;
   const user = await getCurrentServerUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (!user) return unauthorized();
 
   const question = await prisma.question.findUnique({
     where: { slug },
     select: { id: true, type: true, difficulty: true, timeLimitMinutes: true },
   });
 
-  if (!question) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  }
+  if (!question) return notFound();
 
   // Delete any expired timer
   const existing = await prisma.questionTimer.findUnique({

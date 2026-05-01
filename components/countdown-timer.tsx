@@ -32,24 +32,26 @@ export function CountdownTimer({ expiresAt }: CountdownTimerProps) {
     return () => clearInterval(id);
   }, [expiresAt, router]);
 
-  const mounted = remaining !== null;
+  if (remaining === null) {
+    return (
+      <div className="flex items-center gap-1.5 font-mono text-sm tabular-nums text-muted" title="Time remaining">
+        <Clock size={14} />
+        <span>--:--</span>
+      </div>
+    );
+  }
 
-  const isWarning = mounted && remaining! <= 300 && remaining! > 60;
-  const isCritical = mounted && remaining! <= 60;
-
-  const colorClass = isCritical
-    ? 'text-warn'
-    : isWarning
-      ? 'text-caution'
-      : 'text-muted';
+  const isCritical = remaining <= 60;
+  const isWarning = !isCritical && remaining <= 300;
+  const colorClass = isCritical ? 'text-warn' : isWarning ? 'text-caution' : 'text-muted';
 
   return (
     <div
-      className={`flex items-center gap-1.5 font-mono text-sm tabular-nums ${mounted ? colorClass : 'text-muted'} ${isCritical && mounted ? 'animate-pulse' : ''}`}
+      className={`flex items-center gap-1.5 font-mono text-sm tabular-nums ${colorClass} ${isCritical ? 'animate-pulse' : ''}`}
       title="Time remaining"
     >
       <Clock size={14} />
-      <span>{mounted ? formatTime(remaining!) : '--:--'}</span>
+      <span>{formatTime(remaining)}</span>
     </div>
   );
 }
