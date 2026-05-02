@@ -1,3 +1,11 @@
+// OPEN QUESTION: do we need to mock Redis at all, and how detailed?
+// Today only `lib/rate-limit.ts` (via @upstash/ratelimit) talks to Redis, and it
+// gracefully no-ops when env vars are missing — so most tests can run without
+// any Redis mock. Revisit before Phase 2/3:
+//  - if rate-limit branch coverage matters, swap @upstash/ratelimit for this
+//    fake at the boundary instead of hand-rolling commands here
+//  - `incr` here trusts the stored value is numeric (real Redis errors on
+//    non-integer); fine for our usage but tighten if we expand surface area
 type Entry = { value: unknown; expiresAt?: number };
 
 export class InMemoryRedis {
