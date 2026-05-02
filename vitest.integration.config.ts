@@ -13,11 +13,10 @@ export default defineConfig({
   test: {
     environment: 'node',
     setupFiles: ['./__tests__/setup.ts'],
-    include: ['__tests__/**/*.test.ts'],
-    exclude: [
-      '__tests__/dom/**',
-      '__tests__/integration/**',
-      'node_modules/**'
-    ]
+    include: ['__tests__/integration/**/*.test.ts'],
+    testTimeout: 30_000,
+    hookTimeout: 60_000,
+    pool: 'forks',
+    poolOptions: { forks: { singleFork: true } }
   }
 });
