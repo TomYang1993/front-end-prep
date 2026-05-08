@@ -306,8 +306,8 @@ function TestsTab({
               <span className="truncate">{block.name}</span>
             </div>
 
-            {/* Code block — only revealed after tests have been run */}
-            {hasResults && (
+            {/* Code block — only revealed after a failing run */}
+            {hasResults && status === 'failed' && (
               <div className="text-[12px] leading-[1.6]">
                 <SyntaxHighlighter
                   language="javascript"

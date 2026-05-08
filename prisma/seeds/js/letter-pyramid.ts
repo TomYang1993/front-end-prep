@@ -1,38 +1,37 @@
-import { QuestionType, Difficulty, AccessTier } from '@prisma/client';
-import type { SeedQuestion } from '../types';
+import { QuestionType, Difficulty, AccessTier } from "@prisma/client";
+import type { SeedQuestion } from "../types";
 
 export const letterPyramid: SeedQuestion = {
-  slug: 'letter-pyramid',
-  title: 'Letter Pyramid',
-  prompt: `Build a pyramid of letters with \`n\` rows.
+  slug: "letter-pyramid",
+  title: "Letter Pyramid",
+  prompt: `Build a pyramid of letters with \`n\` rows, where \`1 ≤ n ≤ 10\`.
 
-Each row \`i\` (0-indexed) contains letters ascending from \`A\` to the \`i\`-th letter, then descending back to \`A\`, centered with leading spaces.
+Each row \`i\` (0-indexed) contains letters ascending from \`A\` to the i-th letter, then descending back to \`A\`. Rows are padded with spaces so each row's center letter aligns with the peak of the pyramid.
 
-**Example — \`n = 4\`:**
-\`\`\`
+**Example \`n = 4\`:**
+\`\`\`text
    A
   ABA
  ABCBA
 ABCDCBA
 \`\`\`
 
-**Example — \`n = 3\`:**
-\`\`\`
+**Example \`n = 3\`:**
+\`\`\`text
   A
  ABA
 ABCBA
 \`\`\`
 
 **Rules:**
-- Use \`String.fromCharCode(65 + offset)\` to generate letters (\`65\` is the char code for \`A\`).
-- Each row is padded with leading spaces so the pyramid is right-aligned to the last row.
 - Return the pattern as a single string with rows separated by \`\\n\`.
-- No trailing spaces on any row.`,
-  description: 'Build a centered letter pyramid using nested loops and String.fromCharCode.',
+- No trailing spaces on any row.
+- Assume \`1 ≤ n ≤ 10\` so letters never exceed \`J\`.`,
+  description: "Build a centered letter pyramid.",
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
-  tags: ['loops', 'strings'],
+  tags: ["string"],
   starterCode: {
     javascript: `function letterPyramid(n) {
   // Return the letter pyramid as a string
@@ -95,7 +94,7 @@ test('6-row pyramid reaches F', () => {
 });`,
   solutions: [
     {
-      language: 'javascript',
+      language: "javascript",
       explanation: `## Building each row
 
 For row \`i\` (0-indexed):

@@ -1,9 +1,9 @@
-import { QuestionType, Difficulty, AccessTier } from '@prisma/client';
-import type { SeedQuestion } from '../types';
+import { QuestionType, Difficulty, AccessTier } from "@prisma/client";
+import type { SeedQuestion } from "../types";
 
 export const formValidation: SeedQuestion = {
-  slug: 'form-validation',
-  title: 'Form Validation',
+  slug: "form-validation",
+  title: "Form Validation Pattern",
   prompt: `Given a form object, validate it against a set of rules and return an array of error messages. Return an empty array if the form is valid.
 
 \`\`\`js
@@ -26,14 +26,17 @@ validateForm(form)
 2. \`password\` must be at least 8 characters \u2192 error: \`'Password must be at least 8 characters'\`
 3. \`age\` must be 18 or older \u2192 error: \`'Must be 18 or older'\`
 
-**Hint:** Think data-driven \u2014 define rules as an array of objects with a \`check\` function and \`message\`, then filter for failing rules.
+> [!info] Interview inspiration
+> Every form validation library uses some version of this pattern. Testing if you are familiar with array manipulation and also common design pattern and real world coding experience.
+> Also notice this is simplified high-level code. The purpose is to try to use real world coding example to help you understand.
 
-**Why this matters:** Every form validation library uses some version of this pattern. Tests whether you can think in terms of data-driven code instead of a big if/else block.`,
-  description: 'Validate form fields using a data-driven rule array with filter and map.',
+`,
+  description:
+    "Validate form fields using a data-driven rule array with filter and map.",
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
-  tags: ['array', 'validation'],
+  tags: ["array", "validation"],
   starterCode: {
     javascript: `function validateForm(form) {
   // Return array of error messages (empty if valid)
@@ -92,7 +95,7 @@ test('email with @ but no dot is invalid', () => {
 });`,
   solutions: [
     {
-      language: 'javascript',
+      language: "javascript",
       explanation: `## Data-driven validation
 
 Instead of a chain of if/else statements, define rules as data:
@@ -104,8 +107,8 @@ const rules = [
 ];
 \`\`\`
 
-Then filter for rules that *fail* and map to their messages. This pattern is:
-- **Extensible** — add a rule = add an object, no control flow changes
+Then filter for rules that fail and map to their messages. This pattern is:
+- **Extensible** — add a rule is just adding an object, no control flow changes
 - **Testable** — each rule is independent
 - **Composable** — reuse rule sets across forms
 

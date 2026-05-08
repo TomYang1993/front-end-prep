@@ -1,9 +1,9 @@
-import { QuestionType, Difficulty, AccessTier } from '@prisma/client';
-import type { SeedQuestion } from '../types';
+import { QuestionType, Difficulty, AccessTier } from "@prisma/client";
+import type { SeedQuestion } from "../types";
 
 export const hollowSquare: SeedQuestion = {
-  slug: 'hollow-square',
-  title: 'Hollow Square Pattern',
+  slug: "hollow-square",
+  title: "Hollow Square Pattern",
   prompt: `Print a hollow square of \`*\` characters with the given side length \`n\`.
 
 **Rules:**
@@ -11,7 +11,7 @@ export const hollowSquare: SeedQuestion = {
 - Middle rows have \`*\` only at the first and last positions, with spaces in between.
 - Return the pattern as a single string with rows separated by \`\\n\`.
 
-**Example — \`n = 5\`:**
+**Example \`n = 5\`:**
 \`\`\`
 *****
 *   *
@@ -20,7 +20,7 @@ export const hollowSquare: SeedQuestion = {
 *****
 \`\`\`
 
-**Example — \`n = 3\`:**
+**Example \`n = 3\`:**
 \`\`\`
 ***
 * *
@@ -28,11 +28,12 @@ export const hollowSquare: SeedQuestion = {
 \`\`\`
 
 **Hint:** You need a conditional inside the inner loop — print \`*\` if it's the first/last row or first/last column, otherwise a space.`,
-  description: 'Print a hollow square pattern using nested loops with conditional branching.',
+  description:
+    "Print a hollow square pattern using nested loops with conditional branching.",
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
-  tags: ['loops', 'strings'],
+  tags: ["loops", "strings"],
   starterCode: {
     javascript: `function hollowSquare(n) {
   // Return the hollow square pattern as a string
@@ -96,7 +97,7 @@ test('7x7 hollow square', () => {
 });`,
   solutions: [
     {
-      language: 'javascript',
+      language: "javascript",
       explanation: `## Nested loops with boundary check
 
 The outer loop iterates rows, the inner loop iterates columns. A cell gets \`*\` if it sits on any edge (first/last row or first/last column), otherwise it gets a space.

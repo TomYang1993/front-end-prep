@@ -6,7 +6,7 @@ import { Search, SlidersHorizontal } from 'lucide-react';
 import { QuestionsFilters } from './questions-filters';
 import { QuestionsTable, type QuestionRow } from './questions-table';
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 20;
 
 interface Props {
   allRows: QuestionRow[];

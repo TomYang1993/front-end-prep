@@ -16,7 +16,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   const version = await prisma.questionVersion.findFirst({
-    where: { question: { slug: 'use-previous-hook' } }
+    where: { question: { slug: 'use-localstorage-hook' } }
   });
   
   console.log('--- DB RESULT ---');

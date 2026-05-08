@@ -1,9 +1,9 @@
-import { QuestionType, Difficulty, AccessTier } from '@prisma/client';
-import type { SeedQuestion } from '../types';
+import { QuestionType, Difficulty, AccessTier } from "@prisma/client";
+import type { SeedQuestion } from "../types";
 
 export const groupTransactions: SeedQuestion = {
-  slug: 'group-transactions',
-  title: 'Group Transactions by Category',
+  slug: "group-transactions",
+  title: "Group Transactions by Category",
   prompt: `Given an array of bank transactions, group them by \`category\` and sum the amounts.
 
 \`\`\`js
@@ -18,13 +18,12 @@ const transactions = [
 groupByCategory(transactions)
 // \u2192 { food: 60, transport: 25, entertainment: 15 }
 \`\`\`
-
-**Why this matters:** Expense trackers, analytics dashboards, any aggregation view \u2014 "group by and sum" is one of the most common data transformations.`,
-  description: 'Group transactions by category and sum amounts using reduce.',
+`,
+  description: "Group transactions by category and sum amounts using reduce.",
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
-  tags: ['array', 'reduce'],
+  tags: ["array manipulation"],
   starterCode: {
     javascript: `function groupByCategory(transactions) {
   // Return an object mapping category -> total amount
@@ -94,7 +93,7 @@ test('handles zero amounts', () => {
 });`,
   solutions: [
     {
-      language: 'javascript',
+      language: "javascript",
       explanation: `## reduce with object accumulator
 
 The classic "group by" pattern:

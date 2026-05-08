@@ -59,7 +59,7 @@ const CALLOUT_STYLES: Record<CalloutKind, { border: string; bg: string; icon: st
 
 function useMarkdownComponents(syntaxTheme: Record<string, React.CSSProperties>): Components {
   return {
-    code({ children, className: codeClassName, ...props }) {
+    code({ children, className: codeClassName, node, ...props }) {
       const match = /language-(\w+)/.exec(codeClassName || '');
       if (match) {
         return (
@@ -78,6 +78,16 @@ function useMarkdownComponents(syntaxTheme: Record<string, React.CSSProperties>)
           </SyntaxHighlighter>
         );
       }
+      // Untagged fenced block (parent is <pre>) — render as preformatted, preserve whitespace
+      const isBlock = (node as { tagName?: string } | undefined)?.tagName === 'code'
+        && String(children).includes('\n');
+      if (isBlock) {
+        return (
+          <code className="block font-mono text-[0.82rem] leading-[1.6] whitespace-pre" {...props}>
+            {String(children).replace(/\n$/, '')}
+          </code>
+        );
+      }
       return (
         <code
           className="bg-surface-raised border border-line px-1.5 py-0.5 rounded text-[0.85em] font-mono text-brand"
@@ -88,7 +98,11 @@ function useMarkdownComponents(syntaxTheme: Record<string, React.CSSProperties>)
       );
     },
     pre({ children }) {
-      return <div className="my-4">{children}</div>;
+      return (
+        <pre className="my-4 bg-surface-raised border border-line rounded-md p-3 overflow-x-auto">
+          {children}
+        </pre>
+      );
     },
     p({ children }) {
       return <p className="mb-4 last:mb-0">{children}</p>;

@@ -34,7 +34,7 @@ You may use any approach: \`let\`, IIFE, \`bind\`, closures, etc.`,
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
-  tags: ['closure', 'scope'],
+  tags: ['closure', 'scope', 'coding taste'],
   starterCode: {
     javascript: `function delayedLog(n) {
   const fns = [];

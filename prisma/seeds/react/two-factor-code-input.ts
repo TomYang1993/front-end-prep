@@ -1,18 +1,5 @@
-/**
- * Seed: "Two-Factor Code Input" React question.
- * Run with: npx tsx prisma/seeds/react/two-factor-code-input.ts
- */
-import {
-  PrismaClient,
-  QuestionType,
-  Difficulty,
-  AccessTier,
-  QuestionVersionStatus,
-} from '@prisma/client';
-
-const prisma = new PrismaClient();
-
-const SLUG = 'two-factor-code-input';
+import { QuestionType, Difficulty, AccessTier } from '@prisma/client';
+import type { SeedQuestion } from '../types';
 
 const STARTER_CODE_REACT = `import React, { useState } from 'react';
 
@@ -320,79 +307,21 @@ const PROMPT = `Build a **two-factor authentication code input** — the 6-digit
 - \`inputMode="numeric"\` gives mobile users a number pad
 - Handle \`onPaste\` by reading from \`e.clipboardData.getData('text')\``;
 
-async function main() {
-  // 1. Upsert tags
-  const tagReact = await prisma.questionTag.upsert({ where: { name: 'react' }, update: {}, create: { name: 'react' } });
-  const tagForms = await prisma.questionTag.upsert({ where: { name: 'forms' }, update: {}, create: { name: 'forms' } });
-  const tagA11y = await prisma.questionTag.upsert({ where: { name: 'accessibility' }, update: {}, create: { name: 'accessibility' } });
-  const tagDom = await prisma.questionTag.upsert({ where: { name: 'dom-api' }, update: {}, create: { name: 'dom-api' } });
-
-  // 2. Get admin user
-  const adminUser = await prisma.user.findFirst({ orderBy: { createdAt: 'asc' } });
-  if (!adminUser) {
-    throw new Error('No user found. Run `npx prisma db seed` first.');
-  }
-
-  // 3. Upsert the question
-  const question = await prisma.question.upsert({
-    where: { slug: SLUG },
-    update: {
-      title: 'Two-Factor Code Input',
-      prompt: PROMPT,
-      type: QuestionType.REACT_APP,
-      difficulty: Difficulty.MEDIUM,
-      accessTier: AccessTier.FREE,
-      isPublished: true,
-    },
-    create: {
-      slug: SLUG,
-      title: 'Two-Factor Code Input',
-      prompt: PROMPT,
-      type: QuestionType.REACT_APP,
-      difficulty: Difficulty.MEDIUM,
-      accessTier: AccessTier.FREE,
-      isPublished: true,
-      createdById: adminUser.id,
-    },
-  });
-
-  console.log(`Question upserted: ${question.id} (${question.slug})`);
-
-  // 4. Tags
-  for (const tag of [tagReact, tagForms, tagA11y, tagDom]) {
-    await prisma.questionTagOnQuestion.upsert({
-      where: { questionId_tagId: { questionId: question.id, tagId: tag.id } },
-      update: {},
-      create: { questionId: question.id, tagId: tag.id },
-    });
-  }
-
-  // 5. Version with starter code
-  await prisma.questionVersion.upsert({
-    where: { questionId_version: { questionId: question.id, version: 1 } },
-    update: {
-      starterCode: { react: STARTER_CODE_REACT, reactTypescript: STARTER_CODE_REACT_TS, css: STARTER_CSS },
-      content: {
-        description: 'Build a 6-digit 2FA code input with auto-focus advancing, paste support, arrow key navigation, and visual verification feedback.',
-      },
-    },
-    create: {
-      questionId: question.id,
-      version: 1,
-      status: QuestionVersionStatus.PUBLISHED,
-      content: {
-        description: 'Build a 6-digit 2FA code input with auto-focus advancing, paste support, arrow key navigation, and visual verification feedback.',
-      },
-      starterCode: { react: STARTER_CODE_REACT, reactTypescript: STARTER_CODE_REACT_TS, css: STARTER_CSS },
-      publishedAt: new Date(),
-    },
-  });
-
-  // 6. Test code (RTL tests for React questions)
-  await prisma.question.update({
-    where: { id: question.id },
-    data: {
-      publicTestCode: `test('six input fields render', () => {
+export const twoFactorCodeInput: SeedQuestion = {
+  slug: 'two-factor-code-input',
+  title: 'Two-Factor Code Input',
+  prompt: PROMPT,
+  description: 'Build a 6-digit 2FA code input with auto-focus advancing, paste support, arrow key navigation, and visual verification feedback.',
+  type: QuestionType.REACT_APP,
+  difficulty: Difficulty.MEDIUM,
+  accessTier: AccessTier.FREE,
+  tags: ['react', 'forms', 'accessibility', 'dom-api', 'coding taste'],
+  starterCode: {
+    react: STARTER_CODE_REACT,
+    reactTypescript: STARTER_CODE_REACT_TS,
+    css: STARTER_CSS,
+  },
+  publicTestCode: `test('six input fields render', () => {
   render(<UserComponent />);
   const inputs = document.querySelectorAll('input');
   expect(inputs.length).toBe(6);
@@ -421,41 +350,11 @@ test('only digits accepted', () => {
   fireEvent.change(inputs[0], { target: { value: 'a' } });
   expect(inputs[0].value).toBe('');
 });`,
-    },
-  });
-
-  // 7. Official solution
-  await prisma.officialSolution.upsert({
-    where: { id: `${question.id}-official-react` },
-    update: {
-      explanation: SOLUTION_EXPLANATION,
-      code: SOLUTION_CODE,
-      complexity: null,
-    },
-    create: {
-      id: `${question.id}-official-react`,
-      questionId: question.id,
+  solutions: [
+    {
       language: 'typescript',
-      explanation: SOLUTION_EXPLANATION,
       code: SOLUTION_CODE,
-      complexity: null,
+      explanation: SOLUTION_EXPLANATION,
     },
-  });
-
-  // 8. Refresh renderData
-  const { refreshQuestionRenderData } = await import('../../../lib/questions-snapshot');
-  await refreshQuestionRenderData(question.id);
-
-  console.log(`✓ Question seeded: "${question.title}" (${SLUG})`);
-  console.log(`  - 4 tags: react, forms, accessibility, dom-api`);
-  console.log(`  - 7 public acceptance criteria`);
-  console.log(`  - 1 official solution with explanation`);
-  console.log(`  - renderData refreshed`);
-}
-
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
+  ],
+};

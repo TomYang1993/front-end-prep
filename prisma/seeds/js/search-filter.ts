@@ -1,9 +1,9 @@
-import { QuestionType, Difficulty, AccessTier } from '@prisma/client';
-import type { SeedQuestion } from '../types';
+import { QuestionType, Difficulty, AccessTier } from "@prisma/client";
+import type { SeedQuestion } from "../types";
 
 export const searchFilter: SeedQuestion = {
-  slug: 'search-filter',
-  title: 'Build a Search Filter',
+  slug: "search-filter",
+  title: "Build a Search Filter",
   prompt: `Given a list of articles and a search query, return articles where the query appears in either the \`title\` or any \`tag\`. The search should be **case-insensitive**.
 
 \`\`\`js
@@ -22,12 +22,15 @@ searchArticles(articles, 'react')
 
 The first article matches because "React" is in the title. The third matches on both title and tag.
 
-**Why this matters:** Client-side search/filter is in every app with a list view.`,
-  description: 'Filter articles by case-insensitive search across title and tags.',
+> [!info] Interview inspiration
+> This question is testing array manipulation methods you would use in your daily work, it's not testing leetcode style algo.
+>`,
+  description:
+    "Filter articles by case-insensitive search across title and tags.",
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
-  tags: ['array', 'filter'],
+  tags: ["array manipulation"],
   starterCode: {
     javascript: `function searchArticles(articles, query) {
   // Return articles matching the query in title or any tag
@@ -105,11 +108,11 @@ test('partial match in tag', () => {
 });`,
   solutions: [
     {
-      language: 'javascript',
+      language: "javascript",
       explanation: `## filter + includes + some
 
 Convert the query to lowercase once, then filter articles where:
-- The lowercased title includes the query, **OR**
+- The lowercased title includes the query
 - Some tag (lowercased) includes the query
 
 \`\`\`js

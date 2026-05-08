@@ -66,9 +66,12 @@ export async function seedQuestion(
     },
   });
 
-  // Link tags
-  for (const tagName of question.tags) {
-    const tagId = tagMap.get(tagName)!;
+  // Link tags — reconcile so removed tags actually disappear (seed is source of truth)
+  const desiredTagIds = question.tags.map((name) => tagMap.get(name)!);
+  await prisma.questionTagOnQuestion.deleteMany({
+    where: { questionId: q.id, tagId: { notIn: desiredTagIds } },
+  });
+  for (const tagId of desiredTagIds) {
     await prisma.questionTagOnQuestion.upsert({
       where: { questionId_tagId: { questionId: q.id, tagId } },
       update: {},

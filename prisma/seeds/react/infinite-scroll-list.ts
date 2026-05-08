@@ -1,18 +1,5 @@
-/**
- * Seed: "Infinite Scroll List" React question.
- * Run with: npx tsx prisma/seeds/react/infinite-scroll-list.ts
- */
-import {
-  PrismaClient,
-  QuestionType,
-  Difficulty,
-  AccessTier,
-  QuestionVersionStatus,
-} from '@prisma/client';
-
-const prisma = new PrismaClient();
-
-const SLUG = 'infinite-scroll-list';
+import { QuestionType, Difficulty, AccessTier } from '@prisma/client';
+import type { SeedQuestion } from '../types';
 
 const STARTER_CODE_REACT = `import React, { useState } from 'react';
 
@@ -236,79 +223,21 @@ A \`fetchItems(page, pageSize?)\` mock function is included in the starter code.
 - Remember to disconnect the observer on cleanup
 - \`useCallback\` helps keep observer references fresh across re-renders`;
 
-async function main() {
-  // 1. Upsert tags
-  const tagReact = await prisma.questionTag.upsert({ where: { name: 'react' }, update: {}, create: { name: 'react' } });
-  const tagHooks = await prisma.questionTag.upsert({ where: { name: 'hooks' }, update: {}, create: { name: 'hooks' } });
-  const tagPerf = await prisma.questionTag.upsert({ where: { name: 'performance' }, update: {}, create: { name: 'performance' } });
-  const tagDom = await prisma.questionTag.upsert({ where: { name: 'dom-api' }, update: {}, create: { name: 'dom-api' } });
-
-  // 2. Get admin user
-  const adminUser = await prisma.user.findFirst({ orderBy: { createdAt: 'asc' } });
-  if (!adminUser) {
-    throw new Error('No user found. Run `npx prisma db seed` first.');
-  }
-
-  // 3. Upsert the question
-  const question = await prisma.question.upsert({
-    where: { slug: SLUG },
-    update: {
-      title: 'Infinite Scroll List',
-      prompt: PROMPT,
-      type: QuestionType.REACT_APP,
-      difficulty: Difficulty.MEDIUM,
-      accessTier: AccessTier.FREE,
-      isPublished: true,
-    },
-    create: {
-      slug: SLUG,
-      title: 'Infinite Scroll List',
-      prompt: PROMPT,
-      type: QuestionType.REACT_APP,
-      difficulty: Difficulty.MEDIUM,
-      accessTier: AccessTier.FREE,
-      isPublished: true,
-      createdById: adminUser.id,
-    },
-  });
-
-  console.log(`Question upserted: ${question.id} (${question.slug})`);
-
-  // 4. Tags
-  for (const tag of [tagReact, tagHooks, tagPerf, tagDom]) {
-    await prisma.questionTagOnQuestion.upsert({
-      where: { questionId_tagId: { questionId: question.id, tagId: tag.id } },
-      update: {},
-      create: { questionId: question.id, tagId: tag.id },
-    });
-  }
-
-  // 5. Version with starter code
-  await prisma.questionVersion.upsert({
-    where: { questionId_version: { questionId: question.id, version: 1 } },
-    update: {
-      starterCode: { react: STARTER_CODE_REACT, reactTypescript: STARTER_CODE_REACT_TS, css: STARTER_CSS },
-      content: {
-        description: 'Build an infinite-scrolling list using IntersectionObserver that loads paginated data as the user scrolls down.',
-      },
-    },
-    create: {
-      questionId: question.id,
-      version: 1,
-      status: QuestionVersionStatus.PUBLISHED,
-      content: {
-        description: 'Build an infinite-scrolling list using IntersectionObserver that loads paginated data as the user scrolls down.',
-      },
-      starterCode: { react: STARTER_CODE_REACT, reactTypescript: STARTER_CODE_REACT_TS, css: STARTER_CSS },
-      publishedAt: new Date(),
-    },
-  });
-
-  // 6. Test code (RTL tests for React questions)
-  await prisma.question.update({
-    where: { id: question.id },
-    data: {
-      publicTestCode: `test('first 20 items render on initial mount', async () => {
+export const infiniteScrollList: SeedQuestion = {
+  slug: 'infinite-scroll-list',
+  title: 'Infinite Scroll List',
+  prompt: PROMPT,
+  description: 'Build an infinite-scrolling list using IntersectionObserver that loads paginated data as the user scrolls down.',
+  type: QuestionType.REACT_APP,
+  difficulty: Difficulty.MEDIUM,
+  accessTier: AccessTier.FREE,
+  tags: ['react', 'hooks', 'performance', 'dom-api', 'coding taste'],
+  starterCode: {
+    react: STARTER_CODE_REACT,
+    reactTypescript: STARTER_CODE_REACT_TS,
+    css: STARTER_CSS,
+  },
+  publicTestCode: `test('first 20 items render on initial mount', async () => {
   render(<UserComponent />);
   await waitFor(() => {
     expect(screen.getByText('Item 1')).toBeInTheDocument();
@@ -332,41 +261,12 @@ test('items are appended, not replaced', async () => {
   // First batch should remain after more loads
   expect(screen.getByText('Item 1')).toBeInTheDocument();
 });`,
-    },
-  });
-
-  // 7. Official solution
-  await prisma.officialSolution.upsert({
-    where: { id: `${question.id}-official-react` },
-    update: {
-      explanation: SOLUTION_EXPLANATION,
-      code: SOLUTION_CODE,
-      complexity: 'O(n) items, O(1) observer',
-    },
-    create: {
-      id: `${question.id}-official-react`,
-      questionId: question.id,
+  solutions: [
+    {
       language: 'typescript',
-      explanation: SOLUTION_EXPLANATION,
       code: SOLUTION_CODE,
+      explanation: SOLUTION_EXPLANATION,
       complexity: 'O(n) items, O(1) observer',
     },
-  });
-
-  // 8. Refresh renderData
-  const { refreshQuestionRenderData } = await import('../../../lib/questions-snapshot');
-  await refreshQuestionRenderData(question.id);
-
-  console.log(`✓ Question seeded: "${question.title}" (${SLUG})`);
-  console.log(`  - 4 tags: react, hooks, performance, dom-api`);
-  console.log(`  - 6 public acceptance criteria`);
-  console.log(`  - 1 official solution with explanation`);
-  console.log(`  - renderData refreshed`);
-}
-
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
+  ],
+};

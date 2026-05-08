@@ -40,7 +40,7 @@ predictOutput(); // ['A', 'H', 'C', 'F', 'D', 'B', 'E', 'G']  (or is it?)
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
-  tags: ['event-loop', 'async'],
+  tags: ['event-loop', 'async', 'coding taste'],
   starterCode: {
     javascript: `function predictOutput() {
   // Return an array of letters in the order they would be logged
