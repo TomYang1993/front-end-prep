@@ -44,6 +44,7 @@ vi.mock('@/lib/hooks/use-debounce', () => ({
 
 const baseProps = {
   questionId: 'q1',
+  slug: 'two-sum',
   title: 'Two Sum',
   prompt: 'Solve it',
   difficulty: 'EASY',

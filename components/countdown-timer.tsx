@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Clock } from 'lucide-react';
 
 interface CountdownTimerProps {
   expiresAt: string;
+  slug: string;
 }
 
 function formatTime(totalSeconds: number): string {
@@ -14,8 +15,9 @@ function formatTime(totalSeconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export function CountdownTimer({ expiresAt }: CountdownTimerProps) {
+export function CountdownTimer({ expiresAt, slug }: CountdownTimerProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [remaining, setRemaining] = useState<number | null>(null);
 
   useEffect(() => {
@@ -23,14 +25,19 @@ export function CountdownTimer({ expiresAt }: CountdownTimerProps) {
       const diff = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
       setRemaining(diff);
       if (diff <= 0) {
-        router.replace('/questions');
+        // Only kick if user is still on this question's page. Prevents a
+        // stale interval from a previous question redirecting the user
+        // away from a different question they're now working on.
+        if (pathname === `/questions/${slug}`) {
+          router.replace('/questions');
+        }
       }
     };
 
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [expiresAt, router]);
+  }, [expiresAt, slug, pathname, router]);
 
   if (remaining === null) {
     return (

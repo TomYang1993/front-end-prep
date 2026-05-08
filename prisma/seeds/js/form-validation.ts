@@ -36,6 +36,7 @@ validateForm(form)
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 20,
   tags: ["array", "validation"],
   starterCode: {
     javascript: `function validateForm(form) {

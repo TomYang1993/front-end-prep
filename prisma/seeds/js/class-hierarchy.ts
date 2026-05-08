@@ -35,10 +35,9 @@ h.lifeBirth(); // "lifeBirth"
 `,
   description: 'Fix broken inheritance and implement a new Human class',
   type: QuestionType.FUNCTION_JS,
-  difficulty: Difficulty.MEDIUM,
+  difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
   tags: ['prototypes', 'inheritance', 'oop', 'coding taste'],
-  timeLimitMinutes: 20,
   starterCode: {
     javascript: `function Animal(age) {
   this.age = age;

@@ -115,6 +115,7 @@ export default async function QuestionDetailPage({ params }: PageProps) {
     return (
       <EditorWorkspace
         questionId={question.id}
+        slug={slug}
         questionType={question.type}
         title={question.title}
         prompt={question.prompt}
@@ -132,6 +133,7 @@ export default async function QuestionDetailPage({ params }: PageProps) {
   return (
     <ReactEditorWorkspace
       questionId={question.id}
+      slug={slug}
       title={question.title}
       prompt={question.prompt}
       difficulty={question.difficulty}
