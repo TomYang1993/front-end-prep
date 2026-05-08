@@ -28,6 +28,7 @@ export function usePythonRunner(enabled: boolean): UsePythonRunnerReturn {
   useEffect(() => {
     if (!enabled) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: kick off Pyodide init
     setLoading(true);
     const worker = new Worker('/pyodide-worker.js');
     workerRef.current = worker;
