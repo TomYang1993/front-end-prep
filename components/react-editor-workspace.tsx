@@ -22,6 +22,7 @@ import { SubmissionsTab } from '@/components/tabs/submissions-tab';
 
 export interface ReactEditorWorkspaceProps {
   questionId: string;
+  slug: string;
   title: string;
   prompt: string;
   difficulty: string;
@@ -54,6 +55,7 @@ const DEFAULT_CSS = `/* Write your component styles here */
 
 export function ReactEditorWorkspace({
   questionId,
+  slug,
   title,
   prompt,
   difficulty,
@@ -327,7 +329,7 @@ export function ReactEditorWorkspace({
                 <h1 className="text-[1.25rem] font-bold m-0">{title}</h1>
                 <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${DIFFICULTY_BADGE_CLASS[difficulty] ?? ''}`}>{DIFFICULTY_LABEL[difficulty] ?? difficulty}</span>
               </div>
-              {expiresAt && <CountdownTimer expiresAt={expiresAt} />}
+              {expiresAt && <CountdownTimer expiresAt={expiresAt} slug={slug} />}
             </div>
             <div className="flex gap-6">
               <button

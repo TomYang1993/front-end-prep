@@ -22,6 +22,7 @@ import { SubmissionsTab } from '@/components/tabs/submissions-tab';
 
 interface EditorWorkspaceProps {
   questionId: string;
+  slug: string;
   questionType?: 'FUNCTION_JS' | 'FUNCTION_PYTHON';
   title: string;
   prompt: string;
@@ -38,6 +39,7 @@ const leftTabBtn = 'py-2 text-[0.75rem] font-bold uppercase tracking-[0.05em] bg
 
 export function EditorWorkspace({
   questionId,
+  slug,
   questionType = 'FUNCTION_JS',
   title,
   prompt,
@@ -346,7 +348,7 @@ export function EditorWorkspace({
                 <h1 className="text-[1.25rem] font-bold m-0">{title}</h1>
                 <span className={`inline-flex items-center justify-center px-2 py-[0.3rem] rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${DIFFICULTY_BADGE_CLASS[difficulty] ?? ''}`}>{DIFFICULTY_LABEL[difficulty] ?? difficulty}</span>
               </div>
-              {expiresAt && <CountdownTimer expiresAt={expiresAt} />}
+              {expiresAt && <CountdownTimer expiresAt={expiresAt} slug={slug} />}
             </div>
             <div className="flex gap-6">
               <button
