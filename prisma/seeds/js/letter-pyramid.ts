@@ -6,7 +6,7 @@ export const letterPyramid: SeedQuestion = {
   title: "Letter Pyramid",
   prompt: `Build a pyramid of letters with \`n\` rows, where \`1 ≤ n ≤ 10\`.
 
-Each row \`i\` (0-indexed) contains letters ascending from \`A\` to the i-th letter, then descending back to \`A\`. Rows are padded with spaces so each row's center letter aligns with the peak of the pyramid.
+Row \`i\` (0-indexed, \`0 ≤ i < n\`) contains \`2i + 1\` letters: ascend \`A, B, …\` up to the letter at offset \`i\` from \`A\` (i.e. \`String.fromCharCode(65 + i)\`), then descend back to \`A\` **without repeating the peak**. So row 0 is just \`A\`, row 1 is \`ABA\`, row 2 is \`ABCBA\`, and so on. Rows are padded with \`n - 1 - i\` leading spaces so each row's center letter aligns with the peak of the pyramid.
 
 **Example \`n = 4\`:**
 \`\`\`text
@@ -26,11 +26,17 @@ ABCBA
 **Rules:**
 - Return the pattern as a single string with rows separated by \`\\n\`.
 - No trailing spaces on any row.
-- Assume \`1 ≤ n ≤ 10\` so letters never exceed \`J\`.`,
+- Assume \`1 ≤ n ≤ 10\` so letters never exceed \`J\`.
+
+> [!info] Interview inspiration
+> This kind of question still exists, yeah... personally I don't see any point in doing this kind of question, but it's classic and surprisingly highly frequent.
+> You will rarely run across this in real work.
+`,
   description: "Build a centered letter pyramid.",
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 20,
   tags: ["string"],
   starterCode: {
     javascript: `function letterPyramid(n) {

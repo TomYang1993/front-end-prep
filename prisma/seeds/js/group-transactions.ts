@@ -23,6 +23,7 @@ groupByCategory(transactions)
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 20,
   tags: ["array manipulation"],
   starterCode: {
     javascript: `function groupByCategory(transactions) {

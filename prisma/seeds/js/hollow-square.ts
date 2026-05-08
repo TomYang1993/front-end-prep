@@ -6,13 +6,8 @@ export const hollowSquare: SeedQuestion = {
   title: "Hollow Square Pattern",
   prompt: `Print a hollow square of \`*\` characters with the given side length \`n\`.
 
-**Rules:**
-- The first and last rows are fully filled with \`*\`.
-- Middle rows have \`*\` only at the first and last positions, with spaces in between.
-- Return the pattern as a single string with rows separated by \`\\n\`.
-
 **Example \`n = 5\`:**
-\`\`\`
+\`\`\`text
 *****
 *   *
 *   *
@@ -21,18 +16,26 @@ export const hollowSquare: SeedQuestion = {
 \`\`\`
 
 **Example \`n = 3\`:**
-\`\`\`
+\`\`\`text
 ***
 * *
 ***
 \`\`\`
 
-**Hint:** You need a conditional inside the inner loop — print \`*\` if it's the first/last row or first/last column, otherwise a space.`,
+**Rules:**
+- The first and last rows are fully filled with \`*\`.
+- Middle rows have \`*\` only at the first and last positions, with spaces in between.
+- Return the pattern as a single string with rows separated by \`\\n\`.
+
+> [!info] Interview inspiration
+> This is quite similar as letter pyramid. It's testing JS syntax mostly.
+> You will rarely run across this in real work.`,
   description:
     "Print a hollow square pattern using nested loops with conditional branching.",
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 20,
   tags: ["loops", "strings"],
   starterCode: {
     javascript: `function hollowSquare(n) {
@@ -109,7 +112,7 @@ col === 0          → left edge
 col === n - 1      → right edge
 \`\`\`
 
-This is the classic pattern for testing whether a candidate understands conditionals inside nested loops.`,
+This is the classic pattern for testing whether a candidate understands conditionals, nested loops, basic JS syntax.`,
       code: `function hollowSquare(n) {
   const rows = [];
   for (let r = 0; r < n; r++) {
