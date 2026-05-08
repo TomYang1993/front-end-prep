@@ -3,176 +3,214 @@ import type { SeedQuestion } from '../types';
 
 export const useLocalStorageHook: SeedQuestion = {
   slug: 'use-localstorage-hook',
-  title: 'useLocalStorage Hook',
-  prompt: `Implement a custom React hook \`useLocalStorage\` that mirrors the \`useState\` API but persists the value to \`localStorage\`, then wire it into a demo component.
+  title: 'useLocalStorage Hook with Cross-Tab Auth',
+  prompt: `Implement a custom React hook \`useLocalStorage\` that mirrors the \`useState\` API, persists to \`localStorage\`, and **stays in sync across browser tabs**. Then wire it into a permissioned-auth demo.
 
 \`\`\`js
-const [value, setValue] = useLocalStorage(key, initialValue);
+const [user, setUser] = useLocalStorage('auth:user', null);
 \`\`\`
 
 ### Hook behavior
 
-1. **Lazy init.** On mount, read the key from \`localStorage\`. If present, parse it as JSON and use it. Otherwise fall back to \`initialValue\`. Read happens **once** — do not re-read on every render.
-2. **\`useState\`-compatible setter.** \`setValue\` accepts either a new value *or* an updater function \`(prev) => next\`, just like \`useState\`.
+1. **Lazy init.** On mount, read the key from \`localStorage\`. If present, parse as JSON and use it. Otherwise fall back to \`initialValue\`. The read must happen **once** — not on every render.
+2. **\`useState\`-compatible setter.** \`setValue\` accepts either a new value or an updater \`(prev) => next\`.
 3. **Write through.** Whenever the value changes, JSON-serialize and write it to \`localStorage\` under \`key\`.
-4. **Resilience.** If JSON parsing fails (corrupt data), fall back to \`initialValue\` instead of crashing.
+4. **Cross-tab sync.** Subscribe to the window \`storage\` event. When *another* tab writes to the same \`key\`, this tab updates its state too. Clean up the listener on unmount.
+5. **Resilience.** If parsing fails (corrupt data or bad event payload), fall back to current state instead of crashing.
 
 ### Demo component
 
-Your \`App\` should render two persisted pieces of state:
+Build a tiny auth UI in \`App\` using \`useLocalStorage('auth:user', null)\`. The stored user shape:
 
-- A text input bound to a \`name\` value (initial: empty string)
-- A counter that starts at \`0\`, with **Increment** and **Reset** buttons
+\`\`\`ts
+type User = { name: string; permissions: string[] } | null;
+\`\`\`
+
+**Logged-out view** (when \`user === null\`):
+- Text input for name
+- Three checkboxes for permissions: \`read\`, \`write\`, \`delete\`
+- A **Log in** button that stores \`{ name, permissions: [...checked] }\`
+
+**Logged-in view** (when \`user\` is set):
+- A greeting showing the user's name
+- An **Admin Panel** section, but **only** if the user has *all* of \`['write', 'delete']\`
+- A **Log out** button that clears the stored user back to \`null\`
 
 Required \`data-testid\` attributes:
 
-- \`data-testid="name-input"\` — the text input
-- \`data-testid="name-display"\` — element showing the current \`name\`
-- \`data-testid="counter"\` — element showing the current count
-- \`data-testid="increment"\` — increment button
-- \`data-testid="reset"\` — resets the counter to \`0\`
+- \`data-testid="name-input"\` — name field (logged-out view)
+- \`data-testid="perm-read"\`, \`"perm-write"\`, \`"perm-delete"\` — permission checkboxes
+- \`data-testid="login-btn"\` — log-in button
+- \`data-testid="greeting"\` — element shown only when logged in (e.g. \`Hello, Ada\`)
+- \`data-testid="admin-panel"\` — present **only** if user has both \`write\` and \`delete\`
+- \`data-testid="logout-btn"\` — log-out button
 
-**Hint:** \`useState\` accepts a function for lazy initialization — perfect spot to read \`localStorage\`. Use \`useEffect\` to sync writes.`,
-  description: 'Implement a useLocalStorage hook with a useState-compatible API that persists state across reloads, then use it in a counter + name demo.',
+**Hints:**
+- \`useState\` accepts a function for lazy init — perfect for the \`localStorage\` read.
+- Use \`useEffect\` to wire up \`window.addEventListener('storage', …)\` and \`removeEventListener\` on cleanup.
+- For the admin gate: \`required.every(p => user.permissions.includes(p))\`.`,
+  description: 'Implement a useLocalStorage hook with useState-compatible API, cross-tab sync via the storage event, and a permissioned auth demo gated by every+includes.',
   type: QuestionType.REACT_APP,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
-  tags: ['react', 'hooks', 'storage'],
+  tags: ['react', 'hooks', 'storage', 'auth'],
   starterCode: {
     react: `import { useState } from 'react';
 
 function useLocalStorage(key, initialValue) {
-  // Implement this hook
+  // 1. Lazy init from localStorage (try/catch for corrupt JSON)
+  // 2. Write through on change
+  // 3. Subscribe to 'storage' event for cross-tab sync; clean up on unmount
   return [initialValue, () => {}];
 }
 
 export default function App() {
-  const [name, setName] = useLocalStorage('demo:name', '');
-  const [count, setCount] = useLocalStorage('demo:count', 0);
+  const [user, setUser] = useLocalStorage('auth:user', null);
 
-  return (
-    <div>
-      <input
-        data-testid="name-input"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <p>Hello, <span data-testid="name-display">{name}</span></p>
-      <p>Count: <span data-testid="counter">{count}</span></p>
-      <button data-testid="increment" onClick={() => setCount(c => c + 1)}>Increment</button>
-      <button data-testid="reset" onClick={() => setCount(0)}>Reset</button>
-    </div>
-  );
+  // Implement logged-out form (name input + 3 perm checkboxes + login button)
+  // and logged-in view (greeting + gated admin panel + logout button).
+  return <div />;
 }`,
     reactTypescript: `import { useState, Dispatch, SetStateAction } from 'react';
+
+type User = { name: string; permissions: string[] } | null;
 
 function useLocalStorage<T>(
   key: string,
   initialValue: T,
 ): [T, Dispatch<SetStateAction<T>>] {
-  // Implement this hook
+  // 1. Lazy init from localStorage (try/catch for corrupt JSON)
+  // 2. Write through on change
+  // 3. Subscribe to 'storage' event for cross-tab sync; clean up on unmount
   return [initialValue, () => {}];
 }
 
 export default function App(): JSX.Element {
-  const [name, setName] = useLocalStorage<string>('demo:name', '');
-  const [count, setCount] = useLocalStorage<number>('demo:count', 0);
+  const [user, setUser] = useLocalStorage<User>('auth:user', null);
 
-  return (
-    <div>
-      <input
-        data-testid="name-input"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <p>Hello, <span data-testid="name-display">{name}</span></p>
-      <p>Count: <span data-testid="counter">{count}</span></p>
-      <button data-testid="increment" onClick={() => setCount(c => c + 1)}>Increment</button>
-      <button data-testid="reset" onClick={() => setCount(0)}>Reset</button>
-    </div>
-  );
+  // Implement logged-out form (name input + 3 perm checkboxes + login button)
+  // and logged-in view (greeting + gated admin panel + logout button).
+  return <div />;
 }`,
   },
   publicTestCode: `beforeEach(() => {
   localStorage.clear();
 });
 
-test('uses initial value when localStorage is empty', () => {
+test('logged-out view renders form, no greeting or admin panel', () => {
   render(<App />);
-  expect(screen.getByTestId('counter').textContent).toBe('0');
-  expect(screen.getByTestId('name-display').textContent).toBe('');
+  expect(screen.getByTestId('name-input')).toBeTruthy();
+  expect(screen.getByTestId('login-btn')).toBeTruthy();
+  expect(screen.queryByTestId('greeting')).toBeNull();
+  expect(screen.queryByTestId('admin-panel')).toBeNull();
 });
 
-test('typing into the input updates the display', async () => {
+test('login persists user to localStorage and shows greeting', async () => {
   render(<App />);
   fireEvent.change(screen.getByTestId('name-input'), { target: { value: 'Ada' } });
+  fireEvent.click(screen.getByTestId('perm-read'));
+  fireEvent.click(screen.getByTestId('login-btn'));
   await waitFor(() => {
-    expect(screen.getByTestId('name-display').textContent).toBe('Ada');
+    expect(screen.getByTestId('greeting').textContent).toMatch(/Ada/);
+    const stored = JSON.parse(localStorage.getItem('auth:user'));
+    expect(stored).toEqual({ name: 'Ada', permissions: ['read'] });
   });
 });
 
-test('writes to localStorage when count changes', async () => {
+test('logout clears the stored user', async () => {
+  localStorage.setItem('auth:user', JSON.stringify({ name: 'Ada', permissions: ['read'] }));
   render(<App />);
-  fireEvent.click(screen.getByTestId('increment'));
+  fireEvent.click(screen.getByTestId('logout-btn'));
   await waitFor(() => {
-    expect(JSON.parse(localStorage.getItem('demo:count'))).toBe(1);
+    expect(screen.queryByTestId('greeting')).toBeNull();
+    expect(JSON.parse(localStorage.getItem('auth:user'))).toBeNull();
   });
 });`,
   hiddenTestCode: `beforeEach(() => {
   localStorage.clear();
 });
 
-test('reads existing value from localStorage on mount', () => {
-  localStorage.setItem('demo:count', JSON.stringify(42));
-  localStorage.setItem('demo:name', JSON.stringify('Linus'));
+test('reads existing user from localStorage on mount', () => {
+  localStorage.setItem('auth:user', JSON.stringify({ name: 'Linus', permissions: ['read'] }));
   render(<App />);
-  expect(screen.getByTestId('counter').textContent).toBe('42');
-  expect(screen.getByTestId('name-display').textContent).toBe('Linus');
+  expect(screen.getByTestId('greeting').textContent).toMatch(/Linus/);
 });
 
-test('functional updater form works (setCount(c => c + 1))', async () => {
+test('admin panel only shows when user has both write and delete', () => {
+  localStorage.setItem('auth:user', JSON.stringify({ name: 'Ada', permissions: ['read', 'write'] }));
+  const { rerender, unmount } = render(<App />);
+  expect(screen.queryByTestId('admin-panel')).toBeNull();
+  unmount();
+
+  localStorage.setItem('auth:user', JSON.stringify({ name: 'Ada', permissions: ['write', 'delete'] }));
   render(<App />);
-  fireEvent.click(screen.getByTestId('increment'));
-  fireEvent.click(screen.getByTestId('increment'));
-  fireEvent.click(screen.getByTestId('increment'));
+  expect(screen.getByTestId('admin-panel')).toBeTruthy();
+});
+
+test('cross-tab: storage event for the same key updates this tab', async () => {
+  render(<App />);
+  expect(screen.queryByTestId('greeting')).toBeNull();
+
+  // Simulate another tab writing the user
+  const next = { name: 'Grace', permissions: ['read', 'write', 'delete'] };
+  localStorage.setItem('auth:user', JSON.stringify(next));
+  fireEvent(window, new StorageEvent('storage', {
+    key: 'auth:user',
+    newValue: JSON.stringify(next),
+  }));
+
   await waitFor(() => {
-    expect(screen.getByTestId('counter').textContent).toBe('3');
-    expect(JSON.parse(localStorage.getItem('demo:count'))).toBe(3);
+    expect(screen.getByTestId('greeting').textContent).toMatch(/Grace/);
+    expect(screen.getByTestId('admin-panel')).toBeTruthy();
   });
 });
 
-test('reset writes 0 to localStorage', async () => {
+test('cross-tab: storage events for unrelated keys are ignored', async () => {
+  localStorage.setItem('auth:user', JSON.stringify({ name: 'Ada', permissions: ['read'] }));
   render(<App />);
-  fireEvent.click(screen.getByTestId('increment'));
-  fireEvent.click(screen.getByTestId('increment'));
-  fireEvent.click(screen.getByTestId('reset'));
-  await waitFor(() => {
-    expect(screen.getByTestId('counter').textContent).toBe('0');
-    expect(JSON.parse(localStorage.getItem('demo:count'))).toBe(0);
-  });
+
+  fireEvent(window, new StorageEvent('storage', {
+    key: 'something-else',
+    newValue: 'whatever',
+  }));
+
+  // Greeting should still reflect Ada, not crash or change
+  expect(screen.getByTestId('greeting').textContent).toMatch(/Ada/);
 });
 
-test('falls back to initialValue when stored JSON is corrupt', () => {
-  localStorage.setItem('demo:count', '{not valid json');
+test('falls back gracefully when stored JSON is corrupt', () => {
+  localStorage.setItem('auth:user', '{not valid json');
   render(<App />);
-  expect(screen.getByTestId('counter').textContent).toBe('0');
+  expect(screen.queryByTestId('greeting')).toBeNull();
+  expect(screen.getByTestId('name-input')).toBeTruthy();
 });`,
   solutions: [
     {
       language: 'javascript',
-      explanation: `## Lazy init + write-through pattern
+      explanation: `## Three concerns, three primitives
 
-The hook is essentially \`useState\` wrapped with a read on mount and a write on change.
+The hook stitches together three independent pieces:
 
-1. **Lazy init via \`useState(fn)\`.** Pass an initializer function so the \`localStorage\` read happens only on the first render — not every render. Wrap it in try/catch so a corrupt stored value falls back to \`initialValue\` instead of crashing.
-2. **Write on change via \`useEffect\`.** Serialize and write whenever \`value\` (or \`key\`) changes. Putting the write in an effect — not in the setter — keeps the setter signature identical to \`useState\`'s, so functional updates \`setValue(prev => ...)\` work for free.
-3. **Return \`[value, setValue]\`** directly — \`setValue\` is just \`useState\`'s setter, which already supports both value-form and updater-form.
+1. **Lazy init via \`useState(fn)\`** — the initializer runs once. Wrap the read in try/catch so corrupt JSON falls back to \`initialValue\` instead of crashing the app on load.
+2. **Write-through via \`useEffect\`** — serialize and write whenever \`value\` (or \`key\`) changes. Keeping the write in an effect — not in the setter — preserves the \`useState\` setter signature, so functional updates \`setValue(prev => …)\` keep working.
+3. **Cross-tab sync via the \`storage\` event** — the browser fires \`storage\` on **other** tabs (not the writer) when \`localStorage\` changes. Subscribe in a \`useEffect\`, filter by \`e.key === key\`, parse \`e.newValue\`, and call \`setValue\`. Don't forget to \`removeEventListener\` in the cleanup.
+
+### The permissions gate
+
+For "user has all required permissions," the canonical pattern is \`filter\` / \`every\` / \`includes\`:
+
+\`\`\`js
+const isAdmin = user && ['write', 'delete'].every(p => user.permissions.includes(p));
+\`\`\`
+
+Reads almost like English. O(required × user-perms), fine for auth-sized lists.
 
 ### Things to watch out for in real production code
 
-- **SSR safety.** \`localStorage\` is undefined on the server. In a Next.js / SSR app you'd guard with \`typeof window !== 'undefined'\` and read in a \`useEffect\` instead — accepting one render of \`initialValue\` to avoid hydration mismatch.
-- **Cross-tab sync.** Subscribe to the \`storage\` event so other tabs setting the same key update this tab's state.
-- **Key changes.** If \`key\` changes, you'd want to re-read — usually keys are static, but be intentional.`,
+- **SSR safety.** \`localStorage\` is undefined on the server. In Next.js you'd guard with \`typeof window !== 'undefined'\` and read in a \`useEffect\` instead — accept one render of \`initialValue\` to avoid hydration mismatch.
+- **Storage events don't fire in the writing tab.** That's why we need write-through *and* the listener — the listener handles other tabs, the effect handles this tab. They don't overlap.
+- **Quota / private mode.** \`setItem\` can throw (Safari private mode, quota exceeded). Wrap in try/catch.
+- **Testing limitation.** jsdom shares one \`localStorage\` across all renders in a file and doesn't auto-fire \`storage\` events the way a real browser does. The hidden test simulates the event with \`fireEvent(window, new StorageEvent(...))\` — that exercises the listener but doesn't prove real cross-tab behavior. For end-to-end confidence, use a Playwright test with two browser contexts.`,
       code: `import { useState, useEffect } from 'react';
 
 function useLocalStorage(key, initialValue) {
@@ -189,16 +227,58 @@ function useLocalStorage(key, initialValue) {
     try {
       localStorage.setItem(key, JSON.stringify(value));
     } catch {
-      // Quota exceeded or storage disabled — silently ignore
+      // Quota / private mode — silently ignore
     }
   }, [key, value]);
+
+  useEffect(() => {
+    function onStorage(e) {
+      if (e.key !== key) return;
+      try {
+        setValue(e.newValue !== null ? JSON.parse(e.newValue) : initialValue);
+      } catch {
+        // Bad event payload — ignore
+      }
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [key, initialValue]);
 
   return [value, setValue];
 }
 
+const ALL_PERMS = ['read', 'write', 'delete'];
+const ADMIN_PERMS = ['write', 'delete'];
+
 export default function App() {
-  const [name, setName] = useLocalStorage('demo:name', '');
-  const [count, setCount] = useLocalStorage('demo:count', 0);
+  const [user, setUser] = useLocalStorage('auth:user', null);
+  const [name, setName] = useState('');
+  const [perms, setPerms] = useState([]);
+
+  function togglePerm(p) {
+    setPerms((prev) => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
+  }
+
+  function login() {
+    setUser({ name, permissions: perms });
+  }
+
+  function logout() {
+    setUser(null);
+    setName('');
+    setPerms([]);
+  }
+
+  if (user) {
+    const isAdmin = ADMIN_PERMS.every(p => user.permissions.includes(p));
+    return (
+      <div>
+        <p data-testid="greeting">Hello, {user.name}</p>
+        {isAdmin && <section data-testid="admin-panel">Admin Panel</section>}
+        <button data-testid="logout-btn" onClick={logout}>Log out</button>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -206,11 +286,20 @@ export default function App() {
         data-testid="name-input"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        placeholder="Name"
       />
-      <p>Hello, <span data-testid="name-display">{name}</span></p>
-      <p>Count: <span data-testid="counter">{count}</span></p>
-      <button data-testid="increment" onClick={() => setCount(c => c + 1)}>Increment</button>
-      <button data-testid="reset" onClick={() => setCount(0)}>Reset</button>
+      {ALL_PERMS.map((p) => (
+        <label key={p}>
+          <input
+            type="checkbox"
+            data-testid={\`perm-\${p}\`}
+            checked={perms.includes(p)}
+            onChange={() => togglePerm(p)}
+          />
+          {p}
+        </label>
+      ))}
+      <button data-testid="login-btn" onClick={login}>Log in</button>
     </div>
   );
 }`,

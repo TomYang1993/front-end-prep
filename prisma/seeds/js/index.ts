@@ -10,7 +10,6 @@ export { promiseChain } from './promise-chain';
 export { eventLoopOutput } from './event-loop-output';
 export { hollowSquare } from './hollow-square';
 export { letterPyramid } from './letter-pyramid';
-export { userPermissionsCheck } from './user-permissions-check';
 export { deduplicateEnrichUsers } from './deduplicate-enrich-users';
 export { formValidation } from './form-validation';
 export { groupTransactions } from './group-transactions';
