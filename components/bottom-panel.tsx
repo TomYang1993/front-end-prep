@@ -208,7 +208,7 @@ function parseTestBlocks(code: string): { name: string; code: string }[] {
 
 /** Parse error message into structured parts */
 function formatError(error: string): { type?: string; expected?: string; received?: string; message: string } {
-  // Take only first line — stack traces from isolated-vm are not useful
+  // Take only first line — stack traces from the test runner are not useful
   const message = error.split('\n')[0];
 
   // Match "Expected X, got Y" pattern

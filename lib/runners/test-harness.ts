@@ -1,9 +1,11 @@
 /**
- * Minimal test/expect/describe harness injected into isolated-vm.
- * NOT a full Jest — just enough to support test code strings.
+ * Minimal test/expect/describe harness, injected as a string into the
+ * JS test runner (currently a Web Worker — see lib/runners/client/js-test-worker.ts).
+ * NOT a full Jest — just enough to support inline test code strings.
  *
- * Collects results into `__results` array, which the runner reads
- * after execution completes.
+ * Collects results into `__results`, which the runner reads after execution.
+ * Async tests register their settled Promise in `__pendingAsync`; the runner
+ * awaits these via TEST_COLLECT_ASYNC_CODE before serializing.
  */
 export const TEST_HARNESS_CODE = `
 const __results = [];
@@ -50,8 +52,45 @@ function __doneFactory(name) {
   };
 }
 
+function __asyncMatchers(promiseLike, negate) {
+  function check(matcher, expected) {
+    return Promise.resolve(promiseLike).then(
+      (value) => {
+        if (negate) {
+          // .rejects but it resolved — fail
+          throw new Error('Expected promise to reject, but it resolved with ' + JSON.stringify(value));
+        }
+        // run matcher against resolved value
+        expect(value)[matcher](expected);
+      },
+      (err) => {
+        if (!negate) {
+          // .resolves but it rejected — fail
+          throw new Error('Expected promise to resolve, but it rejected with ' + __formatError(err));
+        }
+        expect(err)[matcher](expected);
+      }
+    );
+  }
+  return {
+    toBe: (expected) => check('toBe', expected),
+    toEqual: (expected) => check('toEqual', expected),
+    toBeTruthy: () => check('toBeTruthy'),
+    toBeFalsy: () => check('toBeFalsy'),
+    toBeNull: () => check('toBeNull'),
+    toBeUndefined: () => check('toBeUndefined'),
+    toContain: (item) => check('toContain', item),
+    toBeGreaterThan: (n) => check('toBeGreaterThan', n),
+    toBeLessThan: (n) => check('toBeLessThan', n),
+    toHaveLength: (n) => check('toHaveLength', n),
+    toBeInstanceOf: (cls) => check('toBeInstanceOf', cls),
+  };
+}
+
 function expect(received) {
   return {
+    get resolves() { return __asyncMatchers(received, false); },
+    get rejects() { return __asyncMatchers(received, true); },
     toBe(expected) {
       if (!Object.is(received, expected)) {
         throw new Error('Expected ' + JSON.stringify(expected) + ', got ' + JSON.stringify(received));
@@ -136,8 +175,20 @@ const it = test;
 
 /**
  * Code appended after user code + test code to collect results.
- * Returns a JSON string synchronously — isolated-vm's runSync can't resolve promises.
+ * Returns a JSON string synchronously — for sync-only sandboxes that can't await.
  */
 export const TEST_COLLECT_CODE = `
 JSON.stringify({ results: __results });
+`;
+
+/**
+ * Async variant: awaits all pending async tests before serializing results.
+ * Use in environments with a real event loop (Web Worker, Node).
+ * Returns a Promise<string> of the results JSON.
+ */
+export const TEST_COLLECT_ASYNC_CODE = `
+(async () => {
+  try { await Promise.all(__pendingAsync); } catch (_e) { /* individual tests already recorded their errors */ }
+  return JSON.stringify({ results: __results });
+})()
 `;
