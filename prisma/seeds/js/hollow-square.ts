@@ -30,8 +30,7 @@ export const hollowSquare: SeedQuestion = {
 > [!info] Interview inspiration
 > This is quite similar as letter pyramid. It's testing JS syntax mostly.
 > You will rarely run across this in real work.`,
-  description:
-    "Print a hollow square pattern using nested loops with conditional branching.",
+  description: "Print a hollow square pattern.",
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,

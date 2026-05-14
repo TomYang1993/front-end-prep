@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
     return forbidden('Premium content is locked for this account');
   }
 
-  // Python questions run client-side — record pre-computed results
-  if (framework === 'python' && clientResults) {
+  // Python + JS questions run client-side — record pre-computed results
+  if ((framework === 'python' || framework === 'javascript') && clientResults) {
     const status = clientResults.passedCount === clientResults.total ? 'PASSED' : 'FAILED';
     const submission = await prisma.submission.create({
       data: {

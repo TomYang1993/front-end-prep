@@ -13,6 +13,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { CheatsheetModal } from '@/components/cheatsheet-modal';
 import { usePythonRunner } from '@/hooks/use-python-runner';
+import { useJsRunner } from '@/hooks/use-js-runner';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { DIFFICULTY_LABEL, DIFFICULTY_BADGE_CLASS } from '@/types/domain';
 import { BottomPanel, type BottomTab, type TestResult, type SubmitResult } from '@/components/bottom-panel';
@@ -54,6 +55,7 @@ export function EditorWorkspace({
 
   const isPython = questionType === 'FUNCTION_PYTHON';
   const pythonRunner = usePythonRunner(isPython);
+  const jsRunner = useJsRunner();
 
   const [language, setLanguage] = useState<'javascript' | 'typescript' | 'python'>(
     isPython ? 'python' : 'javascript'
@@ -248,16 +250,28 @@ export function EditorWorkspace({
     const currentCode = getCode();
 
     try {
-      const response = await fetch('/api/playground/run-public', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionId, framework: isPython ? 'python' : 'javascript', code: currentCode }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Public test run failed');
+      let results: TestResult[] = [];
+      let logs: string[] = [];
 
-      const results: TestResult[] = data.results || [];
-      const logs: string[] = data.logs || [];
+      if (!isPython) {
+        const out = await jsRunner.runTests(
+          currentCode,
+          publicTestCode,
+          language as 'javascript' | 'typescript',
+        );
+        results = out.results;
+        logs = out.logs;
+      } else {
+        const response = await fetch('/api/playground/run-public', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ questionId, framework: 'python', code: currentCode }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Public test run failed');
+        results = data.results || [];
+        logs = data.logs || [];
+      }
 
       setTestResults(results);
       setConsoleLogs((prev) => [...prev, ...logs]);
@@ -284,19 +298,58 @@ export function EditorWorkspace({
     const currentCode = getCode();
 
     try {
-      const response = await fetch('/api/submissions/judge-hidden', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionId, framework: isPython ? 'python' : 'javascript', code: currentCode }),
-      });
+      let hiddenResults: TestResult[] = [];
+      let serverData: { passedCount?: number; total?: number; hiddenResults?: TestResult[] } = {};
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Hidden judge failed');
+      if (!isPython) {
+        // Fetch hidden test code, run client-side, then post pre-computed result.
+        const htRes = await fetch(`/api/questions/${questionId}/hidden-tests`);
+        if (!htRes.ok) throw new Error('Failed to load hidden tests');
+        const { testCode: hiddenTestCode } = (await htRes.json()) as { testCode: string };
+
+        if (hiddenTestCode) {
+          const out = await jsRunner.runTests(
+            currentCode,
+            hiddenTestCode,
+            language as 'javascript' | 'typescript',
+          );
+          hiddenResults = out.results;
+        }
+
+        const passedCount = hiddenResults.filter((r) => r.passed).length;
+        const total = hiddenResults.length;
+        const score = total > 0 ? Math.round((passedCount / total) * 100) : 0;
+        const runtimeMs = 0;
+
+        const response = await fetch('/api/submissions/judge-hidden', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            questionId,
+            framework: 'javascript',
+            code: currentCode,
+            clientResults: { passedCount, total, score, runtimeMs },
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Hidden judge failed');
+        serverData = { passedCount: data.passedCount, total: data.total, hiddenResults };
+      } else {
+        const response = await fetch('/api/submissions/judge-hidden', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ questionId, framework: 'python', code: currentCode }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Hidden judge failed');
+        serverData = data;
+        hiddenResults = data.hiddenResults || [];
+      }
 
       const publicPassed = testResults.filter((r) => r.passed).length;
       const publicTotal = testResults.length;
-      const totalPassed = (data.passedCount ?? 0) + publicPassed;
-      const grandTotal = (data.total ?? 0) + publicTotal;
+      const totalPassed = (serverData.passedCount ?? 0) + publicPassed;
+      const grandTotal = (serverData.total ?? 0) + publicTotal;
       const allPassed = grandTotal > 0 && totalPassed === grandTotal;
       const mergedScore = grandTotal > 0 ? Math.round((totalPassed / grandTotal) * 100) : 0;
 
@@ -306,7 +359,7 @@ export function EditorWorkspace({
         passedCount: totalPassed,
         total: grandTotal,
         publicResults: testResults,
-        hiddenResults: data.hiddenResults || [],
+        hiddenResults: hiddenResults.map((r, i) => ({ index: i, ...r })),
       });
       setActiveBottomTab('results');
 

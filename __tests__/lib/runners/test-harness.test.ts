@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import vm from 'node:vm';
-import { TEST_HARNESS_CODE, TEST_COLLECT_CODE } from '@/lib/runners/test-harness';
+import {
+  TEST_HARNESS_CODE,
+  TEST_COLLECT_CODE,
+  TEST_COLLECT_ASYNC_CODE,
+} from '@/lib/runners/test-harness';
 
 interface HarnessResult {
   name: string;
@@ -13,6 +17,15 @@ function runHarness(testCode: string, userCode = ''): HarnessResult[] {
   vm.createContext(ctx);
   vm.runInContext(TEST_HARNESS_CODE + '\n' + userCode + '\n' + testCode, ctx);
   const json = vm.runInContext(TEST_COLLECT_CODE, ctx) as string;
+  return (JSON.parse(json) as { results: HarnessResult[] }).results;
+}
+
+async function runHarnessAsync(testCode: string, userCode = ''): Promise<HarnessResult[]> {
+  // Node vm context has setTimeout/Promise natively via globals injection.
+  const ctx: Record<string, unknown> = { setTimeout, clearTimeout, Promise };
+  vm.createContext(ctx);
+  vm.runInContext(TEST_HARNESS_CODE + '\n' + userCode + '\n' + testCode, ctx);
+  const json = (await vm.runInContext(TEST_COLLECT_ASYNC_CODE, ctx)) as string;
   return (JSON.parse(json) as { results: HarnessResult[] }).results;
 }
 
@@ -117,5 +130,58 @@ describe('test-harness', () => {
     expect(() =>
       runHarness(`test('boom', () => { throw new Error('oops'); });`)
     ).not.toThrow();
+  });
+
+  describe('async path (TEST_COLLECT_ASYNC_CODE)', () => {
+    it('drains setTimeout-based async test (the delayedLog scenario)', async () => {
+      const userCode = `
+        function delayedLog(n) {
+          const fns = [];
+          for (let i = 0; i < n; i++) {
+            fns.push(() => new Promise(r => setTimeout(() => r(i), 5)));
+          }
+          return fns;
+        }
+      `;
+      const r = await runHarnessAsync(
+        `test('each resolves to own index', async () => {
+          const fns = delayedLog(3);
+          await expect(fns[0]()).resolves.toBe(0);
+          await expect(fns[1]()).resolves.toBe(1);
+          await expect(fns[2]()).resolves.toBe(2);
+        });`,
+        userCode
+      );
+      expect(r).toEqual([{ name: 'each resolves to own index', passed: true }]);
+    });
+
+    it('catches a wrong .resolves expectation', async () => {
+      const r = await runHarnessAsync(
+        `test('wrong', async () => {
+          await expect(Promise.resolve(1)).resolves.toBe(2);
+        });`
+      );
+      expect(r[0].passed).toBe(false);
+      expect(r[0].error).toContain('Expected 2, got 1');
+    });
+
+    it('.rejects matches a rejecting promise', async () => {
+      const r = await runHarnessAsync(
+        `test('rejects', async () => {
+          await expect(Promise.reject(new Error('nope'))).rejects.toBeInstanceOf(Error);
+        });`
+      );
+      expect(r[0].passed).toBe(true);
+    });
+
+    it('.resolves fails when promise rejects', async () => {
+      const r = await runHarnessAsync(
+        `test('should resolve', async () => {
+          await expect(Promise.reject(new Error('oops'))).resolves.toBe(1);
+        });`
+      );
+      expect(r[0].passed).toBe(false);
+      expect(r[0].error).toContain('rejected');
+    });
   });
 });

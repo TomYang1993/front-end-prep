@@ -19,7 +19,7 @@ groupByCategory(transactions)
 // \u2192 { food: 60, transport: 25, entertainment: 15 }
 \`\`\`
 `,
-  description: "Group transactions by category and sum amounts using reduce.",
+  description: "Group transactions by category and sum amounts.",
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
