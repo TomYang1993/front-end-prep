@@ -185,10 +185,12 @@ JSON.stringify({ results: __results });
  * Async variant: awaits all pending async tests before serializing results.
  * Use in environments with a real event loop (Web Worker, Node).
  * Returns a Promise<string> of the results JSON.
+ *
+ * NOTE: must stay on a single starting line so callers can do
+ *   `return ${TEST_COLLECT_ASYNC_CODE};`
+ * without ASI inserting a semicolon after `return`.
  */
-export const TEST_COLLECT_ASYNC_CODE = `
-(async () => {
+export const TEST_COLLECT_ASYNC_CODE = `(async () => {
   try { await Promise.all(__pendingAsync); } catch (_e) { /* individual tests already recorded their errors */ }
   return JSON.stringify({ results: __results });
-})()
-`;
+})()`;
