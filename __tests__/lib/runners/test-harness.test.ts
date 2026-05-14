@@ -183,5 +183,39 @@ describe('test-harness', () => {
       expect(r[0].passed).toBe(false);
       expect(r[0].error).toContain('rejected');
     });
+
+    // Mirrors the worker's exact composition:
+    //   new Function('console', `${HARNESS}\n${user}\n${tests}\nreturn ${ASYNC_COLLECT};`)
+    // Catches ASI / return-newline regressions that vm.runInContext doesn't.
+    it('works inside `new Function` with a trailing return — worker shape', async () => {
+      const userCode = `
+        function delayedLog(n) {
+          const fns = [];
+          for (let i = 0; i < n; i++) {
+            fns.push(() => new Promise(r => setTimeout(() => r(i), 5)));
+          }
+          return fns;
+        }
+      `;
+      const testCode = `
+        test('each resolves to own index', async () => {
+          const fns = delayedLog(3);
+          await expect(fns[0]()).resolves.toBe(0);
+          await expect(fns[1]()).resolves.toBe(1);
+          await expect(fns[2]()).resolves.toBe(2);
+        });
+      `;
+      const body = `
+        ${TEST_HARNESS_CODE}
+        ${userCode}
+        ${testCode}
+        return ${TEST_COLLECT_ASYNC_CODE};
+      `;
+      const runner = new Function(body) as () => Promise<string>;
+      const jsonOut = await runner();
+      expect(typeof jsonOut).toBe('string');
+      const parsed = JSON.parse(jsonOut) as { results: HarnessResult[] };
+      expect(parsed.results).toEqual([{ name: 'each resolves to own index', passed: true }]);
+    });
   });
 });
