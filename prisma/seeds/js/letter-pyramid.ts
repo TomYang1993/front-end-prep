@@ -6,8 +6,6 @@ export const letterPyramid: SeedQuestion = {
   title: "Letter Pyramid",
   prompt: `Build a pyramid of letters with \`n\` rows, where \`1 ≤ n ≤ 10\`.
 
-Row \`i\` (0-indexed, \`0 ≤ i < n\`) contains \`2i + 1\` letters: ascend \`A, B, …\` up to the letter at offset \`i\` from \`A\` (i.e. \`String.fromCharCode(65 + i)\`), then descend back to \`A\` **without repeating the peak**. So row 0 is just \`A\`, row 1 is \`ABA\`, row 2 is \`ABCBA\`, and so on. Rows are padded with \`n - 1 - i\` leading spaces so each row's center letter aligns with the peak of the pyramid.
-
 **Example \`n = 4\`:**
 \`\`\`text
    A

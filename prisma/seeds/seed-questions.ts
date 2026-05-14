@@ -82,7 +82,10 @@ export async function seedQuestion(
   // Version with starter code
   await prisma.questionVersion.upsert({
     where: { questionId_version: { questionId: q.id, version: 1 } },
-    update: { starterCode: question.starterCode },
+    update: {
+      content: { description: question.description },
+      starterCode: question.starterCode,
+    },
     create: {
       questionId: q.id,
       version: 1,
