@@ -1,4 +1,4 @@
-import { PrismaClient, QuestionType, Difficulty, QuestionVersionStatus } from '@prisma/client';
+import { PrismaClient, Prisma, QuestionType, Difficulty, QuestionVersionStatus } from '@prisma/client';
 import type { SeedQuestion } from './types';
 import { refreshQuestionRenderData } from '../../lib/questions-snapshot';
 
@@ -48,8 +48,12 @@ export async function seedQuestion(
       difficulty: question.difficulty,
       accessTier: question.accessTier,
       timeLimitMinutes: question.timeLimitMinutes ?? defaultTimeLimit(question.type, question.difficulty),
-      publicTestCode: question.publicTestCode,
+      publicTestCode: question.publicTestCode ?? null,
       hiddenTestCode: question.hiddenTestCode ?? null,
+      language: question.language ?? null,
+      functionName: question.functionName ?? null,
+      publicTestCases: question.publicTestCases ?? Prisma.DbNull,
+      hiddenTestCases: question.hiddenTestCases ?? Prisma.DbNull,
     },
     create: {
       slug: question.slug,
@@ -61,8 +65,12 @@ export async function seedQuestion(
       timeLimitMinutes: question.timeLimitMinutes ?? defaultTimeLimit(question.type, question.difficulty),
       isPublished: true,
       createdById,
-      publicTestCode: question.publicTestCode,
+      publicTestCode: question.publicTestCode ?? null,
       hiddenTestCode: question.hiddenTestCode ?? null,
+      language: question.language ?? null,
+      functionName: question.functionName ?? null,
+      publicTestCases: question.publicTestCases ?? Prisma.DbNull,
+      hiddenTestCases: question.hiddenTestCases ?? Prisma.DbNull,
     },
   });
 

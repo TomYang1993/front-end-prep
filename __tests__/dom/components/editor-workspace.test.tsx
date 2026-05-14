@@ -2,15 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
-const pythonState = { ready: false, loading: false };
-vi.mock('@/hooks/use-python-runner', () => ({
-  usePythonRunner: () => ({
-    ready: pythonState.ready,
-    loading: pythonState.loading,
-    runTests: vi.fn().mockResolvedValue([])
-  })
-}));
-
 vi.mock('@monaco-editor/react', () => ({
   default: () => <div data-testid="monaco-stub" />
 }));
@@ -54,8 +45,6 @@ const baseProps = {
 };
 
 beforeEach(() => {
-  pythonState.ready = false;
-  pythonState.loading = false;
   vi.stubGlobal(
     'fetch',
     vi.fn().mockResolvedValue({
@@ -126,38 +115,10 @@ describe('<EditorWorkspace />', () => {
     await waitFor(() => expect(submit.disabled).toBe(false));
   });
 
-  it('Python mode: Run + Submit disabled while runtime loading', async () => {
-    pythonState.loading = true;
+  it('Python mode shows Python badge instead of language selector', async () => {
     const { EditorWorkspace } = await import('@/components/editor-workspace');
     render(<EditorWorkspace {...baseProps} questionType="FUNCTION_PYTHON" />);
-    expect(
-      (screen.getByRole('button', { name: /run/i }) as HTMLButtonElement).disabled
-    ).toBe(true);
-    expect(
-      (screen.getByRole('button', { name: /submit/i }) as HTMLButtonElement)
-        .disabled
-    ).toBe(true);
-    expect(screen.getByText(/Loading Python runtime/i)).toBeTruthy();
-  });
-
-  it('Python mode: buttons enabled once runtime ready', async () => {
-    pythonState.ready = true;
-    pythonState.loading = false;
-    const { EditorWorkspace } = await import('@/components/editor-workspace');
-    render(<EditorWorkspace {...baseProps} questionType="FUNCTION_PYTHON" />);
-    expect(
-      (screen.getByRole('button', { name: /run/i }) as HTMLButtonElement).disabled
-    ).toBe(false);
-    expect(
-      (screen.getByRole('button', { name: /submit/i }) as HTMLButtonElement)
-        .disabled
-    ).toBe(false);
-  });
-
-  it('Python mode shows "Python 3.11" badge instead of language selector', async () => {
-    const { EditorWorkspace } = await import('@/components/editor-workspace');
-    render(<EditorWorkspace {...baseProps} questionType="FUNCTION_PYTHON" />);
-    expect(screen.getByText(/Python 3.11/)).toBeTruthy();
+    expect(screen.getByText(/Python/)).toBeTruthy();
     expect(screen.queryByRole('combobox')).toBeNull();
   });
 
@@ -166,6 +127,6 @@ describe('<EditorWorkspace />', () => {
     render(<EditorWorkspace {...baseProps} />);
     const select = screen.getByRole('combobox') as HTMLSelectElement;
     expect(select.value).toBe('javascript');
-    expect(screen.queryByText(/Python 3.11/)).toBeNull();
+    expect(screen.queryByText(/Python/)).toBeNull();
   });
 });

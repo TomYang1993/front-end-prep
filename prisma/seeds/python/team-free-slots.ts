@@ -72,172 +72,195 @@ find_common_free_slots(
     return []
 `,
   },
-  publicTestCode: `test('two users with non-overlapping busy times', () => {
-  const users = [
+  language: 'python',
+  functionName: 'find_common_free_slots',
+  publicTestCases: [
     {
-      name: "carol",
-      events: [
-        { start_time: "2024-06-02T16:30:00.000Z", end_time: "2024-06-02T17:30:00.000Z" },
+      name: 'two users with non-overlapping busy times',
+      args: [
+        [
+          {
+            name: 'carol',
+            events: [
+              { start_time: '2024-06-02T16:30:00.000Z', end_time: '2024-06-02T17:30:00.000Z' },
+            ],
+          },
+          {
+            name: 'diego',
+            events: [
+              { start_time: '2024-06-02T16:30:00.000Z', end_time: '2024-06-02T17:30:00.000Z' },
+              { start_time: '2024-06-02T18:30:00.000Z', end_time: '2024-06-02T19:30:00.000Z' },
+              { start_time: '2024-06-02T19:30:00.000Z', end_time: '2024-06-02T20:00:00.000Z' },
+            ],
+          },
+        ],
+        '2024-06-02T00:00:00.000Z',
+        '2024-06-03T00:00:00.000Z',
+      ],
+      expected: [
+        { start_time: '2024-06-02T00:00:00.000Z', end_time: '2024-06-02T16:30:00.000Z' },
+        { start_time: '2024-06-02T17:30:00.000Z', end_time: '2024-06-02T18:30:00.000Z' },
+        { start_time: '2024-06-02T20:00:00.000Z', end_time: '2024-06-03T00:00:00.000Z' },
       ],
     },
     {
-      name: "diego",
-      events: [
-        { start_time: "2024-06-02T16:30:00.000Z", end_time: "2024-06-02T17:30:00.000Z" },
-        { start_time: "2024-06-02T18:30:00.000Z", end_time: "2024-06-02T19:30:00.000Z" },
-        { start_time: "2024-06-02T19:30:00.000Z", end_time: "2024-06-02T20:00:00.000Z" },
+      name: 'no busy events — entire window is free',
+      args: [
+        [
+          { name: 'ana', events: [] },
+          { name: 'ben', events: [] },
+        ],
+        '2024-06-02T09:00:00.000Z',
+        '2024-06-02T17:00:00.000Z',
+      ],
+      expected: [
+        { start_time: '2024-06-02T09:00:00.000Z', end_time: '2024-06-02T17:00:00.000Z' },
       ],
     },
-  ];
-  expect(
-    find_common_free_slots(users, "2024-06-02T00:00:00.000Z", "2024-06-03T00:00:00.000Z")
-  ).toEqual([
-    { start_time: "2024-06-02T00:00:00.000Z", end_time: "2024-06-02T16:30:00.000Z" },
-    { start_time: "2024-06-02T17:30:00.000Z", end_time: "2024-06-02T18:30:00.000Z" },
-    { start_time: "2024-06-02T20:00:00.000Z", end_time: "2024-06-03T00:00:00.000Z" },
-  ]);
-});
-
-test('no busy events — entire window is free', () => {
-  const users = [
-    { name: "ana", events: [] },
-    { name: "ben", events: [] },
-  ];
-  expect(
-    find_common_free_slots(users, "2024-06-02T09:00:00.000Z", "2024-06-02T17:00:00.000Z")
-  ).toEqual([
-    { start_time: "2024-06-02T09:00:00.000Z", end_time: "2024-06-02T17:00:00.000Z" },
-  ]);
-});`,
-  hiddenTestCode: `test('three users with partial overlap', () => {
-  const users = [
+  ],
+  hiddenTestCases: [
     {
-      name: "carol",
-      events: [
-        { start_time: "2024-06-02T16:30:00.000Z", end_time: "2024-06-02T17:30:00.000Z" },
-        { start_time: "2024-06-02T18:30:00.000Z", end_time: "2024-06-02T19:30:00.000Z" },
+      name: 'three users with partial overlap',
+      args: [
+        [
+          {
+            name: 'carol',
+            events: [
+              { start_time: '2024-06-02T16:30:00.000Z', end_time: '2024-06-02T17:30:00.000Z' },
+              { start_time: '2024-06-02T18:30:00.000Z', end_time: '2024-06-02T19:30:00.000Z' },
+            ],
+          },
+          {
+            name: 'priya',
+            events: [
+              { start_time: '2024-06-02T16:45:00.000Z', end_time: '2024-06-02T17:45:00.000Z' },
+            ],
+          },
+          {
+            name: 'diego',
+            events: [
+              { start_time: '2024-06-02T15:30:00.000Z', end_time: '2024-06-02T17:30:00.000Z' },
+              { start_time: '2024-06-02T18:30:00.000Z', end_time: '2024-06-02T19:30:00.000Z' },
+              { start_time: '2024-06-02T19:30:00.000Z', end_time: '2024-06-02T20:00:00.000Z' },
+            ],
+          },
+        ],
+        '2024-06-02T00:00:00.000Z',
+        '2024-06-03T00:00:00.000Z',
       ],
-    },
-    {
-      name: "priya",
-      events: [
-        { start_time: "2024-06-02T16:45:00.000Z", end_time: "2024-06-02T17:45:00.000Z" },
-      ],
-    },
-    {
-      name: "diego",
-      events: [
-        { start_time: "2024-06-02T15:30:00.000Z", end_time: "2024-06-02T17:30:00.000Z" },
-        { start_time: "2024-06-02T18:30:00.000Z", end_time: "2024-06-02T19:30:00.000Z" },
-        { start_time: "2024-06-02T19:30:00.000Z", end_time: "2024-06-02T20:00:00.000Z" },
-      ],
-    },
-  ];
-  expect(
-    find_common_free_slots(users, "2024-06-02T00:00:00.000Z", "2024-06-03T00:00:00.000Z")
-  ).toEqual([
-    { start_time: "2024-06-02T00:00:00.000Z", end_time: "2024-06-02T15:30:00.000Z" },
-    { start_time: "2024-06-02T17:45:00.000Z", end_time: "2024-06-02T18:30:00.000Z" },
-    { start_time: "2024-06-02T20:00:00.000Z", end_time: "2024-06-03T00:00:00.000Z" },
-  ]);
-});
-
-test('one user busy the entire window', () => {
-  const users = [
-    {
-      name: "kai",
-      events: [
-        { start_time: "2024-06-02T00:00:00.000Z", end_time: "2024-06-03T00:00:00.000Z" },
-      ],
-    },
-  ];
-  expect(
-    find_common_free_slots(users, "2024-06-02T00:00:00.000Z", "2024-06-03T00:00:00.000Z")
-  ).toEqual([]);
-});
-
-test('busy event extends past the window — clipped to window edges', () => {
-  const users = [
-    {
-      name: "ren",
-      events: [
-        { start_time: "2024-06-01T22:00:00.000Z", end_time: "2024-06-02T08:00:00.000Z" },
-        { start_time: "2024-06-02T22:00:00.000Z", end_time: "2024-06-03T04:00:00.000Z" },
-      ],
-    },
-  ];
-  expect(
-    find_common_free_slots(users, "2024-06-02T00:00:00.000Z", "2024-06-03T00:00:00.000Z")
-  ).toEqual([
-    { start_time: "2024-06-02T08:00:00.000Z", end_time: "2024-06-02T22:00:00.000Z" },
-  ]);
-});
-
-test('adjacent busy intervals merge into one gap, not two', () => {
-  const users = [
-    {
-      name: "tess",
-      events: [
-        { start_time: "2024-06-02T10:00:00.000Z", end_time: "2024-06-02T11:00:00.000Z" },
-        { start_time: "2024-06-02T11:00:00.000Z", end_time: "2024-06-02T12:00:00.000Z" },
-      ],
-    },
-  ];
-  expect(
-    find_common_free_slots(users, "2024-06-02T09:00:00.000Z", "2024-06-02T13:00:00.000Z")
-  ).toEqual([
-    { start_time: "2024-06-02T09:00:00.000Z", end_time: "2024-06-02T10:00:00.000Z" },
-    { start_time: "2024-06-02T12:00:00.000Z", end_time: "2024-06-02T13:00:00.000Z" },
-  ]);
-});
-
-test('events fully outside the window are ignored', () => {
-  const users = [
-    {
-      name: "lin",
-      events: [
-        { start_time: "2024-06-01T10:00:00.000Z", end_time: "2024-06-01T12:00:00.000Z" },
-        { start_time: "2024-06-03T10:00:00.000Z", end_time: "2024-06-03T12:00:00.000Z" },
-      ],
-    },
-  ];
-  expect(
-    find_common_free_slots(users, "2024-06-02T00:00:00.000Z", "2024-06-03T00:00:00.000Z")
-  ).toEqual([
-    { start_time: "2024-06-02T00:00:00.000Z", end_time: "2024-06-03T00:00:00.000Z" },
-  ]);
-});
-
-test('empty users list — entire window is free', () => {
-  expect(
-    find_common_free_slots([], "2024-06-02T00:00:00.000Z", "2024-06-02T12:00:00.000Z")
-  ).toEqual([
-    { start_time: "2024-06-02T00:00:00.000Z", end_time: "2024-06-02T12:00:00.000Z" },
-  ]);
-});
-
-test('user with one event nested inside another user\\'s longer event', () => {
-  const users = [
-    {
-      name: "outer",
-      events: [
-        { start_time: "2024-06-02T13:00:00.000Z", end_time: "2024-06-02T16:00:00.000Z" },
+      expected: [
+        { start_time: '2024-06-02T00:00:00.000Z', end_time: '2024-06-02T15:30:00.000Z' },
+        { start_time: '2024-06-02T17:45:00.000Z', end_time: '2024-06-02T18:30:00.000Z' },
+        { start_time: '2024-06-02T20:00:00.000Z', end_time: '2024-06-03T00:00:00.000Z' },
       ],
     },
     {
-      name: "inner",
-      events: [
-        { start_time: "2024-06-02T14:00:00.000Z", end_time: "2024-06-02T15:00:00.000Z" },
+      name: 'one user busy the entire window',
+      args: [
+        [
+          {
+            name: 'kai',
+            events: [
+              { start_time: '2024-06-02T00:00:00.000Z', end_time: '2024-06-03T00:00:00.000Z' },
+            ],
+          },
+        ],
+        '2024-06-02T00:00:00.000Z',
+        '2024-06-03T00:00:00.000Z',
+      ],
+      expected: [],
+    },
+    {
+      name: 'busy event extends past the window — clipped to window edges',
+      args: [
+        [
+          {
+            name: 'ren',
+            events: [
+              { start_time: '2024-06-01T22:00:00.000Z', end_time: '2024-06-02T08:00:00.000Z' },
+              { start_time: '2024-06-02T22:00:00.000Z', end_time: '2024-06-03T04:00:00.000Z' },
+            ],
+          },
+        ],
+        '2024-06-02T00:00:00.000Z',
+        '2024-06-03T00:00:00.000Z',
+      ],
+      expected: [
+        { start_time: '2024-06-02T08:00:00.000Z', end_time: '2024-06-02T22:00:00.000Z' },
       ],
     },
-  ];
-  expect(
-    find_common_free_slots(users, "2024-06-02T12:00:00.000Z", "2024-06-02T17:00:00.000Z")
-  ).toEqual([
-    { start_time: "2024-06-02T12:00:00.000Z", end_time: "2024-06-02T13:00:00.000Z" },
-    { start_time: "2024-06-02T16:00:00.000Z", end_time: "2024-06-02T17:00:00.000Z" },
-  ]);
-});`,
+    {
+      name: 'adjacent busy intervals merge into one gap, not two',
+      args: [
+        [
+          {
+            name: 'tess',
+            events: [
+              { start_time: '2024-06-02T10:00:00.000Z', end_time: '2024-06-02T11:00:00.000Z' },
+              { start_time: '2024-06-02T11:00:00.000Z', end_time: '2024-06-02T12:00:00.000Z' },
+            ],
+          },
+        ],
+        '2024-06-02T09:00:00.000Z',
+        '2024-06-02T13:00:00.000Z',
+      ],
+      expected: [
+        { start_time: '2024-06-02T09:00:00.000Z', end_time: '2024-06-02T10:00:00.000Z' },
+        { start_time: '2024-06-02T12:00:00.000Z', end_time: '2024-06-02T13:00:00.000Z' },
+      ],
+    },
+    {
+      name: 'events fully outside the window are ignored',
+      args: [
+        [
+          {
+            name: 'lin',
+            events: [
+              { start_time: '2024-06-01T10:00:00.000Z', end_time: '2024-06-01T12:00:00.000Z' },
+              { start_time: '2024-06-03T10:00:00.000Z', end_time: '2024-06-03T12:00:00.000Z' },
+            ],
+          },
+        ],
+        '2024-06-02T00:00:00.000Z',
+        '2024-06-03T00:00:00.000Z',
+      ],
+      expected: [
+        { start_time: '2024-06-02T00:00:00.000Z', end_time: '2024-06-03T00:00:00.000Z' },
+      ],
+    },
+    {
+      name: 'empty users list — entire window is free',
+      args: [[], '2024-06-02T00:00:00.000Z', '2024-06-02T12:00:00.000Z'],
+      expected: [
+        { start_time: '2024-06-02T00:00:00.000Z', end_time: '2024-06-02T12:00:00.000Z' },
+      ],
+    },
+    {
+      name: "user with one event nested inside another user's longer event",
+      args: [
+        [
+          {
+            name: 'outer',
+            events: [
+              { start_time: '2024-06-02T13:00:00.000Z', end_time: '2024-06-02T16:00:00.000Z' },
+            ],
+          },
+          {
+            name: 'inner',
+            events: [
+              { start_time: '2024-06-02T14:00:00.000Z', end_time: '2024-06-02T15:00:00.000Z' },
+            ],
+          },
+        ],
+        '2024-06-02T12:00:00.000Z',
+        '2024-06-02T17:00:00.000Z',
+      ],
+      expected: [
+        { start_time: '2024-06-02T12:00:00.000Z', end_time: '2024-06-02T13:00:00.000Z' },
+        { start_time: '2024-06-02T16:00:00.000Z', end_time: '2024-06-02T17:00:00.000Z' },
+      ],
+    },
+  ],
   solutions: [
     {
       language: 'python',

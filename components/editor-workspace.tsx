@@ -12,7 +12,6 @@ import {
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { CheatsheetModal } from '@/components/cheatsheet-modal';
-import { usePythonRunner } from '@/hooks/use-python-runner';
 import { useJsRunner } from '@/hooks/use-js-runner';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { DIFFICULTY_LABEL, DIFFICULTY_BADGE_CLASS } from '@/types/domain';
@@ -54,7 +53,6 @@ export function EditorWorkspace({
   const [activeLeftTab, setActiveLeftTab] = useState<LeftTab>('description');
 
   const isPython = questionType === 'FUNCTION_PYTHON';
-  const pythonRunner = usePythonRunner(isPython);
   const jsRunner = useJsRunner();
 
   const [language, setLanguage] = useState<'javascript' | 'typescript' | 'python'>(
@@ -440,13 +438,10 @@ export function EditorWorkspace({
                 <FileCode2 size={16} className="inline-block mr-1" />
                 {isPython ? 'solution.py' : language === 'javascript' ? 'Solution.js' : 'Solution.ts'}
               </span>
-              {isPython && pythonRunner.loading && (
-                <span className="ml-3 text-[0.7rem] text-accent-tertiary animate-pulse">Loading Python runtime…</span>
-              )}
             </div>
             <div className="flex items-center gap-2">
               {isPython ? (
-                <span className="font-mono text-[0.7rem] font-semibold text-accent-tertiary bg-accent-tertiary/10 px-3 py-1 rounded-md">Python 3.11</span>
+                <span className="font-mono text-[0.7rem] font-semibold text-accent-tertiary bg-accent-tertiary/10 px-3 py-1 rounded-md">Python 3.13</span>
               ) : (
                 <div className="relative">
                   <select
@@ -463,14 +458,14 @@ export function EditorWorkspace({
               <span className="mx-1 h-5 w-px bg-line" />
               <button
                 className="inline-flex items-center gap-1.5 bg-transparent border border-brand text-brand py-[0.3rem] px-[1rem] rounded-md text-[0.7rem] font-bold cursor-pointer transition-all duration-200 hover:bg-brand/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={running || (isPython && pythonRunner.loading)}
+                disabled={running}
                 onClick={runPublicTests}
               >
                 <Play size={12} fill="currentColor" /> {running ? 'Running…' : 'Run'}
               </button>
               <button
                 className="inline-flex items-center gap-1.5 bg-brand text-white border-none py-[0.3rem] px-[1.2rem] rounded-md text-[0.7rem] font-bold cursor-pointer transition-all duration-200 shadow-[0_0_12px_rgba(37,99,235,0.25)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={submitting || (isPython && pythonRunner.loading)}
+                disabled={submitting}
                 onClick={submitHiddenTests}
               >
                 <Upload size={12} /> {submitting ? 'Judging…' : 'Submit'}

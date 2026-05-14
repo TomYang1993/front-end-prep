@@ -137,6 +137,10 @@ model Question {
   renderData       Json?
   publicTestCode   String?
   hiddenTestCode   String?
+  language         String?
+  functionName     String?
+  publicTestCases  Json?
+  hiddenTestCases  Json?
   createdById      String?
   createdAt        DateTime               @default(now())
   updatedAt        DateTime               @updatedAt
