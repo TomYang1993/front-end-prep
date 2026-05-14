@@ -7,6 +7,13 @@ export interface SeedSolution {
   complexity?: string;
 }
 
+/** Structured backend test case: function called with `args`, output deep-compared to `expected`. */
+export interface BackendTestCase {
+  name: string;
+  args: unknown[];
+  expected: unknown;
+}
+
 export interface SeedQuestion {
   slug: string;
   title: string;
@@ -19,7 +26,16 @@ export interface SeedQuestion {
   tags: string[];
   starterCode: Record<string, string>;
   timeLimitMinutes?: number;
-  publicTestCode: string;
+
+  // Frontend (JS/React) questions — Jest-style test source.
+  publicTestCode?: string;
   hiddenTestCode?: string;
+
+  // Backend (Python/Go/Java/Rust) questions — structured JSON cases + entrypoint.
+  language?: 'python' | 'go' | 'java' | 'rust';
+  functionName?: string;
+  publicTestCases?: BackendTestCase[];
+  hiddenTestCases?: BackendTestCase[];
+
   solutions?: SeedSolution[];
 }

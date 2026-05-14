@@ -55,77 +55,93 @@ def web_crawl(pages, start_url):
     return []
 `,
   },
-  publicTestCode: `test('single page with no links', () => {
-  const pages = { "https://a.com": [] };
-  expect(web_crawl(pages, "https://a.com")).toEqual(["https://a.com"]);
-});
-
-test('follows same-domain links only', () => {
-  const pages = {
-    "https://a.com": ["https://a.com/about", "https://b.com"],
-    "https://a.com/about": [],
-  };
-  expect(web_crawl(pages, "https://a.com")).toEqual(["https://a.com", "https://a.com/about"]);
-});`,
-  hiddenTestCode: `test('resolves relative paths', () => {
-  const pages = {
-    "https://a.com": ["/about", "/blog"],
-    "https://a.com/about": [],
-    "https://a.com/blog": [],
-  };
-  expect(web_crawl(pages, "https://a.com")).toEqual([
-    "https://a.com", "https://a.com/about", "https://a.com/blog"
-  ]);
-});
-
-test('handles cycles without infinite loop', () => {
-  const pages = {
-    "https://a.com": ["https://a.com/one"],
-    "https://a.com/one": ["https://a.com/two"],
-    "https://a.com/two": ["https://a.com"],
-  };
-  expect(web_crawl(pages, "https://a.com")).toEqual([
-    "https://a.com", "https://a.com/one", "https://a.com/two"
-  ]);
-});
-
-test('skips pages not in the map (404)', () => {
-  const pages = {
-    "https://a.com": ["https://a.com/exists", "https://a.com/missing"],
-    "https://a.com/exists": [],
-  };
-  expect(web_crawl(pages, "https://a.com")).toEqual([
-    "https://a.com", "https://a.com/exists"
-  ]);
-});
-
-test('deep chain', () => {
-  const pages = {
-    "https://x.com": ["https://x.com/1"],
-    "https://x.com/1": ["https://x.com/2"],
-    "https://x.com/2": ["https://x.com/3"],
-    "https://x.com/3": [],
-  };
-  expect(web_crawl(pages, "https://x.com")).toEqual([
-    "https://x.com", "https://x.com/1", "https://x.com/2", "https://x.com/3"
-  ]);
-});
-
-test('mixed relative and absolute with cross-domain noise', () => {
-  const pages = {
-    "https://site.io": ["/docs", "https://site.io/api", "https://evil.com/hack"],
-    "https://site.io/docs": ["/api", "https://other.org"],
-    "https://site.io/api": ["/"],
-  };
-  expect(web_crawl(pages, "https://site.io")).toEqual([
-    "https://site.io", "https://site.io/api", "https://site.io/docs"
-  ]);
-});
-
-test('start url not in pages returns empty', () => {
-  const pages = { "https://a.com/other": [] };
-  expect(web_crawl(pages, "https://a.com")).toEqual([]);
-});`,
+  language: 'python',
+  functionName: 'web_crawl',
+  publicTestCases: [
+    {
+      name: 'single page with no links',
+      args: [{ 'https://a.com': [] }, 'https://a.com'],
+      expected: ['https://a.com'],
+    },
+    {
+      name: 'follows same-domain links only',
+      args: [
+        {
+          'https://a.com': ['https://a.com/about', 'https://b.com'],
+          'https://a.com/about': [],
+        },
+        'https://a.com',
+      ],
+      expected: ['https://a.com', 'https://a.com/about'],
+    },
+  ],
+  hiddenTestCases: [
+    {
+      name: 'resolves relative paths',
+      args: [
+        {
+          'https://a.com': ['/about', '/blog'],
+          'https://a.com/about': [],
+          'https://a.com/blog': [],
+        },
+        'https://a.com',
+      ],
+      expected: ['https://a.com', 'https://a.com/about', 'https://a.com/blog'],
+    },
+    {
+      name: 'handles cycles without infinite loop',
+      args: [
+        {
+          'https://a.com': ['https://a.com/one'],
+          'https://a.com/one': ['https://a.com/two'],
+          'https://a.com/two': ['https://a.com'],
+        },
+        'https://a.com',
+      ],
+      expected: ['https://a.com', 'https://a.com/one', 'https://a.com/two'],
+    },
+    {
+      name: 'skips pages not in the map (404)',
+      args: [
+        {
+          'https://a.com': ['https://a.com/exists', 'https://a.com/missing'],
+          'https://a.com/exists': [],
+        },
+        'https://a.com',
+      ],
+      expected: ['https://a.com', 'https://a.com/exists'],
+    },
+    {
+      name: 'deep chain',
+      args: [
+        {
+          'https://x.com': ['https://x.com/1'],
+          'https://x.com/1': ['https://x.com/2'],
+          'https://x.com/2': ['https://x.com/3'],
+          'https://x.com/3': [],
+        },
+        'https://x.com',
+      ],
+      expected: ['https://x.com', 'https://x.com/1', 'https://x.com/2', 'https://x.com/3'],
+    },
+    {
+      name: 'mixed relative and absolute with cross-domain noise',
+      args: [
+        {
+          'https://site.io': ['/docs', 'https://site.io/api', 'https://evil.com/hack'],
+          'https://site.io/docs': ['/api', 'https://other.org'],
+          'https://site.io/api': ['/'],
+        },
+        'https://site.io',
+      ],
+      expected: ['https://site.io', 'https://site.io/api', 'https://site.io/docs'],
+    },
+    {
+      name: 'start url not in pages returns empty',
+      args: [{ 'https://a.com/other': [] }, 'https://a.com'],
+      expected: [],
+    },
+  ],
   solutions: [
     {
       language: 'python',
