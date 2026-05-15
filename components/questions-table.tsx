@@ -25,6 +25,7 @@ interface QuestionsTableProps {
   questions: QuestionRow[];
   isLoggedIn: boolean;
   page: number;
+  pageSize: number;
   totalPages: number;
   totalFiltered: number;
   onPageChange: (page: number) => void;
@@ -41,7 +42,7 @@ const pageBtnBase = 'h-8 w-8 flex items-center justify-center rounded-md border 
 const pageBtnEnabled = 'hover:bg-line-soft transition-colors';
 const pageBtnDisabled = 'opacity-40 cursor-default';
 
-export function QuestionsTable({ questions, isLoggedIn, page, totalPages, totalFiltered, onPageChange }: QuestionsTableProps) {
+export function QuestionsTable({ questions, isLoggedIn, page, pageSize, totalPages, totalFiltered, onPageChange }: QuestionsTableProps) {
   return (
     <div className="bg-surface rounded-lg border border-line shadow-sm overflow-hidden flex flex-col">
       <table className="w-full border-collapse text-left">
@@ -122,7 +123,7 @@ export function QuestionsTable({ questions, isLoggedIn, page, totalPages, totalF
       <div className="flex items-center justify-between px-5 py-3 border-t border-line bg-bg-subtle/50 mt-auto">
         <span className="text-[0.85rem] text-muted font-medium">
           {totalPages > 1
-            ? `Showing ${(page - 1) * 25 + 1}–${Math.min(page * 25, totalFiltered)} of ${totalFiltered}`
+            ? `Showing ${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, totalFiltered)} of ${totalFiltered}`
             : `Showing ${totalFiltered} question${totalFiltered !== 1 ? 's' : ''}`}
         </span>
         {totalPages > 1 && (
