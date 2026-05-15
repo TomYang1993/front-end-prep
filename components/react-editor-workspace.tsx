@@ -435,7 +435,11 @@ export function ReactEditorWorkspace({
 
         {/* Preview Column */}
         <section className="flex flex-col border-l border-line min-w-[200px] flex-none" style={{ width: previewWidth }}>
-          <SandpackProvider template={sandpackTemplate} files={sandpackFiles}>
+          <SandpackProvider
+            template={sandpackTemplate}
+            files={sandpackFiles}
+            style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}
+          >
             <div className="h-10 bg-surface border-b border-line flex items-center justify-between px-4 shrink-0">
               <span className="text-[0.75rem] font-bold text-muted uppercase tracking-wider flex items-center gap-2">
                 <Eye size={16} /> Preview

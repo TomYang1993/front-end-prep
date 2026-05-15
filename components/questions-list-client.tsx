@@ -83,6 +83,7 @@ export function QuestionsListClient({ allRows, isLoggedIn }: Props) {
         questions={paginated}
         isLoggedIn={isLoggedIn}
         page={safePage}
+        pageSize={PAGE_SIZE}
         totalPages={totalPages}
         totalFiltered={totalFiltered}
         onPageChange={setPage}

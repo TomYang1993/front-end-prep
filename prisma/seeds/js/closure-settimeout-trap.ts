@@ -5,7 +5,7 @@ export const closureSetTimeoutTrap: SeedQuestion = {
   slug: "closure-settimeout-trap",
   title: "Fix the delayedLog Function",
   prompt: `
-The function \`delayedLog(n)\` should return an array of \`n\` functions. When called, the \`i\`-th function (0-indexed) returns a \`Promise\` that resolves to \`i\` after a short \`setTimeout\` delay.
+The function \`delayedLog(n)\` should return an array of \`n\` functions. When called, the \`i\`-th function returns a \`Promise\` that resolves to \`i\` after a short \`setTimeout\` delay.
 
 Looks fine on a quick read, but is the output correct?
 
@@ -41,7 +41,6 @@ await fns[1]();                         // => 1
 `,
     typescript: `function delayedLog(n: number): (() => Promise<number>)[] {
   const fns: (() => Promise<number>)[] = [];
-  // Fix the closure bug so each Promise resolves to its own index
   for (var i = 0; i < n; i++) {
     fns.push(function () {
       return new Promise<number>(function (resolve) {
@@ -95,13 +94,13 @@ test('returns a real Promise (uses async timing)', () => {
       language: "javascript",
       explanation: `## Why it breaks
 
-The \`setTimeout\` callback doesn't run until **after** the \`for\` loop finishes. By then \`var i\` — function-scoped, one binding shared by every iteration — equals \`n\`. Every Promise resolves to \`n\`.
+The \`setTimeout\` callback doesn't run until **after** the \`for\` loop finishes. By then \`var i\` (one binding shared by every iteration) — equals \`n\`. Every Promise resolves to \`n\`.
 
-The \`function (resolve)\` wrapper and the inner \`function ()\` callback both *look* like fresh scopes, but they don't help: they capture \`i\` by reference, and there's only one \`i\`.
+The \`function (resolve)\` wrapper and the inner \`function ()\` callback both look like fresh scopes, but they don't help: they just capture \`i\` by reference, and there's only one \`i\`.
 
 ## Three classic fixes
 
-### 1. \`let\` (simplest)
+### 1. \`let\`
 \`let\` is block-scoped, so each iteration gets its own \`i\`:
 \`\`\`js
 for (let i = 0; i < n; i++) {
@@ -120,7 +119,7 @@ for (var i = 0; i < n; i++) {
 \`\`\`
 
 ### 3. \`bind\`
-Pre-bind the index:
+Pre-bind the index, the essence is the same, capture the  \`i\` by value:
 \`\`\`js
 for (var i = 0; i < n; i++) {
   fns.push(function (j) {
