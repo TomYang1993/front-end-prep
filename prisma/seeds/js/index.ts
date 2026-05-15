@@ -4,8 +4,6 @@ export { promiseAllImplementation } from './promise-all-implementation';
 export { classHierarchy } from './class-hierarchy';
 export { closureSetTimeoutTrap } from './closure-settimeout-trap';
 export { functionCurry } from './function-curry';
-export { callApplyBind } from './call-apply-bind';
-export { promiseChain } from './promise-chain';
 export { eventLoopOutput } from './event-loop-output';
 export { hollowSquare } from './hollow-square';
 export { letterPyramid } from './letter-pyramid';
