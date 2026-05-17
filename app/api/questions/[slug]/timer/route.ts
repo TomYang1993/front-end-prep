@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { prisma } from '@/lib/db/prisma';
 import { notFound, unauthorized } from '@/lib/api';
-import { getDefaultTimeLimitMinutes } from '@/lib/question-timer';
-import type { Difficulty, QuestionType } from '@prisma/client';
 
 export async function POST(
   req: NextRequest,
@@ -15,7 +13,7 @@ export async function POST(
 
   const question = await prisma.question.findUnique({
     where: { slug },
-    select: { id: true, type: true, difficulty: true, timeLimitMinutes: true },
+    select: { id: true, timeLimitMinutes: true },
   });
 
   if (!question) return notFound();
@@ -36,8 +34,7 @@ export async function POST(
     await prisma.questionTimer.delete({ where: { id: existing.id } });
   }
 
-  const limit = question.timeLimitMinutes
-    ?? getDefaultTimeLimitMinutes(question.type as QuestionType, question.difficulty as Difficulty);
+  const limit = question.timeLimitMinutes;
 
   let reactLanguage: string | null = null;
   try {

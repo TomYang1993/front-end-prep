@@ -55,6 +55,7 @@ find_common_free_slots(
   type: QuestionType.FUNCTION_PYTHON,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 30,
   tags: ['interval', 'sorting', 'array'],
   starterCode: {
     python: `def find_common_free_slots(users, range_start, range_end):

@@ -9,6 +9,7 @@ export const virtualList: SeedQuestion = {
   type: QuestionType.REACT_APP,
   difficulty: Difficulty.HARD,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 60,
   tags: ['react', 'performance'],
   starterCode: {
     react: 'export default function VirtualList({ items }) {\n  return <div>{/* render visible items */}</div>;\n}',

@@ -231,6 +231,7 @@ export const infiniteScrollList: SeedQuestion = {
   type: QuestionType.REACT_APP,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 45,
   tags: ['react', 'hooks', 'performance', 'dom-api', 'coding taste'],
   starterCode: {
     react: STARTER_CODE_REACT,

@@ -45,6 +45,7 @@ const copy = deepClone(obj);
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.HARD,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 60,
   tags: ['recursion', 'objects', 'coding taste'],
   starterCode: {
     javascript: `function deepClone(value) {

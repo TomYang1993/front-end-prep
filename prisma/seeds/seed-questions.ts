@@ -1,13 +1,6 @@
-import { PrismaClient, Prisma, QuestionType, Difficulty, QuestionVersionStatus } from '@prisma/client';
+import { PrismaClient, Prisma, QuestionVersionStatus } from '@prisma/client';
 import type { SeedQuestion } from './types';
 import { refreshQuestionRenderData } from '../../lib/questions-snapshot';
-
-function defaultTimeLimit(type: QuestionType, difficulty: Difficulty): number {
-  if (type === 'REACT_APP') return 60;
-  if (difficulty === 'EASY') return 30;
-  if (difficulty === 'HARD') return 60;
-  return 45;
-}
 
 /**
  * Ensure tag names exist and return a name → id map.
@@ -47,7 +40,7 @@ export async function seedQuestion(
       type: question.type,
       difficulty: question.difficulty,
       accessTier: question.accessTier,
-      timeLimitMinutes: question.timeLimitMinutes ?? defaultTimeLimit(question.type, question.difficulty),
+      timeLimitMinutes: question.timeLimitMinutes,
       publicTestCode: question.publicTestCode ?? null,
       hiddenTestCode: question.hiddenTestCode ?? null,
       language: question.language ?? null,
@@ -62,7 +55,7 @@ export async function seedQuestion(
       type: question.type,
       difficulty: question.difficulty,
       accessTier: question.accessTier,
-      timeLimitMinutes: question.timeLimitMinutes ?? defaultTimeLimit(question.type, question.difficulty),
+      timeLimitMinutes: question.timeLimitMinutes,
       isPublished: true,
       createdById,
       publicTestCode: question.publicTestCode ?? null,

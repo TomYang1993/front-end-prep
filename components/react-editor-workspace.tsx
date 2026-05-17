@@ -138,6 +138,7 @@ export function ReactEditorWorkspace({
   // ─── Drag handles ───
   const [leftWidth, setLeftWidth] = useState(450);
   const [previewWidth, setPreviewWidth] = useState(420);
+  const [resizeCursor, setResizeCursor] = useState<'' | 'col-resize' | 'row-resize'>('');
   const isDragging = useRef(false);
   const isPreviewDragging = useRef(false);
 
@@ -161,13 +162,16 @@ export function ReactEditorWorkspace({
       }
     };
     const handleMouseUp = () => {
+      let stopped = false;
       if (isDragging.current) {
         isDragging.current = false;
         document.body.style.cursor = '';
+        stopped = true;
       }
       if (isPreviewDragging.current) {
         isPreviewDragging.current = false;
         document.body.style.cursor = '';
+        stopped = true;
       }
       if (consoleDragStart.current) {
         consoleDragStart.current = null;
@@ -175,7 +179,9 @@ export function ReactEditorWorkspace({
         if (consoleHeightRef.current >= 80) {
           lastOpenConsoleHeightRef.current = consoleHeightRef.current;
         }
+        stopped = true;
       }
+      if (stopped) setResizeCursor('');
     };
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
@@ -185,18 +191,24 @@ export function ReactEditorWorkspace({
     };
   }, []);
 
-  const handleMouseDown = () => {
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
     isDragging.current = true;
+    setResizeCursor('col-resize');
     document.body.style.cursor = 'col-resize';
   };
 
-  const handlePreviewMouseDown = () => {
+  const handlePreviewMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
     isPreviewDragging.current = true;
+    setResizeCursor('col-resize');
     document.body.style.cursor = 'col-resize';
   };
 
   const handleConsoleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
     consoleDragStart.current = { y: e.clientY, h: consoleHeight };
+    setResizeCursor('row-resize');
     document.body.style.cursor = 'row-resize';
   };
 
@@ -306,6 +318,9 @@ export function ReactEditorWorkspace({
 
   return (
     <div className="flex h-screen w-screen ml-[calc(-50vw+50%)] -mt-8 -mb-16 bg-bg overflow-hidden focus-mode:bg-[#15140f]">
+      {resizeCursor && (
+        <div className="fixed inset-0 z-[9999]" style={{ cursor: resizeCursor }} />
+      )}
       {/* ─── Side Nav ─── */}
       <aside className="w-[64px] bg-black border-r border-line flex flex-col items-center justify-between py-4 z-10">
         <div className="flex flex-col gap-4">

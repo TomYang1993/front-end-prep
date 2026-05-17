@@ -34,7 +34,7 @@ ABCBA
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
-  timeLimitMinutes: 20,
+  timeLimitMinutes: 15,
   tags: ["string"],
   starterCode: {
     javascript: `function letterPyramid(n) {

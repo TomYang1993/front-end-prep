@@ -37,6 +37,7 @@ h.lifeBirth(); // "lifeBirth"
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 15,
   tags: ['prototypes', 'inheritance', 'oop', 'coding taste'],
   starterCode: {
     javascript: `function Animal(age) {

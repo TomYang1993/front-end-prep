@@ -53,6 +53,7 @@ Required \`data-testid\` attributes:
   type: QuestionType.REACT_APP,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 45,
   tags: ['react', 'hooks', 'storage', 'auth'],
   starterCode: {
     react: `import { useState } from 'react';

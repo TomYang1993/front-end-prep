@@ -30,7 +30,7 @@ The first article matches because "React" is in the title. The third matches on 
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
-  timeLimitMinutes: 20,
+  timeLimitMinutes: 15,
   tags: ["array manipulation"],
   starterCode: {
     javascript: `function searchArticles(articles, query) {

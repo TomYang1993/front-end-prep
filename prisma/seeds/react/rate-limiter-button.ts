@@ -9,6 +9,7 @@ export const rateLimiterButton: SeedQuestion = {
   type: QuestionType.REACT_APP,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 45,
   tags: ['react', 'hooks'],
   starterCode: {
     react: 'export default function RateLimiterButton() {\n  return <button>Click me</button>;\n}',

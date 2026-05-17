@@ -9,6 +9,7 @@ export const debounceFunction: SeedQuestion = {
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 30,
   tags: ['utility'],
   starterCode: {
     javascript: 'function debounce(fn, delay) {\n  // your code here\n}',

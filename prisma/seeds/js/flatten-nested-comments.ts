@@ -4,75 +4,131 @@ import type { SeedQuestion } from '../types';
 export const flattenNestedComments: SeedQuestion = {
   slug: 'flatten-nested-comments',
   title: 'Flatten Nested Comments',
-  prompt: `Given a nested comment tree, return a flat array of all comment texts in **depth-first** order.
+  prompt: `You're rendering a Reddit-style comment thread. The UI indents replies by depth and caps how deep it shows — anything past the limit collapses behind a "Show more replies" button.
+
+Given a nested comment tree and a \`maxDepth\`, return a flat array of items the UI can render directly:
+
+\`\`\`text
+{ text: string, depth: number, hasHiddenReplies: boolean }
+\`\`\`
+
+- \`depth\` — \`0\` for top-level, \`+1\` per level
+- \`hasHiddenReplies\` — \`true\` only when a comment has replies that were cut off by \`maxDepth\`; \`false\` otherwise
 
 \`\`\`js
 const comments = [
   { text: 'Great post!', replies: [
-    { text: 'Thanks!', replies: [] },
-    { text: 'Agreed', replies: [
-      { text: 'Same here', replies: [] }
-    ]}
+    { text: 'Thanks!', replies: [
+      { text: 'You bet', replies: [] }
+    ]},
+    { text: 'Agreed', replies: [] }
   ]},
   { text: 'Nice work', replies: [] }
 ];
 
-flattenComments(comments)
-// \u2192 ['Great post!', 'Thanks!', 'Agreed', 'Same here', 'Nice work']
+flattenComments(comments, 1)
+// → [
+//   { text: 'Great post!', depth: 0, hasHiddenReplies: false },
+//   { text: 'Thanks!',     depth: 1, hasHiddenReplies: true  },
+//   { text: 'Agreed',      depth: 1, hasHiddenReplies: false },
+//   { text: 'Nice work',   depth: 0, hasHiddenReplies: false }
+// ]
 \`\`\`
 
-Each comment has a \`text\` (string) and \`replies\` (array of comments with the same shape). Traverse the tree depth-first: a comment's text comes before its replies.
+Order is depth-first: a comment comes before its replies, siblings in given order.
 
-**Why this matters:** Comment threads, org charts, file trees \u2014 any tree structure. Tests recursion + array methods together.`,
-  description: 'Flatten a nested comment tree into a flat array using recursion.',
+> [!tip]
+> Pass \`depth\` down through recursion. A comment at \`depth === maxDepth\` should not recurse into its replies — but you still need to look at \`replies.length\` to set \`hasHiddenReplies\`.`,
+  description: 'Flatten a nested comment tree up to a depth limit, with metadata for indented rendering.',
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
-  tags: ['array', 'recursion'],
+  timeLimitMinutes: 30,
+  tags: ['array', 'recursion', 'tree'],
   starterCode: {
-    javascript: `function flattenComments(comments) {
-  // Return flat array of all comment texts, depth-first
+    javascript: `function flattenComments(comments, maxDepth) {
+  // Return [{ text, depth, hasHiddenReplies }, ...] in depth-first order
 }`,
     typescript: `interface Comment {
   text: string;
   replies: Comment[];
 }
 
-function flattenComments(comments: Comment[]): string[] {
-  // Return flat array of all comment texts, depth-first
+interface FlatComment {
+  text: string;
+  depth: number;
+  hasHiddenReplies: boolean;
+}
+
+function flattenComments(comments: Comment[], maxDepth: number): FlatComment[] {
+  // Return depth-first flattened list, truncated at maxDepth
 }`,
   },
-  publicTestCode: `test('flattens nested comment tree', () => {
+  publicTestCode: `test('flattens with maxDepth = 2', () => {
   const comments = [
     { text: 'Great post!', replies: [
-      { text: 'Thanks!', replies: [] },
-      { text: 'Agreed', replies: [
-        { text: 'Same here', replies: [] }
-      ]}
+      { text: 'Thanks!', replies: [
+        { text: 'You bet', replies: [] }
+      ]},
+      { text: 'Agreed', replies: [] }
     ]},
     { text: 'Nice work', replies: [] }
   ];
-  expect(flattenComments(comments)).toEqual([
-    'Great post!', 'Thanks!', 'Agreed', 'Same here', 'Nice work'
+  expect(flattenComments(comments, 2)).toEqual([
+    { text: 'Great post!', depth: 0, hasHiddenReplies: false },
+    { text: 'Thanks!',     depth: 1, hasHiddenReplies: false },
+    { text: 'You bet',     depth: 2, hasHiddenReplies: false },
+    { text: 'Agreed',      depth: 1, hasHiddenReplies: false },
+    { text: 'Nice work',   depth: 0, hasHiddenReplies: false }
   ]);
 });
 
-test('flat list with no replies', () => {
+test('marks hasHiddenReplies when cut off at maxDepth', () => {
   const comments = [
-    { text: 'A', replies: [] },
-    { text: 'B', replies: [] }
+    { text: 'Great post!', replies: [
+      { text: 'Thanks!', replies: [
+        { text: 'You bet', replies: [] }
+      ]},
+      { text: 'Agreed', replies: [] }
+    ]}
   ];
-  expect(flattenComments(comments)).toEqual(['A', 'B']);
+  expect(flattenComments(comments, 1)).toEqual([
+    { text: 'Great post!', depth: 0, hasHiddenReplies: false },
+    { text: 'Thanks!',     depth: 1, hasHiddenReplies: true  },
+    { text: 'Agreed',      depth: 1, hasHiddenReplies: false }
+  ]);
 });`,
   hiddenTestCode: `test('empty input', () => {
-  expect(flattenComments([])).toEqual([]);
+  expect(flattenComments([], 3)).toEqual([]);
 });
 
-test('single comment no replies', () => {
-  expect(flattenComments([{ text: 'solo', replies: [] }])).toEqual(['solo']);
+test('maxDepth = 0 shows only top-level', () => {
+  const comments = [
+    { text: 'a', replies: [{ text: 'a1', replies: [] }] },
+    { text: 'b', replies: [] }
+  ];
+  expect(flattenComments(comments, 0)).toEqual([
+    { text: 'a', depth: 0, hasHiddenReplies: true  },
+    { text: 'b', depth: 0, hasHiddenReplies: false }
+  ]);
 });
 
-test('deeply nested chain', () => {
+test('maxDepth larger than tree depth — nothing hidden', () => {
+  const comments = [
+    { text: '1', replies: [
+      { text: '2', replies: [
+        { text: '3', replies: [] }
+      ]}
+    ]}
+  ];
+  expect(flattenComments(comments, 10)).toEqual([
+    { text: '1', depth: 0, hasHiddenReplies: false },
+    { text: '2', depth: 1, hasHiddenReplies: false },
+    { text: '3', depth: 2, hasHiddenReplies: false }
+  ]);
+});
+
+test('deeply nested chain truncated', () => {
   const comments = [
     { text: '1', replies: [
       { text: '2', replies: [
@@ -82,53 +138,85 @@ test('deeply nested chain', () => {
       ]}
     ]}
   ];
-  expect(flattenComments(comments)).toEqual(['1', '2', '3', '4']);
+  expect(flattenComments(comments, 2)).toEqual([
+    { text: '1', depth: 0, hasHiddenReplies: false },
+    { text: '2', depth: 1, hasHiddenReplies: false },
+    { text: '3', depth: 2, hasHiddenReplies: true  }
+  ]);
 });
 
-test('wide tree — many siblings', () => {
-  const comments = [
-    { text: 'root', replies: [
-      { text: 'a', replies: [] },
-      { text: 'b', replies: [] },
-      { text: 'c', replies: [] },
-      { text: 'd', replies: [] }
-    ]}
-  ];
-  expect(flattenComments(comments)).toEqual(['root', 'a', 'b', 'c', 'd']);
-});
-
-test('mixed depth', () => {
+test('mixed branches — some hit limit, some do not', () => {
   const comments = [
     { text: 'r1', replies: [
       { text: 'r1a', replies: [{ text: 'r1a1', replies: [] }] }
     ]},
     { text: 'r2', replies: [] },
     { text: 'r3', replies: [
-      { text: 'r3a', replies: [] }
+      { text: 'r3a', replies: [{ text: 'r3a1', replies: [{ text: 'r3a1x', replies: [] }] }] }
     ]}
   ];
-  expect(flattenComments(comments)).toEqual(['r1', 'r1a', 'r1a1', 'r2', 'r3', 'r3a']);
+  expect(flattenComments(comments, 2)).toEqual([
+    { text: 'r1',    depth: 0, hasHiddenReplies: false },
+    { text: 'r1a',   depth: 1, hasHiddenReplies: false },
+    { text: 'r1a1',  depth: 2, hasHiddenReplies: false },
+    { text: 'r2',    depth: 0, hasHiddenReplies: false },
+    { text: 'r3',    depth: 0, hasHiddenReplies: false },
+    { text: 'r3a',   depth: 1, hasHiddenReplies: false },
+    { text: 'r3a1',  depth: 2, hasHiddenReplies: true  }
+  ]);
+});
+
+test('leaf at maxDepth — no hidden replies flag', () => {
+  const comments = [
+    { text: 'root', replies: [
+      { text: 'leaf', replies: [] }
+    ]}
+  ];
+  expect(flattenComments(comments, 1)).toEqual([
+    { text: 'root', depth: 0, hasHiddenReplies: false },
+    { text: 'leaf', depth: 1, hasHiddenReplies: false }
+  ]);
 });`,
   solutions: [
     {
       language: 'javascript',
-      explanation: `## Recursive reduce (or flatMap)
+      explanation: `## Recursive walk with depth threading
 
-For each comment, emit its \`text\`, then recursively flatten its \`replies\`.
+Two things travel through recursion: the current \`depth\`, and the decision of whether to descend into \`replies\`.
 
-**reduce version:**
+For each comment:
+1. Build the flat entry — \`text\`, current \`depth\`, and \`hasHiddenReplies\` = "has replies AND we're at the limit"
+2. If \`depth < maxDepth\`, recurse into \`replies\` with \`depth + 1\`. Otherwise stop.
+
 \`\`\`js
-comments.reduce((acc, c) => [...acc, c.text, ...flattenComments(c.replies)], [])
+function flattenComments(comments, maxDepth) {
+  function walk(nodes, depth) {
+    return nodes.flatMap(c => {
+      const truncated = depth === maxDepth && c.replies.length > 0;
+      const entry = { text: c.text, depth, hasHiddenReplies: truncated };
+      return depth < maxDepth
+        ? [entry, ...walk(c.replies, depth + 1)]
+        : [entry];
+    });
+  }
+  return walk(comments, 0);
+}
 \`\`\`
 
-**flatMap version (cleaner):**
-\`\`\`js
-comments.flatMap(c => [c.text, ...flattenComments(c.replies)])
-\`\`\`
+**Why \`flatMap\`:** each comment produces 1+ output items (itself plus its flattened subtree). \`flatMap\` joins these per-comment arrays into one flat siblings-then-descendants list.
 
-Both are depth-first: a comment's text appears before its replies' texts. The \`flatMap\` version avoids the intermediate spread into the accumulator, making it slightly more readable.`,
-      code: `function flattenComments(comments) {
-  return comments.flatMap(c => [c.text, ...flattenComments(c.replies)]);
+**Edge case to watch:** \`hasHiddenReplies\` is *not* "has replies." It's "has replies that we chose not to show." A leaf at the depth limit has \`hasHiddenReplies: false\`; a parent at the limit with any replies has \`true\`.`,
+      code: `function flattenComments(comments, maxDepth) {
+  function walk(nodes, depth) {
+    return nodes.flatMap(c => {
+      const truncated = depth === maxDepth && c.replies.length > 0;
+      const entry = { text: c.text, depth, hasHiddenReplies: truncated };
+      return depth < maxDepth
+        ? [entry, ...walk(c.replies, depth + 1)]
+        : [entry];
+    });
+  }
+  return walk(comments, 0);
 }`,
     },
   ],

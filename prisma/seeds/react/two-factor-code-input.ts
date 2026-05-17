@@ -315,6 +315,7 @@ export const twoFactorCodeInput: SeedQuestion = {
   type: QuestionType.REACT_APP,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 45,
   tags: ['react', 'forms', 'accessibility', 'dom-api', 'coding taste'],
   starterCode: {
     react: STARTER_CODE_REACT,
