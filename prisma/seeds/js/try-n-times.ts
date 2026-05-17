@@ -47,6 +47,7 @@ await tryNTimes(async () => { throw new Error('boom'); }, 3, 0);
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 30,
   tags: ['async', 'promise', 'error-handling'],
   starterCode: {
     javascript: `function delay(seconds) {

@@ -298,6 +298,7 @@ export const multiStepForm: SeedQuestion = {
   type: QuestionType.REACT_APP,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 45,
   tags: ['react', 'forms', 'state', 'validation'],
   starterCode: {
     react: STARTER_CODE_REACT,

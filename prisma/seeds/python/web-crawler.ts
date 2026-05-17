@@ -37,6 +37,7 @@ web_crawl(pages, "https://a.com")
   type: QuestionType.FUNCTION_PYTHON,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 30,
   tags: ['graph', 'bfs', 'string'],
   starterCode: {
     python: `from collections import deque

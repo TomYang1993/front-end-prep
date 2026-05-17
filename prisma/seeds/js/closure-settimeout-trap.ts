@@ -22,6 +22,7 @@ await fns[1]();                         // => 1
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 15,
   tags: ["closure", "scope", "coding taste"],
   starterCode: {
     javascript: `function delayedLog(n) {

@@ -34,7 +34,7 @@ export const hollowSquare: SeedQuestion = {
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
-  timeLimitMinutes: 20,
+  timeLimitMinutes: 15,
   tags: ["loops", "strings"],
   starterCode: {
     javascript: `function hollowSquare(n) {

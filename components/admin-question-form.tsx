@@ -21,6 +21,7 @@ export function AdminQuestionForm() {
   const [type, setType] = useState<QuestionType>('FUNCTION_JS');
   const [difficulty, setDifficulty] = useState<Difficulty>('EASY');
   const [accessTier, setAccessTier] = useState<AccessTier>('FREE');
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState<number>(15);
   const [isPublished, setIsPublished] = useState(true);
   const [status, setStatus] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -44,6 +45,7 @@ export function AdminQuestionForm() {
           difficulty,
           accessTier,
           isPublished,
+          timeLimitMinutes,
           tags: tags
             .split(',')
             .map((tag) => tag.trim())
@@ -137,11 +139,21 @@ export function AdminQuestionForm() {
             <option value="PREMIUM">PREMIUM</option>
           </select>
         </label>
-        <label className="checkbox-line">
-          <input type="checkbox" checked={isPublished} onChange={(event) => setIsPublished(event.target.checked)} />
-          Publish immediately
+        <label>
+          Time limit (minutes)
+          <input
+            type="number"
+            min={1}
+            value={timeLimitMinutes}
+            onChange={(event) => setTimeLimitMinutes(Number(event.target.value))}
+            required
+          />
         </label>
       </div>
+      <label className="checkbox-line">
+        <input type="checkbox" checked={isPublished} onChange={(event) => setIsPublished(event.target.checked)} />
+        Publish immediately
+      </label>
       <textarea
         value={starterCode}
         onChange={(event) => setStarterCode(event.target.value)}

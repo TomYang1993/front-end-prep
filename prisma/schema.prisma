@@ -133,7 +133,7 @@ model Question {
   difficulty       Difficulty
   accessTier       AccessTier             @default(FREE)
   isPublished      Boolean                @default(false)
-  timeLimitMinutes Int?
+  timeLimitMinutes Int
   renderData       Json?
   publicTestCode   String?
   hiddenTestCode   String?

@@ -25,7 +25,7 @@ export interface SeedQuestion {
   /** Tag names — resolved to IDs in seed.ts */
   tags: string[];
   starterCode: Record<string, string>;
-  timeLimitMinutes?: number;
+  timeLimitMinutes: number;
 
   // Frontend (JS/React) questions — Jest-style test source.
   publicTestCode?: string;

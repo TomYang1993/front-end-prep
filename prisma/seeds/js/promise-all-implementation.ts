@@ -9,6 +9,7 @@ export const promiseAllImplementation: SeedQuestion = {
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 30,
   tags: ['utility'],
   starterCode: {
     javascript: 'function promiseAll(promises) {\n  // your code here\n}',

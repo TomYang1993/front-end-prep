@@ -43,6 +43,7 @@ t=100ms  →  "Final 0"
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 30,
   tags: ['async', 'closure', 'event-loop'],
   starterCode: {
     javascript: `function countdown(n, gapMs, log) {

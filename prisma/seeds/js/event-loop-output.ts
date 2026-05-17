@@ -40,6 +40,7 @@ predictOutput(); // ['A', 'H', 'C', 'F', 'D', 'B', 'E', 'G']  (or is it?)
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 30,
   tags: ['event-loop', 'async', 'coding taste'],
   starterCode: {
     javascript: `function predictOutput() {

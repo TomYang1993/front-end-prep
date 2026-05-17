@@ -9,6 +9,7 @@ export const autocompleteSearch: SeedQuestion = {
   type: QuestionType.REACT_APP,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 45,
   tags: ['react', 'a11y', 'performance'],
   starterCode: {
     react: `const mockFetch = (query) =>

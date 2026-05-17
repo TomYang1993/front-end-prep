@@ -1,18 +1,23 @@
-import { QuestionType, Difficulty, AccessTier } from '@prisma/client';
-import type { SeedQuestion } from '../types';
+import { QuestionType, Difficulty, AccessTier } from "@prisma/client";
+import type { SeedQuestion } from "../types";
 
 export const twoSum: SeedQuestion = {
-  slug: 'two-sum',
-  title: 'Two Sum',
-  prompt: 'Return indices of the two numbers that add up to target.',
-  description: 'Find two indexes with sum equal to target',
+  slug: "two-sum",
+  title: "Two Sum",
+  prompt: `Return indices of the two numbers that add up to target.
+
+> [!info] Interview inspiration
+> I'll just keep this question as a meme.`,
+  description: "Find two indexes with sum equal to target",
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
-  tags: ['array'],
+  timeLimitMinutes: 15,
+  tags: ["array"],
   starterCode: {
-    javascript: 'function twoSum(nums, target) {\n  return [];\n}',
-    typescript: 'function twoSum(nums: number[], target: number): number[] {\n  return [];\n}',
+    javascript: "function twoSum(nums, target) {\n  return [];\n}",
+    typescript:
+      "function twoSum(nums: number[], target: number): number[] {\n  return [];\n}",
   },
   publicTestCode: `test('basic case — nums [2,7,11,15] with target 9', () => {
   expect(twoSum([2, 7, 11, 15], 9)).toEqual([0, 1]);
@@ -38,9 +43,9 @@ test('first and last', () => {
 });`,
   solutions: [
     {
-      language: 'javascript',
-      explanation: 'Use a hash map to track complements in O(n).',
-      code: 'function twoSum(nums, target) {\n  const map = new Map();\n  for (let i = 0; i < nums.length; i += 1) {\n    const need = target - nums[i];\n    if (map.has(need)) return [map.get(need), i];\n    map.set(nums[i], i);\n  }\n  return [];\n}',
+      language: "javascript",
+      explanation: "Use a hash map to track complements in O(n).",
+      code: "function twoSum(nums, target) {\n  const map = new Map();\n  for (let i = 0; i < nums.length; i += 1) {\n    const need = target - nums[i];\n    if (map.has(need)) return [map.get(need), i];\n    map.set(nums[i], i);\n  }\n  return [];\n}",
     },
   ],
 };

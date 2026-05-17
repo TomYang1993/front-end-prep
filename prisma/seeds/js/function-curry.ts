@@ -28,6 +28,7 @@ curriedAdd(1, 2)(3);
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
+  timeLimitMinutes: 30,
   tags: ['closure', 'functions'],
   starterCode: {
     javascript: `function curry(fn) {

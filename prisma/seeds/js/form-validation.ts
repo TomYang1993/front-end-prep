@@ -31,13 +31,12 @@ validateForm(form)
 > Also notice this is simplified high-level code. The purpose is to try to use real world coding example to help you understand.
 
 `,
-  description:
-    "Validate form fields using a data-driven rule array with filter and map.",
+  description: "Validate form fields using a data-driven rule array.",
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.EASY,
   accessTier: AccessTier.FREE,
-  timeLimitMinutes: 20,
-  tags: ["array", "validation"],
+  timeLimitMinutes: 15,
+  tags: ["array manipulation"],
   starterCode: {
     javascript: `function validateForm(form) {
   // Return array of error messages (empty if valid)

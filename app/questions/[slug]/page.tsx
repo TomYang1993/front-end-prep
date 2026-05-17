@@ -6,10 +6,8 @@ import { PremiumUpsell } from '@/components/premium-upsell';
 import { QuestionStartScreen } from '@/components/question-start-screen';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { getQuestionDetailBySlug } from '@/lib/questions';
-import { getDefaultTimeLimitMinutes } from '@/lib/question-timer';
 import { prisma } from '@/lib/db/prisma';
 import { createTimer } from '@/lib/server-timing';
-import type { Difficulty, QuestionType } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,16 +70,13 @@ export default async function QuestionDetailPage({ params }: PageProps) {
 
   // No active timer → show start screen
   if (!expiresAt) {
-    const timeLimitMinutes = question.timeLimitMinutes
-      ?? getDefaultTimeLimitMinutes(question.type as QuestionType, question.difficulty as Difficulty);
-
     return (
       <QuestionStartScreen
         slug={slug}
         title={question.title}
         difficulty={question.difficulty}
         tags={question.tags}
-        timeLimitMinutes={timeLimitMinutes}
+        timeLimitMinutes={question.timeLimitMinutes}
         questionType={question.type}
       />
     );
