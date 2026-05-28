@@ -136,7 +136,9 @@ export function ReactEditorWorkspace({
   const [monacoTheme, setMonacoTheme] = useState<'vs-dark' | 'light'>('vs-dark');
 
   // ─── Drag handles ───
-  const [leftWidth, setLeftWidth] = useState(450);
+  const [leftWidth, setLeftWidth] = useState(() =>
+    typeof window === 'undefined' ? 450 : Math.max(400, (window.innerWidth - 64) * 0.35)
+  );
   const [previewWidth, setPreviewWidth] = useState(420);
   const [resizeCursor, setResizeCursor] = useState<'' | 'col-resize' | 'row-resize'>('');
   const isDragging = useRef(false);
