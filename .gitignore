@@ -14,5 +14,8 @@ backups/
 
 progress.md
 CLAUDE.md
+PERFORMANCE_AUDIT.md
+SECURITY_AUDIT.md
+PRODUCTION_MIGRATION_PLAN.md
 
 prisma/seeds/archive/
