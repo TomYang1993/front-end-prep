@@ -27,6 +27,7 @@ export interface QuestionInitialValues {
   slug: string;
   title: string;
   prompt: string;
+  description: string;
   tags: string[];
   starterCode: string;
   starterCodeTs?: string;
@@ -49,6 +50,7 @@ export function AdminQuestionForm({ initial }: Props) {
   const [slug, setSlug] = useState(initial?.slug ?? '');
   const [title, setTitle] = useState(initial?.title ?? '');
   const [prompt, setPrompt] = useState(initial?.prompt ?? '');
+  const [description, setDescription] = useState(initial?.description ?? '');
   const [tags, setTags] = useState(initial?.tags.join(', ') ?? '');
   const [starterCode, setStarterCode] = useState(initial?.starterCode ?? defaultStarterJs);
   const [starterCodeTs, setStarterCodeTs] = useState(initial?.starterCodeTs ?? '');
@@ -88,7 +90,7 @@ export function AdminQuestionForm({ initial }: Props) {
       isPublished,
       timeLimitMinutes,
       tags: tagList,
-      content: { description: prompt },
+      content: { description },
       starterCode: starterCodeMap,
     };
 
@@ -119,6 +121,7 @@ export function AdminQuestionForm({ initial }: Props) {
         setSlug('');
         setTitle('');
         setPrompt('');
+        setDescription('');
         setTags('');
       }
     } catch (error) {
@@ -133,13 +136,27 @@ export function AdminQuestionForm({ initial }: Props) {
       <h3>{isEdit ? `Edit: ${initial!.title}` : 'Create Question'}</h3>
       <input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="slug" required />
       <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="title" required />
-      <textarea
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        rows={12}
-        placeholder="prompt (markdown)"
-        required
-      />
+      <label className="block">
+        <span className="mb-1 block text-sm opacity-70">Description (one-sentence summary, shown in list)</span>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={2}
+          placeholder="e.g. Retry a Promise-returning function up to N times with exponential backoff."
+          className="w-full"
+        />
+      </label>
+      <label className="block">
+        <span className="mb-1 block text-sm opacity-70">Prompt (full markdown body)</span>
+        <textarea
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          rows={12}
+          placeholder="prompt (markdown)"
+          required
+          className="w-full"
+        />
+      </label>
       <input
         value={tags}
         onChange={(e) => setTags(e.target.value)}
