@@ -80,10 +80,42 @@ function __asyncMatchers(promiseLike, negate) {
     toBeNull: () => check('toBeNull'),
     toBeUndefined: () => check('toBeUndefined'),
     toContain: (item) => check('toContain', item),
+    toMatch: (pattern) => check('toMatch', pattern),
+    toBeNaN: () => check('toBeNaN'),
     toBeGreaterThan: (n) => check('toBeGreaterThan', n),
+    toBeGreaterThanOrEqual: (n) => check('toBeGreaterThanOrEqual', n),
     toBeLessThan: (n) => check('toBeLessThan', n),
+    toBeLessThanOrEqual: (n) => check('toBeLessThanOrEqual', n),
     toHaveLength: (n) => check('toHaveLength', n),
     toBeInstanceOf: (cls) => check('toBeInstanceOf', cls),
+    toThrow: (expected) => Promise.resolve(promiseLike).then(
+      (value) => {
+        if (negate) {
+          throw new Error('Expected promise to reject, but it resolved with ' + JSON.stringify(value));
+        }
+        throw new Error('Expected promise to resolve, but .resolves.toThrow is not meaningful');
+      },
+      (err) => {
+        if (!negate) {
+          throw new Error('Expected promise to resolve, but it rejected with ' + __formatError(err));
+        }
+        if (expected === undefined) return;
+        const msg = err && err.message ? err.message : String(err);
+        if (typeof expected === 'string') {
+          if (!msg.includes(expected)) {
+            throw new Error('Expected rejection message to contain ' + JSON.stringify(expected) + ', got ' + JSON.stringify(msg));
+          }
+        } else if (expected instanceof RegExp) {
+          if (!expected.test(msg)) {
+            throw new Error('Expected rejection message to match ' + expected + ', got ' + JSON.stringify(msg));
+          }
+        } else if (typeof expected === 'function') {
+          if (!(err instanceof expected)) {
+            throw new Error('Expected rejection to be instance of ' + (expected.name || expected));
+          }
+        }
+      }
+    ),
   };
 }
 
@@ -151,11 +183,38 @@ function expect(received) {
         }
       }
     },
+    toMatch(pattern) {
+      if (typeof received !== 'string') {
+        throw new Error('toMatch requires a string, got ' + typeof received);
+      }
+      if (typeof pattern === 'string') {
+        if (!received.includes(pattern)) {
+          throw new Error('Expected string to contain ' + JSON.stringify(pattern) + ', got ' + JSON.stringify(received));
+        }
+      } else if (pattern instanceof RegExp) {
+        if (!pattern.test(received)) {
+          throw new Error('Expected string to match ' + pattern + ', got ' + JSON.stringify(received));
+        }
+      } else {
+        throw new Error('toMatch requires string or RegExp');
+      }
+    },
+    toBeNaN() {
+      if (!Number.isNaN(received)) {
+        throw new Error('Expected NaN, received ' + JSON.stringify(received));
+      }
+    },
     toBeGreaterThan(n) {
       if (!(received > n)) throw new Error('Expected ' + received + ' > ' + n);
     },
+    toBeGreaterThanOrEqual(n) {
+      if (!(received >= n)) throw new Error('Expected ' + received + ' >= ' + n);
+    },
     toBeLessThan(n) {
       if (!(received < n)) throw new Error('Expected ' + received + ' < ' + n);
+    },
+    toBeLessThanOrEqual(n) {
+      if (!(received <= n)) throw new Error('Expected ' + received + ' <= ' + n);
     },
     toHaveLength(n) {
       const len = received && received.length;
