@@ -40,7 +40,7 @@ await retry(async () => { throw new Error('boom'); }, 3, 0);
 // => rejects with Error('boom')
 \`\`\`
 `,
-  description: 'Retry a Promise-returning function up to N times with an exponentially increasing delay between attempts.',
+  description: 'Retry an async operation with limits',
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
@@ -52,8 +52,7 @@ await retry(async () => { throw new Error('boom'); }, 3, 0);
 }
 
 async function tryNTimes(fn, times = 3, interval = 1) {
-  // Retry fn up to \`times\` total attempts.
-  // Wait doubles each retry: interval, interval*2, interval*4, …
+  // Retry fn up to \`times\` total attempts, waiting \`interval\` seconds between.
   // Reject with the last error if all attempts fail.
 }`,
   },
@@ -139,23 +138,20 @@ for (let attempt = 1; attempt <= times; attempt++) {
 throw lastError;
 \`\`\`
 
-\`return await fn()\` exits the loop the moment something resolves. Every rejection lands in the \`catch\`, which stashes the error and — unless this was the last attempt — sleeps before the next iteration. After the loop ends, we throw whatever the most recent attempt rejected with, so callers see the real cause (e.g. \`ECONNREFUSED\`) rather than a generic "retry failed" message.
-
-## Why \`return await fn()\` and not \`return fn()\`
-
-\`return fn()\` hands the promise back directly, and its rejection propagates **outside** the surrounding \`try/catch\` — the catch never runs, the retry loop never sees the failure, and the helper degenerates into a one-shot call. \`await\` pulls the rejection into the catch block where it can actually be handled.
+\`return await fn()\` exits the loop the moment something resolves. Every rejection lands in the \`catch\`, which assigns the error to lastError and sleeps before the next iteration. After the loop ends, we throw whatever the most recent attempt rejected with, so callers see the real cause (e.g. \`ECONNREFUSED\`) rather than a generic "retry failed" message.
 
 ## Exponential backoff
 
-A fixed interval hammers a struggling service at the same cadence — fine for a flaky local mock, hostile to a real backend that needs breathing room. Doubling the wait each retry (\`interval * 2^(attempt - 1)\`) gives the dependency exponentially more time to recover while keeping the early retries snappy. That's the shape AWS, gRPC, and most HTTP clients use; production code typically adds **jitter** on top so a thundering herd of clients doesn't all retry in lockstep, but the doubling is the core idea.
+A fixed interval hammers a struggling service, maybe fine for a flaky local mock, but bad for a real backend that needs breathing room. Doubling the wait each retry (\`interval * 2^(attempt - 1)\`) gives the dependency exponentially more time to recover while keeping the early retries snappy.
+That's the shape AWS, gRPC, and most HTTP clients use, production code typically adds **jitter** on top so a thundering herd of clients doesn't all retry in lockstep, but the doubling is the core idea.
 
 ## Skipping the trailing delay
 
-After the final attempt fails, there's no next attempt to wait for. Guarding the sleep with \`if (attempt < times)\` lets the helper reject immediately on exhaustion instead of burning a full backoff window after a guaranteed failure.
+After the final attempt fails, there's no next attempt to wait for. Guarding the sleep with \`if (attempt < times)\` lets the helper reject immediately.
 
 ## Preserving the original rejection
 
-Rejections in JS can be any value — \`Error\` instances, strings, numbers, objects. The catch parameter \`err\` is whatever the caller threw; storing and re-throwing it verbatim preserves the type. Wrapping in \`new Error(...)\` would lose information the caller may need.`,
+Rejections in JS can be any value — \`Error\` instances, strings, numbers, objects. The catch parameter \`err\` is whatever the caller threw, storing and re-throwing it preserves the type. Wrapping in \`new Error(...)\` would lose information the caller may need.`,
       code: `function delay(seconds) {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }

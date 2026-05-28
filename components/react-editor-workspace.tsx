@@ -183,7 +183,10 @@ export function ReactEditorWorkspace({
         }
         stopped = true;
       }
-      if (stopped) setResizeCursor('');
+      if (stopped) {
+        setResizeCursor('');
+        document.body.style.userSelect = '';
+      }
     };
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
@@ -198,6 +201,7 @@ export function ReactEditorWorkspace({
     isDragging.current = true;
     setResizeCursor('col-resize');
     document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
   };
 
   const handlePreviewMouseDown = (e: React.MouseEvent) => {
@@ -205,6 +209,7 @@ export function ReactEditorWorkspace({
     isPreviewDragging.current = true;
     setResizeCursor('col-resize');
     document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
   };
 
   const handleConsoleMouseDown = (e: React.MouseEvent) => {
@@ -212,6 +217,7 @@ export function ReactEditorWorkspace({
     consoleDragStart.current = { y: e.clientY, h: consoleHeight };
     setResizeCursor('row-resize');
     document.body.style.cursor = 'row-resize';
+    document.body.style.userSelect = 'none';
   };
 
   const toggleConsole = () => {

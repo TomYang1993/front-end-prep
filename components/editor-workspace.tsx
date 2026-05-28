@@ -162,10 +162,12 @@ export function EditorWorkspace({
       if (isDragging.current) {
         isDragging.current = false;
         document.body.style.cursor = '';
+        document.body.style.userSelect = '';
       }
       if (consoleDragStart.current) {
         consoleDragStart.current = null;
         document.body.style.cursor = '';
+        document.body.style.userSelect = '';
         if (consoleHeightRef.current >= 80) {
           lastOpenConsoleHeightRef.current = consoleHeightRef.current;
         }
@@ -183,11 +185,13 @@ export function EditorWorkspace({
   const handleMouseDown = () => {
     isDragging.current = true;
     document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
   };
 
   const handleConsoleMouseDown = (e: React.MouseEvent) => {
     consoleDragStart.current = { y: e.clientY, h: consoleHeight };
     document.body.style.cursor = 'row-resize';
+    document.body.style.userSelect = 'none';
   };
 
   const toggleConsole = () => {

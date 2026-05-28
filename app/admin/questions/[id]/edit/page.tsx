@@ -33,11 +33,16 @@ export default async function AdminEditQuestionPage({ params }: PageProps) {
   const starterKey =
     question.type === 'REACT_APP' ? 'react' : question.type === 'FUNCTION_PYTHON' ? 'python' : 'javascript';
 
+  const versionContent = (latest?.content ?? null) as { description?: string } | null;
+  const renderData = (question.renderData ?? null) as { description?: string } | null;
+  const description = versionContent?.description ?? renderData?.description ?? '';
+
   const initial: QuestionInitialValues = {
     id: question.id,
     slug: question.slug,
     title: question.title,
     prompt: question.prompt,
+    description,
     tags: question.tags.map((t) => t.tag.name),
     starterCode: starterMap[starterKey] ?? '',
     starterCodeTs: question.type === 'FUNCTION_JS' ? starterMap.typescript ?? '' : undefined,
