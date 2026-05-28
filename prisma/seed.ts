@@ -23,9 +23,7 @@ import {
   groupTransactions,
   searchFilter,
   flattenNestedComments,
-  deepClone,
   tryNTimes,
-  sequencedCountdownWithFinal,
 } from './seeds';
 
 const prisma = new PrismaClient();
@@ -53,9 +51,7 @@ const allQuestions = [
   groupTransactions,
   searchFilter,
   flattenNestedComments,
-  deepClone,
   tryNTimes,
-  sequencedCountdownWithFinal,
 ];
 
 async function main() {

@@ -9,6 +9,7 @@ export const functionCurry: SeedQuestion = {
 \`\`\`js
 function add(a, b, c) { return a + b + c; }
 
+// curry returns a function which it can be called in a chain
 const curriedAdd = curry(add);
 
 // All equivalent — returns 6:
@@ -18,12 +19,12 @@ curriedAdd(1)(2)(3);
 curriedAdd(1, 2)(3);
 \`\`\`
 
-### Requirements
+### Rules
+1. The original function should be called with the correct \`this\` context if invoked as a method.
 
-1. Use \`fn.length\` to determine the expected argument count (arity).
-2. If enough arguments are provided, call \`fn\` immediately and return the result.
-3. If fewer arguments are provided, return a new function that accepts the remaining ones.
-4. The original function should be called with the correct \`this\` context if invoked as a method.`,
+> [!info] interview inspiration
+> In modern JS, arrow fns (x => f(a, x)) cover most cases curry function used to do. Curry shines in Ramda/lodash-fp style codebases, Haskell-influenced libs, or when you want named partial applications as first-class values. Interview asks for it because it tests closures, recursion, rest args in a full set, so it's quite classic!
+`,
   description: 'Implement a generic curry utility that progressively collects arguments until the function arity is met.',
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.MEDIUM,
@@ -32,9 +33,6 @@ curriedAdd(1, 2)(3);
   tags: ['closure', 'functions'],
   starterCode: {
     javascript: `function curry(fn) {
-  // your code here
-}`,
-    typescript: `function curry(fn: Function): Function {
   // your code here
 }`,
   },
@@ -92,15 +90,23 @@ The core idea: return a wrapper that collects arguments. If we have enough (\`ar
 
 \`fn.length\` gives the number of declared parameters (the arity). Each partial call spreads accumulated args plus new args, converging toward the arity.
 
-The \`this\` context is preserved by using \`fn.apply(this, args)\` instead of \`fn(...args)\`.`,
+## Preserving \`this\` through the chain
+
+When \`curry\` is used as a method (\`obj.add(1)(2)\`), only the **first** call has \`this\` bound to \`obj\` — the JS engine binds \`this\` based on the call site. The follow-up call \`(2)\` is a free invocation, so its \`this\` is \`undefined\` (strict) or the global object.
+
+To keep \`this\` flowing across chained calls, the inner partial **must be an arrow function** so it closes over the lexical \`this\` from the outer \`curried\` invocation:
+
+\`\`\`js
+return (...moreArgs) => curried.apply(this, args.concat(moreArgs));
+\`\`\`
+
+A regular \`function (...moreArgs) { ... }\` would get its own \`this\` on each call and silently drop the method receiver, so \`fn.apply(this, args)\` at the end would fire with \`this === undefined\` and \`this.base\` would throw.`,
       code: `function curry(fn) {
   return function curried(...args) {
     if (args.length >= fn.length) {
       return fn.apply(this, args);
     }
-    return function (...moreArgs) {
-      return curried.apply(this, args.concat(moreArgs));
-    };
+    return (...moreArgs) => curried.apply(this, args.concat(moreArgs));
   };
 }`,
     },

@@ -11,6 +11,4 @@ export { formValidation } from './form-validation';
 export { groupTransactions } from './group-transactions';
 export { searchFilter } from './search-filter';
 export { flattenNestedComments } from './flatten-nested-comments';
-export { deepClone } from './deep-clone';
 export { tryNTimes } from './try-n-times';
-export { sequencedCountdownWithFinal } from './sequenced-countdown-with-final';
