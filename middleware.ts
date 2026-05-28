@@ -78,6 +78,18 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/questions', req.url));
   }
 
+  // ── Admin routes: require ADMIN role ──
+  const isAdminPath = pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
+  if (isAdminPath && !session?.roles?.includes('ADMIN')) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { error: 'Forbidden', code: 'FORBIDDEN' },
+        { status: 403 }
+      );
+    }
+    return NextResponse.redirect(new URL('/questions', req.url));
+  }
+
   return response;
 }
 
