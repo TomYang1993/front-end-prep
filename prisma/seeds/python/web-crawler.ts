@@ -156,10 +156,12 @@ Extract \`protocol + host\` from the start URL to filter same-domain links:
 
 \`\`\`python
 # "https://example.com/page" → "https://example.com"
-origin = start_url[:start_url.index("/", 8)]  # skip "https://"
+# "https://example.com"       → "https://example.com" (no path)
+slash = start_url.find("/", 8)  # skip "https://"
+origin = start_url[:slash] if slash != -1 else start_url
 \`\`\`
 
-This avoids importing \`urllib.parse\` — the third slash after \`https://\` always marks the path boundary.
+This avoids importing \`urllib.parse\`. \`find\` returns \`-1\` when the URL has no path — handle that explicitly so a bare \`https://a.com\` doesn't crash.
 
 ### Relative URL resolution
 
@@ -188,8 +190,8 @@ A \`visited\` set tracks seen URLs. Only enqueue links not yet visited. This gua
 
 def web_crawl(pages, start_url):
     # Extract origin: "https://example.com"
-    slash = start_url.index("/", 8)  # find first "/" after "https://"
-    origin = start_url[:slash] if slash > 0 else start_url
+    slash = start_url.find("/", 8)  # first "/" after "https://", -1 if none
+    origin = start_url[:slash] if slash != -1 else start_url
 
     visited = set()
     queue = deque()
