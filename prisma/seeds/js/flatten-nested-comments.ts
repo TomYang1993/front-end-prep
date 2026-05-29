@@ -193,13 +193,11 @@ test('leaf at maxDepth — no hidden replies flag', () => {
       language: 'javascript',
       explanation: `## Recursive with depth check
 
-Two things travel through recursion: the current \`depth\`, and the decision of whether to descend into \`replies\`. Keep one \`result\` array in the outer scope and push into it as you walk — no per-level array allocations.
+Two things travel through recursion: the current \`depth\`, and the decision of whether to descend into \`replies\`. Keep one \`result\` array in the outer scope and push into it as you walk.
 
 For each comment:
-1. Push the flat entry — \`text\`, current \`depth\`, and \`hasHiddenReplies\` = "has replies AND we're at the limit".
+1. Push the flat entry — \`text\`, current \`depth\`, and \`hasHiddenReplies\`.
 2. If \`depth < maxDepth\`, recurse into \`replies\` with \`depth + 1\`. Otherwise stop.
-
-**Edge case to watch:** \`hasHiddenReplies\` is *not* "has replies." It's "has replies that we chose not to show." A leaf at the depth limit has \`hasHiddenReplies: false\`; a parent at the limit with any replies has \`true\`.
 
 ## Full Implementation`,
       code: `function flattenComments(comments, maxDepth) {
