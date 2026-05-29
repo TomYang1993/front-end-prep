@@ -106,7 +106,9 @@ For row \`i\` (0-indexed):
 2. **Ascending letters:** \`A\` through \`String.fromCharCode(65 + i)\`.
 3. **Descending letters:** back from the second-to-last letter down to \`A\`.
 
-\`String.fromCharCode(65)\` gives \`'A'\`, \`66\` gives \`'B'\`, etc. This tests whether the candidate knows ASCII basics in JS and can manage nested loops with ascending/descending logic.`,
+\`String.fromCharCode(65)\` gives \`'A'\`, \`66\` gives \`'B'\`, etc. This tests whether the candidate knows ASCII basics in JS and can manage nested loops with ascending/descending logic.
+
+## Full Implementation`,
       code: `function letterPyramid(n) {
   const rows = [];
   for (let i = 0; i < n; i++) {

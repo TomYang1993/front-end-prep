@@ -115,7 +115,9 @@ Microtask queue empty. Process macrotask queue.
 11. Run E → **E**
 12. Run G → **G**
 
-**Final:** A, H, C, F, D, B, E, G`,
+**Final:** A, H, C, F, D, B, E, G
+
+## Full Implementation`,
       code: `function predictOutput() {
   return ['A', 'H', 'C', 'F', 'D', 'B', 'E', 'G'];
 }`,

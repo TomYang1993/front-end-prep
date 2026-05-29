@@ -129,7 +129,9 @@ for (var i = 0; i < n; i++) {
 }
 \`\`\`
 
-whichever way works, showing the way using \`let\` keyword `,
+whichever way works, showing the way using \`let\` keyword
+
+## Full Implementation`,
       code: `function delayedLog(n) {
   const fns = [];
   for (let i = 0; i < n; i++) {

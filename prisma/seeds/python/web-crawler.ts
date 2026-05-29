@@ -181,7 +181,9 @@ if link.startswith(origin):
 
 ### Cycle prevention
 
-A \`visited\` set tracks seen URLs. Only enqueue links not yet visited. This guarantees each page is processed at most once — O(V + E) time complexity.`,
+A \`visited\` set tracks seen URLs. Only enqueue links not yet visited. This guarantees each page is processed at most once — O(V + E) time complexity.
+
+## Full Implementation`,
       code: `from collections import deque
 
 def web_crawl(pages, start_url):

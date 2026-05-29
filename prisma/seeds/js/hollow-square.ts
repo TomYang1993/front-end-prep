@@ -111,7 +111,9 @@ col === 0          → left edge
 col === n - 1      → right edge
 \`\`\`
 
-This is the classic pattern for testing whether a candidate understands conditionals, nested loops, basic JS syntax.`,
+This is the classic pattern for testing whether a candidate understands conditionals, nested loops, basic JS syntax.
+
+## Full Implementation`,
       code: `function hollowSquare(n) {
   const rows = [];
   for (let r = 0; r < n; r++) {

@@ -121,7 +121,9 @@ a.title.toLowerCase().includes(q) ||
 a.tags.some(tag => tag.toLowerCase().includes(q))
 \`\`\`
 
-The \`some\` short-circuits — it stops checking tags as soon as one matches. This is the standard pattern for multi-field search in client-side filtering.`,
+The \`some\` short-circuits — it stops checking tags as soon as one matches. This is the standard pattern for multi-field search in client-side filtering.
+
+## Full Implementation`,
       code: `function searchArticles(articles, query) {
   const q = query.toLowerCase();
   return articles.filter(a =>

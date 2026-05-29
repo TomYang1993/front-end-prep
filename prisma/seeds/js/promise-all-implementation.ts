@@ -77,7 +77,9 @@ test('handles non-promise values', async () => {
 
 ## Why fail-fast works for free
 
-The first rejected promise calls \`reject(err)\` on the outer Promise. Subsequent resolutions still execute their \`.then\` callbacks and bump \`completed\`, but \`resolve(result)\` after settlement is a silent no-op — the consumer already saw the rejection. No cancellation needed; the contract just says "settle once."`,
+The first rejected promise calls \`reject(err)\` on the outer Promise. Subsequent resolutions still execute their \`.then\` callbacks and bump \`completed\`, but \`resolve(result)\` after settlement is a silent no-op — the consumer already saw the rejection. No cancellation needed; the contract just says "settle once."
+
+## Full Implementation`,
       code: `function promiseAll(promises) {
   return new Promise((resolve, reject) => {
     if (promises.length === 0) resolve([]);

@@ -100,7 +100,9 @@ To keep \`this\` flowing across chained calls, the inner partial **must be an ar
 return (...moreArgs) => curried.apply(this, args.concat(moreArgs));
 \`\`\`
 
-A regular \`function (...moreArgs) { ... }\` would get its own \`this\` on each call and silently drop the method receiver, so \`fn.apply(this, args)\` at the end would fire with \`this === undefined\` and \`this.base\` would throw.`,
+A regular \`function (...moreArgs) { ... }\` would get its own \`this\` on each call and silently drop the method receiver, so \`fn.apply(this, args)\` at the end would fire with \`this === undefined\` and \`this.base\` would throw.
+
+## Full Implementation`,
       code: `function curry(fn) {
   return function curried(...args) {
     if (args.length >= fn.length) {
