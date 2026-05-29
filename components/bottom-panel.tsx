@@ -31,6 +31,7 @@ interface BottomPanelProps {
 
   // Tests tab
   testCode: string;
+  publicCases?: { name: string; args: unknown[]; expected: unknown }[] | null;
   testResults: TestResult[];
   mode: 'js' | 'react';
 
@@ -52,6 +53,7 @@ export function BottomPanel({
   onToggleCollapse,
   onMouseDown,
   testCode,
+  publicCases,
   testResults,
   mode,
   consoleLogs = [],
@@ -147,7 +149,13 @@ export function BottomPanel({
       {!collapsed && (
         <div className="flex-1 min-h-0 overflow-y-auto bg-bg">
           {activeTab === 'tests' && (
-            <TestsTab testCode={testCode} testResults={testResults} syntaxStyle={syntaxStyle} isRunning={isRunning} />
+            <TestsTab
+              testCode={testCode}
+              publicCases={publicCases ?? null}
+              testResults={testResults}
+              syntaxStyle={syntaxStyle}
+              isRunning={isRunning}
+            />
           )}
           {activeTab === 'console' && (
             <ConsoleTab logs={consoleLogs} />
@@ -230,15 +238,28 @@ function formatError(error: string): { type?: string; expected?: string; receive
 
 function TestsTab({
   testCode,
+  publicCases,
   testResults,
   syntaxStyle,
   isRunning,
 }: {
   testCode: string;
+  publicCases: { name: string; args: unknown[]; expected: unknown }[] | null;
   testResults: TestResult[];
   syntaxStyle: Record<string, React.CSSProperties>;
   isRunning: boolean;
 }) {
+  // Python (and other case-based) questions: render structured cases.
+  if (publicCases && publicCases.length > 0) {
+    return (
+      <PythonCasesTab
+        cases={publicCases}
+        testResults={testResults}
+        isRunning={isRunning}
+      />
+    );
+  }
+
   if (!testCode) {
     return (
       <div className="flex items-center justify-center h-full text-muted text-sm font-mono">
@@ -328,6 +349,97 @@ function TestsTab({
       })}
     </div>
   );
+}
+
+function PythonCasesTab({
+  cases,
+  testResults,
+  isRunning,
+}: {
+  cases: { name: string; args: unknown[]; expected: unknown }[];
+  testResults: TestResult[];
+  isRunning: boolean;
+}) {
+  const hasResults = testResults.length > 0;
+  const resultMap = new Map<string, TestResult>();
+  for (const r of testResults) resultMap.set(r.name, r);
+
+  const unmatchedResults = hasResults
+    ? testResults.filter((r) => !cases.some((c) => c.name === r.name))
+    : [];
+
+  return (
+    <div className="p-3 space-y-2">
+      {isRunning && (
+        <div className="text-muted text-sm font-mono animate-pulse px-1 py-2">Running tests...</div>
+      )}
+
+      {unmatchedResults.map((r, i) => (
+        <div key={`unmatched-${i}`} className="border border-warn/40 rounded-md overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 bg-warn-subtle/20 text-warn text-sm font-mono font-bold">
+            <XIcon />
+            {r.name}
+          </div>
+          {r.error && <ErrorDisplay error={r.error} />}
+        </div>
+      ))}
+
+      {cases.map((c, i) => {
+        const result = resultMap.get(c.name);
+        const status = !hasResults ? 'pending' : result?.passed ? 'passed' : 'failed';
+
+        return (
+          <div
+            key={i}
+            className={`rounded-md overflow-hidden border ${
+              status === 'passed'
+                ? 'border-good/30'
+                : status === 'failed'
+                  ? 'border-warn/40'
+                  : 'border-line'
+            }`}
+          >
+            <div className={`flex items-center gap-2 px-3 py-1.5 text-[13px] font-mono font-bold ${
+              status === 'passed'
+                ? 'bg-good-subtle/20 text-good'
+                : status === 'failed'
+                  ? 'bg-warn-subtle/20 text-warn'
+                  : 'bg-surface-raised text-ink-secondary'
+            }`}>
+              {status === 'passed' && <CheckIcon />}
+              {status === 'failed' && <XIcon />}
+              {status === 'pending' && <span className="w-3.5 h-3.5 rounded-full border-2 border-current opacity-30" />}
+              <span className="truncate">{c.name}</span>
+            </div>
+
+            {/* Args/expected — collapsed until a failing run reveals them */}
+            {hasResults && status === 'failed' && (
+              <div className="px-3 py-2 font-mono text-[12px] space-y-1 border-t border-line">
+                <div className="text-muted">
+                  <span className="text-ink-secondary font-bold">args:</span>{' '}
+                  <span className="break-all">{safeJson(c.args)}</span>
+                </div>
+                <div className="text-muted">
+                  <span className="text-ink-secondary font-bold">expected:</span>{' '}
+                  <span className="break-all">{safeJson(c.expected)}</span>
+                </div>
+              </div>
+            )}
+
+            {result?.error && <ErrorDisplay error={result.error} />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function safeJson(value: unknown): string {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
 }
 
 function ErrorDisplay({ error }: { error: string }) {

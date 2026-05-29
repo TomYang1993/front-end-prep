@@ -118,6 +118,10 @@ export default async function QuestionDetailPage({ params }: PageProps) {
         tags={question.tags}
         starterCode={starterCode}
         publicTestCode={question.publicTestCode || ''}
+        publicTestCases={
+          (question.publicTestCases as { name: string; args: unknown[]; expected: unknown }[] | null) ?? null
+        }
+        functionName={question.functionName ?? null}
         expiresAt={expiresAt}
       />
     );

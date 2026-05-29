@@ -44,9 +44,10 @@ export async function POST(req: NextRequest) {
     return forbidden('Premium content is locked for this account');
   }
 
-  // JS questions run client-side — record pre-computed results.
-  // Python now runs server-side via sandbox (clientResults ignored for Python).
-  if (framework === 'javascript' && clientResults) {
+  // JS and Python questions both run client-side (Pyodide for Python) —
+  // record pre-computed results. React still routes through the legacy
+  // server-side hidden judge path below.
+  if ((framework === 'javascript' || framework === 'python') && clientResults) {
     const status = clientResults.passedCount === clientResults.total ? 'PASSED' : 'FAILED';
     const submission = await prisma.submission.create({
       data: {

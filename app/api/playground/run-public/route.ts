@@ -3,12 +3,16 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
 import { badRequest } from '@/lib/api';
 import { getRunner } from '@/lib/runners/registry';
-import { runBackendInSandbox, type BackendTestCase } from '@/lib/runners/sandbox/runner';
-import type { BackendLanguage } from '@/lib/runners/sandbox/harnesses';
 
+/**
+ * Server-side public-test runner for frontend (JS/TS/React) questions.
+ *
+ * Python questions execute entirely client-side via Pyodide (see
+ * `hooks/use-py-runner.ts`) and do not hit this route.
+ */
 const payloadSchema = z.object({
   questionId: z.string().min(1),
-  framework: z.enum(['javascript', 'react', 'python']),
+  framework: z.enum(['javascript', 'react']),
   code: z.string().min(1)
 });
 
@@ -23,38 +27,11 @@ export async function POST(req: NextRequest) {
 
     const question = await prisma.question.findUnique({
       where: { id: questionId },
-      select: {
-        publicTestCode: true,
-        publicTestCases: true,
-        language: true,
-        functionName: true,
-      },
+      select: { publicTestCode: true },
     });
 
     if (!question) {
       return badRequest('Question does not exist', 'QUESTION_NOT_FOUND');
-    }
-
-    const isBackend = !!(question.language && question.functionName && question.publicTestCases);
-
-    if (isBackend) {
-      const cases = question.publicTestCases as unknown as BackendTestCase[];
-      const result = await runBackendInSandbox({
-        language: question.language as BackendLanguage,
-        functionName: question.functionName!,
-        code,
-        cases,
-      });
-      const passedCount = result.results.filter((r) => r.passed).length;
-      return NextResponse.json({
-        summary: { passedCount, total: result.results.length },
-        results: result.results.map((r) => ({
-          name: r.name,
-          passed: r.passed,
-          error: r.error,
-        })),
-        logs: result.logs,
-      });
     }
 
     if (!question.publicTestCode) {

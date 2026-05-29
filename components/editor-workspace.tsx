@@ -13,6 +13,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { CheatsheetModal } from '@/components/cheatsheet-modal';
 import { useJsRunner } from '@/hooks/use-js-runner';
+import { usePyRunner, type PyCase } from '@/hooks/use-py-runner';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { DIFFICULTY_LABEL, DIFFICULTY_BADGE_CLASS } from '@/types/domain';
 import { BottomPanel, type BottomTab, type TestResult, type SubmitResult } from '@/components/bottom-panel';
@@ -30,6 +31,8 @@ interface EditorWorkspaceProps {
   tags: string[];
   starterCode?: Record<string, string>;
   publicTestCode: string;
+  publicTestCases?: PyCase[] | null;
+  functionName?: string | null;
   expiresAt?: string;
 }
 
@@ -47,6 +50,8 @@ export function EditorWorkspace({
   tags,
   starterCode,
   publicTestCode,
+  publicTestCases,
+  functionName,
   expiresAt,
 }: EditorWorkspaceProps) {
   const { toast } = useToast();
@@ -54,6 +59,7 @@ export function EditorWorkspace({
 
   const isPython = questionType === 'FUNCTION_PYTHON';
   const jsRunner = useJsRunner();
+  const pyRunner = usePyRunner();
 
   const [language, setLanguage] = useState<'javascript' | 'typescript' | 'python'>(
     isPython ? 'python' : 'javascript'
@@ -266,15 +272,15 @@ export function EditorWorkspace({
         results = out.results;
         logs = out.logs;
       } else {
-        const response = await fetch('/api/playground/run-public', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ questionId, framework: 'python', code: currentCode }),
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Public test run failed');
-        results = data.results || [];
-        logs = data.logs || [];
+        if (!publicTestCases || publicTestCases.length === 0) {
+          throw new Error('No public test cases configured for this question');
+        }
+        if (!functionName) {
+          throw new Error('Question is missing a function name');
+        }
+        const out = await pyRunner.runTests(currentCode, publicTestCases, functionName);
+        results = out.results;
+        logs = out.logs;
       }
 
       setTestResults(results);
@@ -339,15 +345,41 @@ export function EditorWorkspace({
         if (!response.ok) throw new Error(data.error || 'Hidden judge failed');
         serverData = { passedCount: data.passedCount, total: data.total, hiddenResults };
       } else {
+        // Python — fetch hidden cases, run client-side via Pyodide, post pre-computed result.
+        const htRes = await fetch(`/api/questions/${questionId}/hidden-tests`);
+        if (!htRes.ok) throw new Error('Failed to load hidden tests');
+        const ht = (await htRes.json()) as {
+          functionName: string | null;
+          testCases: PyCase[];
+        };
+
+        if (!ht.functionName) {
+          throw new Error('Question is missing a function name');
+        }
+
+        if (ht.testCases.length > 0) {
+          const out = await pyRunner.runTests(currentCode, ht.testCases, ht.functionName);
+          hiddenResults = out.results;
+        }
+
+        const passedCount = hiddenResults.filter((r) => r.passed).length;
+        const total = hiddenResults.length;
+        const score = total > 0 ? Math.round((passedCount / total) * 100) : 0;
+        const runtimeMs = 0;
+
         const response = await fetch('/api/submissions/judge-hidden', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ questionId, framework: 'python', code: currentCode }),
+          body: JSON.stringify({
+            questionId,
+            framework: 'python',
+            code: currentCode,
+            clientResults: { passedCount, total, score, runtimeMs },
+          }),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Hidden judge failed');
-        serverData = data;
-        hiddenResults = data.hiddenResults || [];
+        serverData = { passedCount: data.passedCount, total: data.total, hiddenResults };
       }
 
       const publicPassed = testResults.filter((r) => r.passed).length;
@@ -509,6 +541,7 @@ export function EditorWorkspace({
               onToggleCollapse={toggleConsole}
               onMouseDown={handleConsoleMouseDown}
               testCode={publicTestCode}
+              publicCases={publicTestCases ?? null}
               testResults={testResults}
               mode="js"
               consoleLogs={consoleLogs}
