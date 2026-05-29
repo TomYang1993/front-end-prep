@@ -44,7 +44,7 @@ test('first and last', () => {
   solutions: [
     {
       language: "javascript",
-      explanation: "Use a hash map to track complements in O(n).",
+      explanation: "Use a hash map to track complements in O(n).\n\n## Full Implementation",
       code: "function twoSum(nums, target) {\n  const map = new Map();\n  for (let i = 0; i < nums.length; i += 1) {\n    const need = target - nums[i];\n    if (map.has(need)) return [map.get(need), i];\n    map.set(nums[i], i);\n  }\n  return [];\n}",
     },
   ],

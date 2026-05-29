@@ -151,7 +151,9 @@ After the final attempt fails, there's no next attempt to wait for. Guarding the
 
 ## Preserving the original rejection
 
-Rejections in JS can be any value — \`Error\` instances, strings, numbers, objects. The catch parameter \`err\` is whatever the caller threw, storing and re-throwing it preserves the type. Wrapping in \`new Error(...)\` would lose information the caller may need.`,
+Rejections in JS can be any value — \`Error\` instances, strings, numbers, objects. The catch parameter \`err\` is whatever the caller threw, storing and re-throwing it preserves the type. Wrapping in \`new Error(...)\` would lose information the caller may need.
+
+## Full Implementation`,
       code: `function delay(seconds) {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }

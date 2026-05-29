@@ -177,7 +177,9 @@ Add an \`instanceof\` check at the top of each constructor. Without \`new\`, \`t
 if (!(this instanceof Animal)) {
   throw new TypeError("Cannot be invoked without 'new'");
 }
-\`\`\``,
+\`\`\`
+
+## Full Implementation`,
       code: `function Animal(age) {
   if (!(this instanceof Animal)) {
     throw new TypeError("Class constructor Animal cannot be invoked without 'new'");
@@ -230,7 +232,9 @@ Add \`super(age)\` as the first line in \`Mammal\`'s constructor.
 
 ## Implementing Human
 
-Extend \`Mammal\`, call \`super(age, '')\` (passing empty string for furColor since humans don't need it), add \`languageSpoken\` property and \`speak()\` method.`,
+Extend \`Mammal\`, call \`super(age, '')\` (passing empty string for furColor since humans don't need it), add \`languageSpoken\` property and \`speak()\` method.
+
+## Full Implementation`,
       code: `class Animal {
   age: number;
 

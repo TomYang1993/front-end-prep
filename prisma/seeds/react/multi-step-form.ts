@@ -257,7 +257,9 @@ The button that triggers submit is conditionally rendered — when \`step < 3\` 
 - Where does form state live? (one object, not per-step)
 - How do you preserve values across Back navigation? (free — state outlives the rendered step)
 - How would you add async validation (e.g. "email already taken")? (per-step \`useEffect\` keyed on the field, or a debounced check)
-- How would you persist progress across refresh? (\`sessionStorage\` sync or URL-sync the step)`;
+- How would you persist progress across refresh? (\`sessionStorage\` sync or URL-sync the step)
+
+## Full Implementation`;
 
 const PROMPT = `Build a **multi-step sign-up form** with three steps and a review screen.
 

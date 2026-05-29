@@ -290,7 +290,9 @@ Walk the merged busy intervals with a \`cursor\` starting at \`range_start\`:
 
 After the loop, if \`cursor < range_end\`, emit a final \`[cursor, range_end]\` slot.
 
-The "no zero-length slots" rule falls out naturally from the \`cursor < clipped_start\` guard, which also handles adjacent (touching) intervals correctly.`,
+The "no zero-length slots" rule falls out naturally from the \`cursor < clipped_start\` guard, which also handles adjacent (touching) intervals correctly.
+
+## Full Implementation`,
       code: `def find_common_free_slots(users, range_start, range_end):
     intervals = []
     for user in users:

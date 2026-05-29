@@ -199,7 +199,9 @@ Each call to \`loadMore\` reads \`page\`, \`loading\`, and \`hasMore\` from clos
 
 ## Loading & end-of-list states
 
-Show a "Loading…" indicator while a fetch is in flight so the user knows more content is coming. Once \`hasMore\` is false, display "No more items" and stop rendering the sentinel entirely — preventing wasted observer callbacks.`;
+Show a "Loading…" indicator while a fetch is in flight so the user knows more content is coming. Once \`hasMore\` is false, display "No more items" and stop rendering the sentinel entirely — preventing wasted observer callbacks.
+
+## Full Implementation`;
 
 const PROMPT = `Build an **infinite-scrolling list** that automatically loads more items as the user scrolls to the bottom.
 

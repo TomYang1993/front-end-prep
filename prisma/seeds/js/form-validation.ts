@@ -112,7 +112,9 @@ Then filter for rules that fail and map to their messages. This pattern is:
 - **Testable** — each rule is independent
 - **Composable** — reuse rule sets across forms
 
-This is how libraries like Yup, Zod, and React Hook Form work under the hood.`,
+This is how libraries like Yup, Zod, and React Hook Form work under the hood.
+
+## Full Implementation`,
       code: `function validateForm(form) {
   const rules = [
     { check: f => f.email.includes('@') && f.email.includes('.'), message: 'Invalid email' },

@@ -1,72 +1,58 @@
 # Interview Platform
 
-React-first coding interview platform with premium questions, subscriptions, one-time packs, submission history, official solutions, and discuss features.
+Front-end coding interview platform: JS/TS function questions, React component questions, in-browser test runner, official solutions, discuss threads, subscriptions, and one-time question packs.
 
 ## Stack
-- Next.js App Router + TypeScript
+- Next.js 16 App Router + React 19 + TypeScript
+- Tailwind CSS v4
 - Supabase Auth + Postgres
 - Prisma ORM
-- Stripe (via billing gateway abstraction)
+- Monaco editor + Sandpack (React preview)
+- Billing via gateway abstraction (Stripe + LemonSqueezy)
 
 ## Quick Start
-1. Install dependencies: `npm install`
+1. `npm install`
 2. Copy `.env.example` to `.env` and fill required values
-3. Run migrations: `npm run prisma:migrate`
-4. Seed sample data: `npm run prisma:seed`
-5. Start app: `npm run dev`
+3. `npm run prisma:migrate`
+4. `npm run prisma:seed`
+5. `npm run dev`
 
-## Auth Notes
-- Production flow uses Supabase magic-link auth via `/auth`.
-- Development fallback user is `demo@interview.dev` (seeded) if Supabase env vars are not set.
+## Auth
+- Production: Supabase magic-link via `/auth`.
+- Dev fallback user: `demo@interview.dev` (seeded) when Supabase env vars are absent.
 
-## Billing Notes
-- Billing logic goes through `lib/billing/gateway.ts` interface.
-- Stripe implementation lives in `lib/billing/stripe-gateway.ts`.
-- Configure `STRIPE_PRO_PLAN_PRICE_ID` and pack `stripePriceId` values in DB/admin.
+## Billing
+- Gateway interface: `lib/billing/gateway.ts`.
+- Implementations: `lib/billing/stripe-gateway.ts`, `lib/billing/lemonsqueezy-gateway.ts`.
+- Configure provider price IDs on plans/packs in the DB.
+
+## Tests
+- `npm test` — unit (vitest)
+- `npm run test:dom` — DOM (jsdom)
+- `npm run test:integration` — integration
+- `npm run test:db` — reset test DB
 
 ## Data Scripts
 
-### Backup
-Export all application data (users, questions, billing, submissions) as JSON:
+Backup all app data as JSON:
 ```bash
 npx tsx prisma/backup-data.ts
 ```
-Outputs to `backups/<timestamp>/`. Run before risky migrations or periodically.
+Outputs to `backups/<timestamp>/`. Run before risky migrations.
 
-For a full Postgres dump (requires `pg_dump` installed):
+Full Postgres dump:
 ```bash
 pg_dump "$DIRECT_URL" --format=custom --no-owner -f backup.dump
 ```
 
-### Backfill renderData
-After modifying question content directly in the DB, rebuild the denormalized render cache:
+Rebuild denormalized render cache after editing question content directly:
 ```bash
 npx tsx prisma/backfill-render-data.ts
 ```
 
-### Full rebuild from scratch
+Fresh rebuild:
 ```bash
-npm run prisma:migrate        # apply schema
-npm run prisma:seed            # seed demo data
-npx tsx prisma/backfill-render-data.ts  # compute renderData
+npm run prisma:migrate
+npm run prisma:seed
+npx tsx prisma/backfill-render-data.ts
 ```
-
-## Admin CMS
-- `/admin` includes question creation.
-- `POST /api/admin/solutions` allows adding official solutions.
-- Admin access requires the `ADMIN` role in `user_roles`.
-
-## API Surface
-- `GET /api/questions`
-- `GET /api/questions/:slug`
-- `POST /api/playground/run-public`
-- `POST /api/submissions/judge-hidden`
-- `GET /api/submissions/history`
-- `POST /api/discuss/threads`
-- `POST /api/discuss/comments`
-- `POST /api/discuss/likes`
-- `POST /api/billing/checkout`
-- `POST /api/billing/webhook/stripe`
-- `GET /api/admin/questions/:id`
-- `POST /api/admin/questions`
-- `POST /api/admin/solutions`

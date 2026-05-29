@@ -106,7 +106,9 @@ The classic "group by" pattern:
 acc[t.category] = (acc[t.category] || 0) + t.amount;
 \`\`\`
 
-This is the JS equivalent of SQL's \`GROUP BY category SUM(amount)\`. Also solvable with a \`for...of\` loop — equally valid, \`reduce\` is just more idiomatic for accumulating into a new shape.`,
+This is the JS equivalent of SQL's \`GROUP BY category SUM(amount)\`. Also solvable with a \`for...of\` loop — equally valid, \`reduce\` is just more idiomatic for accumulating into a new shape.
+
+## Full Implementation`,
       code: `function groupByCategory(transactions) {
   return transactions.reduce((acc, t) => {
     acc[t.category] = (acc[t.category] || 0) + t.amount;

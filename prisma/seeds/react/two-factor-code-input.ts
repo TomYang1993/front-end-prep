@@ -279,7 +279,9 @@ When all 6 digits are filled (via typing or paste), the component auto-submits. 
 - \`inputMode="numeric"\` hints mobile keyboards to show a number pad
 - \`autoFocus\` on the first input gets users typing immediately
 - Each input has \`type="text"\` (not \`type="number"\`) to avoid spinner buttons and allow full keyboard control
-- Arrow keys navigate between fields`;
+- Arrow keys navigate between fields
+
+## Full Implementation`;
 
 const PROMPT = `Build a **two-factor authentication code input** — the 6-digit verification code UI you see after logging in to a secure service.
 

@@ -211,7 +211,9 @@ Reads almost like English. O(required × user-perms), fine for auth-sized lists.
 - **SSR safety.** \`localStorage\` is undefined on the server. In Next.js you'd guard with \`typeof window !== 'undefined'\` and read in a \`useEffect\` instead — accept one render of \`initialValue\` to avoid hydration mismatch.
 - **Storage events don't fire in the writing tab.** That's why we need write-through *and* the listener — the listener handles other tabs, the effect handles this tab. They don't overlap.
 - **Quota / private mode.** \`setItem\` can throw (Safari private mode, quota exceeded). Wrap in try/catch.
-- **Testing limitation.** jsdom shares one \`localStorage\` across all renders in a file and doesn't auto-fire \`storage\` events the way a real browser does. The hidden test simulates the event with \`fireEvent(window, new StorageEvent(...))\` — that exercises the listener but doesn't prove real cross-tab behavior. For end-to-end confidence, use a Playwright test with two browser contexts.`,
+- **Testing limitation.** jsdom shares one \`localStorage\` across all renders in a file and doesn't auto-fire \`storage\` events the way a real browser does. The hidden test simulates the event with \`fireEvent(window, new StorageEvent(...))\` — that exercises the listener but doesn't prove real cross-tab behavior. For end-to-end confidence, use a Playwright test with two browser contexts.
+
+## Full Implementation`,
       code: `import { useState, useEffect } from 'react';
 
 function useLocalStorage(key, initialValue) {
