@@ -9,11 +9,7 @@ export const promiseAllImplementation: SeedQuestion = {
 > [!info] interview inspiration
 > Highly frequent \`Promise\` questions, you may be asked to do \`Promise.allSettled\`, \`Promise.any\`, \`Promise.race\`, it's all related, mostly testing your knowledge of closure and Promise,
 `,
-  description: `Implement your own version of Promise.all that takes an array of promises and resolves when all promises resolve, or rejects if any promise rejects. Do not use the native \`Promise.all\` function.
-
-> [!info] interview inspiration
-> Highly frequent \`Promise\` questions, you may be asked to do \`Promise.allSettled\`, \`Promise.any\`, \`Promise.race\`, it's all related, mostly testing your knowledge of closure and Promise,
-`,
+  description: 'Implement Promise.all without using the native function',
   type: QuestionType.FUNCTION_JS,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
