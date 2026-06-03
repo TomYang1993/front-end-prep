@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
   // JS and Python questions both run client-side (Pyodide for Python) —
   // record pre-computed results. React still routes through the legacy
   // server-side hidden judge path below.
-  if ((framework === 'javascript' || framework === 'python') && clientResults) {
+  if ((framework === 'javascript' || framework === 'python' || framework === 'react') && clientResults) {
     const status = clientResults.passedCount === clientResults.total ? 'PASSED' : 'FAILED';
     const submission = await prisma.submission.create({
       data: {

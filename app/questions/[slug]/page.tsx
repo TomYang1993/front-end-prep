@@ -137,7 +137,8 @@ export default async function QuestionDetailPage({ params }: PageProps) {
       prompt={question.prompt}
       difficulty={question.difficulty}
       tags={question.tags}
-      starterCode={question.starterCode || undefined}
+      starterCode={starterCode}
+      publicTestCode={question.publicTestCode || ''}
       expiresAt={expiresAt}
       language={reactLanguage}
     />
