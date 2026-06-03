@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import type { editor as monacoEditor } from 'monaco-editor';
 import { SandpackProvider, SandpackPreview, SandpackLayout, useSandpackNavigation } from '@codesandbox/sandpack-react';
+import { ReactTestRunner, type ReactTestRunResult } from '@/components/react-test-runner';
 import { useToast } from '@/components/toast-provider';
 import {
   Lightbulb, FileCode2,
@@ -28,6 +29,7 @@ export interface ReactEditorWorkspaceProps {
   difficulty: string;
   tags: string[];
   starterCode?: Record<string, string>;
+  publicTestCode?: string;
   expiresAt?: string;
   language: 'js' | 'ts';
 }
@@ -61,6 +63,7 @@ export function ReactEditorWorkspace({
   difficulty,
   tags,
   starterCode,
+  publicTestCode,
   expiresAt,
   language,
 }: ReactEditorWorkspaceProps) {
@@ -120,6 +123,11 @@ export function ReactEditorWorkspace({
   const [submitting, setSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<SubmitResult | null>(null);
   const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('results');
+  const [testRunnerInput, setTestRunnerInput] = useState<{
+    appCode: string;
+    stylesCode: string;
+  } | null>(null);
+  const submitResolverRef = useRef<((r: ReactTestRunResult | Error) => void) | null>(null);
 
   // ─── Bottom panel resize ───
   const COLLAPSED_CONSOLE_HEIGHT = 46;
@@ -278,26 +286,41 @@ export function ReactEditorWorkspace({
   ), [language, codes.appJs, codes.appTs, codes.styles]);
 
   async function submitTests() {
+    if (!publicTestCode || publicTestCode.trim() === '') {
+      toast({ title: 'No tests defined for this question', type: 'error' });
+      return;
+    }
     setSubmitting(true);
     ensureConsoleOpen();
     setActiveBottomTab('results');
 
+    const appCode = codes[appKey];
+    const stylesCode = codes.styles;
+
     try {
+      const testResult = await new Promise<ReactTestRunResult>((resolve, reject) => {
+        submitResolverRef.current = (r) => {
+          if (r instanceof Error) reject(r);
+          else resolve(r);
+        };
+        setTestRunnerInput({ appCode, stylesCode });
+      });
+
+      const { passedCount, total, runtimeMs, results } = testResult;
+      const score = total > 0 ? Math.round((passedCount / total) * 100) : 0;
+      const status: 'PASSED' | 'FAILED' = total > 0 && passedCount === total ? 'PASSED' : 'FAILED';
+
       const res = await fetch('/api/submissions/judge-hidden', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           questionId,
           framework: 'react',
-          code: JSON.stringify({ app: codes[appKey], styles: codes.styles }),
+          code: JSON.stringify({ app: appCode, styles: stylesCode }),
+          clientResults: { passedCount, total, score, runtimeMs },
         }),
       });
-      const data = await res.json();
-
-      const passedCount: number = data.passedCount ?? 0;
-      const total: number = data.total ?? 0;
-      const score: number = data.score ?? 0;
-      const status: 'PASSED' | 'FAILED' = data.status === 'PASSED' ? 'PASSED' : 'FAILED';
+      if (!res.ok) throw new Error(`Submit failed: ${res.status}`);
 
       setSubmitResult({
         score,
@@ -305,7 +328,12 @@ export function ReactEditorWorkspace({
         passedCount,
         total,
         publicResults: [],
-        hiddenResults: data.hiddenResults ?? [],
+        hiddenResults: results.map((r, i) => ({
+          index: i + 1,
+          name: r.name,
+          passed: r.passed,
+          error: r.error,
+        })),
       });
 
       toast({
@@ -313,12 +341,22 @@ export function ReactEditorWorkspace({
         description: `${passedCount}/${total} tests passed`,
         type: status === 'PASSED' ? 'success' : 'info',
       });
-    } catch {
-      toast({ title: 'Submission failed', description: 'Something went wrong.', type: 'error' });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Something went wrong.';
+      toast({ title: 'Submission failed', description: msg, type: 'error' });
     } finally {
+      submitResolverRef.current = null;
+      setTestRunnerInput(null);
       setSubmitting(false);
     }
   }
+
+  const handleTestRunComplete = (result: ReactTestRunResult) => {
+    submitResolverRef.current?.(result);
+  };
+  const handleTestRunError = (message: string) => {
+    submitResolverRef.current?.(new Error(message));
+  };
 
   const editorLanguage = activeFile === 'app'
     ? (language === 'ts' ? 'typescript' : 'javascript')
@@ -481,6 +519,17 @@ export function ReactEditorWorkspace({
           </SandpackProvider>
         </section>
       </div>
+
+      {testRunnerInput && publicTestCode && (
+        <ReactTestRunner
+          appCode={testRunnerInput.appCode}
+          stylesCode={testRunnerInput.stylesCode}
+          language={language}
+          testCode={publicTestCode}
+          onComplete={handleTestRunComplete}
+          onError={handleTestRunError}
+        />
+      )}
     </div>
   );
 }

@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { requireUser } from '@/lib/auth/current-user';
-import { forbidden, unauthorized } from '@/lib/api';
+import { unauthorized } from '@/lib/api';
 
 /**
- * Returns hidden test code for client-side execution (frontend JS/React questions only).
+ * Returns hidden test material for client-side execution.
  * The slug param here is actually the question ID (passed from the client).
- * Backend questions (`language` set) are evaluated server-side — refuse to leak their hidden tests.
+ *
+ * - Frontend (JS/React): returns the Jest-string `testCode`.
+ * - Backend (`language` set, e.g. python): returns structured `testCases` + `functionName`
+ *   so the client-side Pyodide worker can replay them.
+ *
  * Requires authentication.
  */
 export async function GET(
@@ -21,11 +25,20 @@ export async function GET(
 
   const question = await prisma.question.findUnique({
     where: { id: slug },
-    select: { hiddenTestCode: true, language: true },
+    select: {
+      hiddenTestCode: true,
+      hiddenTestCases: true,
+      language: true,
+      functionName: true,
+    },
   });
 
   if (question?.language) {
-    return forbidden('Hidden tests for backend questions are evaluated server-side');
+    return NextResponse.json({
+      language: question.language,
+      functionName: question.functionName ?? null,
+      testCases: question.hiddenTestCases ?? [],
+    });
   }
 
   return NextResponse.json({ testCode: question?.hiddenTestCode || '' });

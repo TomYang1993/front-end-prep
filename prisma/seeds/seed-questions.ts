@@ -45,8 +45,8 @@ export async function seedQuestion(
       hiddenTestCode: question.hiddenTestCode ?? null,
       language: question.language ?? null,
       functionName: question.functionName ?? null,
-      publicTestCases: question.publicTestCases ?? Prisma.DbNull,
-      hiddenTestCases: question.hiddenTestCases ?? Prisma.DbNull,
+      publicTestCases: (question.publicTestCases ?? Prisma.DbNull) as unknown as Prisma.InputJsonValue,
+      hiddenTestCases: (question.hiddenTestCases ?? Prisma.DbNull) as unknown as Prisma.InputJsonValue,
     },
     create: {
       slug: question.slug,
@@ -62,8 +62,8 @@ export async function seedQuestion(
       hiddenTestCode: question.hiddenTestCode ?? null,
       language: question.language ?? null,
       functionName: question.functionName ?? null,
-      publicTestCases: question.publicTestCases ?? Prisma.DbNull,
-      hiddenTestCases: question.hiddenTestCases ?? Prisma.DbNull,
+      publicTestCases: (question.publicTestCases ?? Prisma.DbNull) as unknown as Prisma.InputJsonValue,
+      hiddenTestCases: (question.hiddenTestCases ?? Prisma.DbNull) as unknown as Prisma.InputJsonValue,
     },
   });
 

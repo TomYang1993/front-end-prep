@@ -16,12 +16,12 @@ export const rateLimiterButton: SeedQuestion = {
     reactTypescript: 'export default function RateLimiterButton(): JSX.Element {\n  return <button>Click me</button>;\n}',
   },
   publicTestCode: `test('renders a clickable button', () => {
-  render(<RateLimiterButton />);
+  render(<UserComponent />);
   expect(screen.getByRole('button')).toBeTruthy();
 });
 
 test('disables after max clicks', () => {
-  render(<RateLimiterButton />);
+  render(<UserComponent />);
   const button = screen.getByRole('button');
   for (let i = 0; i < 5; i++) fireEvent.click(button);
   expect(button.disabled).toBe(true);

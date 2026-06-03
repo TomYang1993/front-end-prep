@@ -45,17 +45,16 @@ find_common_free_slots(
 2. **Merge overlapping busy times** — events from different users may overlap partially or touch at the edges.
 3. **Clip to the window** — only return slots inside \`[range_start, range_end]\`. Events that extend past the window count as busy only for the portion inside it.
 4. **Sorted output** — ascending by \`start_time\`.
-5. **No zero-length slots** — if two adjacent busy intervals fully cover a moment, do not emit an empty range there.
 
-> [!tip] Interview Tip
+> [!tip]  Tip
 > ISO 8601 UTC timestamps with the \`Z\` suffix and a fixed-width format compare correctly with plain string comparison. You don't need to parse them into \`datetime\` objects to sort or check ordering.
 `,
   description:
     'Find every time range when an entire group of users is free, given their busy calendar events and a search window.',
   type: QuestionType.FUNCTION_PYTHON,
-  difficulty: Difficulty.MEDIUM,
+  difficulty: Difficulty.HARD,
   accessTier: AccessTier.FREE,
-  timeLimitMinutes: 30,
+  timeLimitMinutes: 45,
   tags: ['interval', 'sorting', 'array'],
   starterCode: {
     python: `def find_common_free_slots(users, range_start, range_end):
@@ -326,7 +325,6 @@ The "no zero-length slots" rule falls out naturally from the \`cursor < clipped_
         free.append({"start_time": cursor, "end_time": range_end})
 
     return free`,
-      complexity: 'O(N log N) where N = total events across all users',
     },
   ],
 };

@@ -1,9 +1,13 @@
 import { prisma } from '@/lib/db/prisma';
 import { getRunner } from '@/lib/runners/registry';
 import { RunnerFramework } from '@/lib/runners/types';
-import { runBackendInSandbox, type BackendTestCase } from '@/lib/runners/sandbox/runner';
-import type { BackendLanguage } from '@/lib/runners/sandbox/harnesses';
 
+/**
+ * Server-side hidden judge for frontend (JS/TS/React) submissions that arrive
+ * without a pre-computed client result. Backend (python) submissions are
+ * graded entirely client-side via Pyodide; the route records their results
+ * and never reaches this path.
+ */
 export async function judgeHiddenSubmission(params: {
   submissionId: string;
   questionId: string;
@@ -12,18 +16,10 @@ export async function judgeHiddenSubmission(params: {
 }) {
   const question = await prisma.question.findUniqueOrThrow({
     where: { id: params.questionId },
-    select: {
-      hiddenTestCode: true,
-      hiddenTestCases: true,
-      language: true,
-      functionName: true,
-    },
+    select: { hiddenTestCode: true },
   });
 
-  const isBackend = !!(question.language && question.functionName && question.hiddenTestCases);
-  const hasContent = isBackend || question.hiddenTestCode;
-
-  if (!hasContent) {
+  if (!question.hiddenTestCode) {
     await prisma.submission.update({
       where: { id: params.submissionId },
       data: { status: 'FAILED', score: 0, runtimeMs: 0 },
@@ -31,33 +27,14 @@ export async function judgeHiddenSubmission(params: {
     return { passedCount: 0, total: 0, score: 0, status: 'FAILED' as const, runtimeMs: 0, hiddenResults: [] };
   }
 
-  let resultsForPersist: { name: string; passed: boolean; error?: string }[];
-  let runtimeMs: number;
-
-  if (isBackend) {
-    const cases = question.hiddenTestCases as unknown as BackendTestCase[];
-    const sandboxResult = await runBackendInSandbox({
-      language: question.language as BackendLanguage,
-      functionName: question.functionName!,
-      code: params.code,
-      cases,
-    });
-    resultsForPersist = sandboxResult.results.map((r) => ({
-      name: r.name,
-      passed: r.passed,
-      error: r.error,
-    }));
-    runtimeMs = sandboxResult.runtimeMs;
-  } else {
-    const runner = getRunner(params.framework);
-    const result = await runner.run(params.code, question.hiddenTestCode!);
-    resultsForPersist = result.results.map((r) => ({
-      name: r.name,
-      passed: r.passed,
-      error: r.error,
-    }));
-    runtimeMs = result.runtimeMs;
-  }
+  const runner = getRunner(params.framework);
+  const result = await runner.run(params.code, question.hiddenTestCode);
+  const resultsForPersist = result.results.map((r) => ({
+    name: r.name,
+    passed: r.passed,
+    error: r.error,
+  }));
+  const runtimeMs = result.runtimeMs;
 
   const passedCount = resultsForPersist.filter((r) => r.passed).length;
   const total = resultsForPersist.length || 1;
