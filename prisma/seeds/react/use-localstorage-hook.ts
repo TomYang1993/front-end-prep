@@ -51,9 +51,9 @@ Required \`data-testid\` attributes:
 - For the admin gate: \`required.every(p => user.permissions.includes(p))\`.`,
   description: 'Implement a useLocalStorage hook with useState-compatible API, cross-tab sync via the storage event, and a permissioned auth demo gated by every+includes.',
   type: QuestionType.REACT_APP,
-  difficulty: Difficulty.MEDIUM,
+  difficulty: Difficulty.HARD,
   accessTier: AccessTier.FREE,
-  timeLimitMinutes: 45,
+  timeLimitMinutes: 60,
   tags: ['react', 'hooks', 'storage', 'auth'],
   starterCode: {
     react: `import { useState } from 'react';
@@ -99,7 +99,7 @@ export default function App(): JSX.Element {
 });
 
 test('logged-out view renders form, no greeting or admin panel', () => {
-  render(<App />);
+  render(<UserComponent />);
   expect(screen.getByTestId('name-input')).toBeTruthy();
   expect(screen.getByTestId('login-btn')).toBeTruthy();
   expect(screen.queryByTestId('greeting')).toBeNull();
@@ -107,7 +107,7 @@ test('logged-out view renders form, no greeting or admin panel', () => {
 });
 
 test('login persists user to localStorage and shows greeting', async () => {
-  render(<App />);
+  render(<UserComponent />);
   fireEvent.change(screen.getByTestId('name-input'), { target: { value: 'Ada' } });
   fireEvent.click(screen.getByTestId('perm-read'));
   fireEvent.click(screen.getByTestId('login-btn'));
@@ -120,7 +120,7 @@ test('login persists user to localStorage and shows greeting', async () => {
 
 test('logout clears the stored user', async () => {
   localStorage.setItem('auth:user', JSON.stringify({ name: 'Ada', permissions: ['read'] }));
-  render(<App />);
+  render(<UserComponent />);
   fireEvent.click(screen.getByTestId('logout-btn'));
   await waitFor(() => {
     expect(screen.queryByTestId('greeting')).toBeNull();
@@ -133,23 +133,23 @@ test('logout clears the stored user', async () => {
 
 test('reads existing user from localStorage on mount', () => {
   localStorage.setItem('auth:user', JSON.stringify({ name: 'Linus', permissions: ['read'] }));
-  render(<App />);
+  render(<UserComponent />);
   expect(screen.getByTestId('greeting').textContent).toMatch(/Linus/);
 });
 
 test('admin panel only shows when user has both write and delete', () => {
   localStorage.setItem('auth:user', JSON.stringify({ name: 'Ada', permissions: ['read', 'write'] }));
-  const { rerender, unmount } = render(<App />);
+  const { rerender, unmount } = render(<UserComponent />);
   expect(screen.queryByTestId('admin-panel')).toBeNull();
   unmount();
 
   localStorage.setItem('auth:user', JSON.stringify({ name: 'Ada', permissions: ['write', 'delete'] }));
-  render(<App />);
+  render(<UserComponent />);
   expect(screen.getByTestId('admin-panel')).toBeTruthy();
 });
 
 test('cross-tab: storage event for the same key updates this tab', async () => {
-  render(<App />);
+  render(<UserComponent />);
   expect(screen.queryByTestId('greeting')).toBeNull();
 
   // Simulate another tab writing the user
@@ -168,7 +168,7 @@ test('cross-tab: storage event for the same key updates this tab', async () => {
 
 test('cross-tab: storage events for unrelated keys are ignored', async () => {
   localStorage.setItem('auth:user', JSON.stringify({ name: 'Ada', permissions: ['read'] }));
-  render(<App />);
+  render(<UserComponent />);
 
   fireEvent(window, new StorageEvent('storage', {
     key: 'something-else',
@@ -181,7 +181,7 @@ test('cross-tab: storage events for unrelated keys are ignored', async () => {
 
 test('falls back gracefully when stored JSON is corrupt', () => {
   localStorage.setItem('auth:user', '{not valid json');
-  render(<App />);
+  render(<UserComponent />);
   expect(screen.queryByTestId('greeting')).toBeNull();
   expect(screen.getByTestId('name-input')).toBeTruthy();
 });`,

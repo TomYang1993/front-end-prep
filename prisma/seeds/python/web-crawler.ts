@@ -11,12 +11,10 @@ You are given:
 - \`start_url\` — the URL to begin crawling from
 
 ### Rules
-
-1. **BFS traversal** — visit pages in breadth-first order
-2. **Same-domain filter** — only follow links with the same protocol + host as \`start_url\` (e.g. if start is \`https://example.com/home\`, follow \`https://example.com/about\` but skip \`https://other.com\`)
-3. **Resolve relative paths** — treat \`"/about"\` as \`"{origin}/about"\`
-4. **Skip missing pages** — if a URL is not a key in \`pages\`, treat it as a 404 and skip it
-5. **No duplicate visits** — never crawl the same URL twice
+1. **Same-domain filter** — only follow links with the same protocol + host as \`start_url\` (e.g. if start is \`https://example.com/home\`, follow \`https://example.com/about\` but skip \`https://other.com\`)
+2. **Resolve relative paths** — treat \`"/about"\` as \`"{origin}/about"\`
+3. **Skip missing pages** — if a URL is not a key in \`pages\`, treat it as a 404 and skip it
+4. **No duplicate visits** — never crawl the same URL twice
 
 Return a **sorted list** of all successfully visited URLs.
 
@@ -30,10 +28,8 @@ pages = {
 }
 web_crawl(pages, "https://a.com")
 # → ["https://a.com", "https://a.com/about", "https://a.com/blog"]
-\`\`\`
-
-\`https://b.com\` is filtered out (different domain). \`"/about"\` resolves to \`"https://a.com/about"\`. The cycle between \`/blog\` and \`/about\` is handled by the visited set.`,
-  description: 'Implement a BFS web crawler that discovers same-domain pages, resolves relative URLs, and avoids cycles.',
+\`\`\``,
+  description: 'Implement a web crawler that discovers same-domain pages.',
   type: QuestionType.FUNCTION_PYTHON,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
@@ -212,7 +208,6 @@ def web_crawl(pages, start_url):
                 queue.append(link)
 
     return sorted(visited)`,
-      complexity: 'O(V + E) where V = pages, E = total links',
     },
   ],
 };

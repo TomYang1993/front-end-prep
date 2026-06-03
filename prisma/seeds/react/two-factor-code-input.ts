@@ -75,18 +75,16 @@ export default function TwoFactorInput(): JSX.Element {
   );
 }`;
 
-const STARTER_CSS = `/* Two-Factor Input Styles */
+const STARTER_CSS = `/* Write your component styles here */
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #f9fafb;
-  margin: 0;
-}
-
-input:focus {
-  outline: none;
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+.single-input {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
 }
 `;
 
@@ -97,70 +95,53 @@ const CODE_LENGTH = 6;
 export default function TwoFactorInput() {
   const [code, setCode] = useState(Array(CODE_LENGTH).fill(''));
   const [status, setStatus] = useState('idle'); // idle | verifying | success | error
-  const inputsRef = useRef([]);
+
+
+  const inputsRef = useRef([])
 
   const focusInput = (index) => {
-    const clamped = Math.max(0, Math.min(index, CODE_LENGTH - 1));
-    inputsRef.current[clamped]?.focus();
-    inputsRef.current[clamped]?.select();
-  };
+    inputsRef.current[index]?.focus();
+    inputsRef.current[index]?.select();
+  }
 
-  const submitCode = useCallback((finalCode) => {
-    setStatus('verifying');
-    // Simulate verification — accept "123456" as valid
-    setTimeout(() => {
-      if (finalCode.join('') === '123456') {
-        setStatus('success');
-      } else {
-        setStatus('error');
-        setTimeout(() => setStatus('idle'), 1500);
-      }
-    }, 800);
-  }, []);
+  const handleChange = (index, val) => {
+    const digit = val.replace(/[^0-9]/g, '');
+    const updatedCode = [...code]
+    updatedCode[index] = digit
+    setCode(updatedCode)
 
-  const handleChange = (index, value) => {
-    // Only allow single digit
-    const digit = value.replace(/[^0-9]/g, '').slice(-1);
-    const next = [...code];
-    next[index] = digit;
-    setCode(next);
-
-    if (digit && index < CODE_LENGTH - 1) {
-      focusInput(index + 1);
+    if(digit && index < CODE_LENGTH-1){
+      focusInput(index+1)
     }
 
-    // Auto-submit when all digits filled
-    if (digit && next.every((d) => d !== '')) {
-      submitCode(next);
+    if(digit && updatedCode.every((d) => d)){
+      submitCode(updatedCode)
     }
-  };
+  }
 
   const handleKeyDown = (index, e) => {
-    if (e.key === 'Backspace') {
+    if(e.key === 'Backspace'){
       e.preventDefault();
-      const next = [...code];
-      if (code[index]) {
-        // Clear current digit
-        next[index] = '';
-        setCode(next);
-      } else if (index > 0) {
-        // Move to previous and clear it
-        next[index - 1] = '';
-        setCode(next);
+      const curCode= [...code]
+      if(code[index]){
+        curCode[index] = ''
+        setCode(curCode)
+        focusInput(index - 1);
+      }else if(index>0){
         focusInput(index - 1);
       }
-    } else if (e.key === 'ArrowLeft') {
+    }else if (e.key === 'ArrowLeft') {
       e.preventDefault();
       focusInput(index - 1);
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
       focusInput(index + 1);
     }
-  };
+  }
 
   const handlePaste = (e) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, CODE_LENGTH);
+    const pasted = e.clipboardData.getData('text')
     if (!pasted) return;
 
     const next = [...code];
@@ -179,43 +160,39 @@ export default function TwoFactorInput() {
     }
   };
 
-  const borderColor =
-    status === 'success' ? '#22c55e' :
-    status === 'error' ? '#ef4444' :
-    '#d1d5db';
+  const submitCode = useCallback((finalCode) => {
+    setStatus('verifying');
+    // Simulate verification — accept "123456" as valid
+    setTimeout(() => {
+      if (finalCode.join('') === '123456') {
+        setStatus('success');
+      } else {
+        setStatus('error');
+        setTimeout(() => setStatus('idle'), 2000);
+      }
+    }, 1500);
+  }, []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 80 }}>
       <h2>Enter verification code</h2>
-      <p style={{ color: '#6b7280', fontSize: 14, marginBottom: 24 }}>
+      <p style={{ color: '#6b7280', fontSize: 14 }}>
         We sent a {CODE_LENGTH}-digit code to your device
       </p>
       <div style={{ display: 'flex', gap: 8 }}>
         {code.map((digit, i) => (
           <input
+            className="single-input"
             key={i}
-            ref={(el) => (inputsRef.current[i] = el)}
-            type="text"
-            inputMode="numeric"
-            maxLength={1}
-            value={digit}
             onChange={(e) => handleChange(i, e.target.value)}
             onKeyDown={(e) => handleKeyDown(i, e)}
             onPaste={handlePaste}
-            onFocus={(e) => e.target.select()}
+            type="text"
+            maxLength={1}
+            value={digit}
+            ref = {(ele) => inputsRef.current[i] = ele}
             disabled={status === 'verifying' || status === 'success'}
             autoFocus={i === 0}
-            style={{
-              width: 48,
-              height: 56,
-              textAlign: 'center',
-              fontSize: 24,
-              fontWeight: 700,
-              border: \`2px solid \${borderColor}\`,
-              borderRadius: 8,
-              transition: 'border-color 0.2s, box-shadow 0.2s',
-              background: status === 'success' ? '#f0fdf4' : '#fff',
-            }}
           />
         ))}
       </div>
@@ -230,84 +207,89 @@ export default function TwoFactorInput() {
 
 const SOLUTION_EXPLANATION = `## Focus Management with refs
 
-The trickiest part of a multi-digit input is moving focus between fields. We use a \`useRef\` array to hold references to each \`<input>\` element and a \`focusInput(index)\` helper that clamps the index and calls \`.focus()\` + \`.select()\`:
+The trickiest part of a multi-digit input is moving focus between fields. We use a \`useRef\` array to hold references to each \`<input>\` element and a \`focusInput(index)\` helper that calls \`.focus()\` + \`.select()\` on the target input. Optional chaining (\`?.\`) makes out-of-range indices a no-op:
 
 \`\`\`jsx
 const inputsRef = useRef([]);
 
 const focusInput = (index) => {
-  const clamped = Math.max(0, Math.min(index, CODE_LENGTH - 1));
-  inputsRef.current[clamped]?.focus();
-  inputsRef.current[clamped]?.select();
+  inputsRef.current[index]?.focus();
+  inputsRef.current[index]?.select();
 };
 \`\`\`
 
 ## Input Handling
 
-Each input's \`onChange\` strips non-digits, takes the last character (handles mobile keyboards that sometimes prepend), writes it to state, and auto-advances focus:
+Each input's \`onChange\` strips non-digits, writes the result to state, and auto-advances focus when a digit was entered. The native \`maxLength={1}\` on the input caps the field to one character:
 
 \`\`\`jsx
-const digit = value.replace(/[^0-9]/g, '').slice(-1);
-next[index] = digit;
+const digit = val.replace(/[^0-9]/g, '');
+updatedCode[index] = digit;
 if (digit && index < CODE_LENGTH - 1) focusInput(index + 1);
 \`\`\`
 
+When the array is fully populated after the change, \`submitCode\` fires automatically.
+
 ## Backspace Behavior
 
-Backspace has two modes:
-1. **Current field has a digit** → clear it, stay in place
-2. **Current field is empty** → move to the previous field and clear that
+Backspace has two branches:
+1. **Current field has a digit** → clear it, then move focus to the previous field
+2. **Current field is empty** → move focus to the previous field
 
 This "jump back" UX matches what users expect from SMS code inputs.
 
 ## Paste Support
 
-Users often paste a 6-digit code copied from SMS. The \`onPaste\` handler intercepts the clipboard, strips non-digits, distributes across inputs, and auto-submits if complete:
+Users often paste a 6-digit code copied from SMS. The \`onPaste\` handler reads the clipboard, distributes the characters across inputs starting at index 0, then focuses the next empty slot. If the paste completes the code, it auto-submits:
 
 \`\`\`jsx
-const pasted = e.clipboardData.getData('text')
-  .replace(/[^0-9]/g, '')
-  .slice(0, CODE_LENGTH);
+const pasted = e.clipboardData.getData('text');
+for (let i = 0; i < pasted.length; i++) {
+  next[i] = pasted[i];
+}
 \`\`\`
 
 ## Auto-Submit & Status Feedback
 
-When all 6 digits are filled (via typing or paste), the component auto-submits. A simple state machine (\`idle → verifying → success | error\`) drives border colors and a status message. Inputs are disabled during verification to prevent editing mid-flight.
+When all 6 digits are filled (via typing or paste), the component auto-submits. A simple state machine (\`idle → verifying → success | error\`) drives a status message below the inputs. Inputs are disabled during verification and on success to prevent editing mid-flight. On error, the status resets to \`idle\` after 2 seconds so the user can retry.
 
-## Accessibility
+## Styles
 
-- \`inputMode="numeric"\` hints mobile keyboards to show a number pad
-- \`autoFocus\` on the first input gets users typing immediately
-- Each input has \`type="text"\` (not \`type="number"\`) to avoid spinner buttons and allow full keyboard control
-- Arrow keys navigate between fields
+Each input gets a \`single-input\` class wired up in \`styles.css\`:
+
+\`\`\`css
+.single-input {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+}
+\`\`\`
 
 ## Full Implementation`;
 
-const PROMPT = `Build a **two-factor authentication code input** — the 6-digit verification code UI you see after logging in to a secure service.
+const PROMPT = `Build a **two-factor authentication code input**, you are allowed to modify the starter code completely.
 
 ### Requirements
 
-1. **Six separate input fields**, one per digit, displayed in a horizontal row
-2. **Auto-focus advancing** — typing a digit automatically moves focus to the next input
-3. **Backspace behavior** — pressing Backspace on an empty field moves focus to the previous field and clears it
-4. **Arrow key navigation** — Left/Right arrow keys move focus between fields
-5. **Paste support** — pasting a 6-digit string (e.g. copied from SMS) fills all fields at once
-6. **Digit-only input** — reject any non-numeric characters
-7. **Auto-submit** — when all 6 digits are filled, automatically trigger verification
-8. **Visual feedback** — show distinct states for idle, verifying, success, and error (border colors + status text)
+1. **Auto-focus advancing** — typing a digit automatically moves focus to the next input
+2. **Backspace behavior** — pressing Backspace on an empty field moves focus to the previous field and clears it
+3. **Arrow key navigation** — Left/Right arrow keys move focus between fields
+4. **Paste support** — pasting a 6-digit string (e.g. copied from SMS) fills all fields at once
+5. **Digit-only input** — reject any non-numeric characters
+6. **Auto-submit** — when all 6 digits are filled, automatically trigger verification
+7. **Validation feedback** — show distinct states for idle, verifying, success, and error
 
-### Behavior Details
+### Details hint
 
 - Only single digits (0–9) should be accepted per field
 - Pasting "123456" into any field should distribute the digits across all 6 inputs
 - After auto-submit, inputs should be disabled during verification
-- For testing, the code \`123456\` should verify successfully; anything else should show an error state that auto-clears after 1.5 seconds
-
-### Hints
-
-- Use a \`useRef\` array to hold references to each input element
-- \`inputMode="numeric"\` gives mobile users a number pad
-- Handle \`onPaste\` by reading from \`e.clipboardData.getData('text')\``;
+- For testing, the code \`123456\` should verify successfully, anything else should show an error state that auto-clears after certain seconds
+`;
 
 export const twoFactorCodeInput: SeedQuestion = {
   slug: 'two-factor-code-input',
@@ -315,9 +297,9 @@ export const twoFactorCodeInput: SeedQuestion = {
   prompt: PROMPT,
   description: 'Build a 6-digit 2FA code input with auto-focus advancing, paste support, arrow key navigation, and visual verification feedback.',
   type: QuestionType.REACT_APP,
-  difficulty: Difficulty.MEDIUM,
+  difficulty: Difficulty.HARD,
   accessTier: AccessTier.FREE,
-  timeLimitMinutes: 45,
+  timeLimitMinutes: 60,
   tags: ['react', 'forms', 'accessibility', 'dom-api', 'coding taste'],
   starterCode: {
     react: STARTER_CODE_REACT,

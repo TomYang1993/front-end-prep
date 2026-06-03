@@ -298,9 +298,9 @@ export const multiStepForm: SeedQuestion = {
   prompt: PROMPT,
   description: 'Build a 3-step sign-up wizard with per-step validation, Back/Next navigation that preserves values, and a final review + submit screen.',
   type: QuestionType.REACT_APP,
-  difficulty: Difficulty.MEDIUM,
+  difficulty: Difficulty.HARD,
   accessTier: AccessTier.FREE,
-  timeLimitMinutes: 45,
+  timeLimitMinutes: 60,
   tags: ['react', 'forms', 'state', 'validation'],
   starterCode: {
     react: STARTER_CODE_REACT,
@@ -344,7 +344,7 @@ test('Back from step 2 preserves step 1 values', () => {
 });`,
   solutions: [
     {
-      language: 'typescript',
+      language: 'javascript',
       code: SOLUTION_CODE,
       explanation: SOLUTION_EXPLANATION,
     },

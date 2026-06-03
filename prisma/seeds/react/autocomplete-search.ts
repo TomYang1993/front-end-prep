@@ -36,7 +36,7 @@ export default function AutocompleteSearch(): JSX.Element {
 }`,
   },
   publicTestCode: `test('renders search input', () => {
-  render(<AutocompleteSearch />);
+  render(<UserComponent />);
   expect(screen.getByPlaceholderText('Search...')).toBeTruthy();
 });`,
 };
