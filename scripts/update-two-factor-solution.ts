@@ -10,7 +10,8 @@ const prisma = new PrismaClient();
 
 async function main() {
   const slug = twoFactorCodeInput.slug;
-  const seedSol = twoFactorCodeInput.solutions[0];
+  const seedSol = twoFactorCodeInput.solutions?.[0];
+  if (!seedSol) throw new Error(`No seed solution for ${slug}`);
 
   const q = await prisma.question.findUnique({
     where: { slug },
