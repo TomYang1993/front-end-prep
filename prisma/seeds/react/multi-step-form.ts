@@ -49,13 +49,12 @@ const STARTER_CSS = `body {
 
 input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 9px 12px;
   font-size: 14px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   box-sizing: border-box;
 }
-
 input:focus {
   outline: none;
   border-color: #3b82f6;
@@ -63,17 +62,122 @@ input:focus {
 }
 
 button {
-  padding: 8px 16px;
+  padding: 9px 20px;
   font-size: 14px;
   font-weight: 500;
   border-radius: 6px;
   cursor: pointer;
   border: 1px solid transparent;
 }
-
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+`;
+
+const SOLUTION_CSS = `body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f9fafb;
+  margin: 0;
+}
+
+.card {
+  max-width: 480px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+}
+
+/* Step indicator */
+.step-header { display: flex; justify-content: space-between; margin-bottom: 24px; }
+.step-item { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
+
+.step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  background: #e5e7eb;
+  color: #9ca3af;
+}
+.step-dot--done   { background: #22c55e; color: #fff; }
+.step-dot--active { background: #3b82f6; color: #fff; }
+
+.step-label { font-size: 12px; color: #9ca3af; }
+.step-label--active { color: #3b82f6; font-weight: 600; }
+
+/* Form */
+.form-heading { margin: 0 0 4px; font-size: 20px; font-weight: 700; color: #111827; }
+.form-subtext  { margin: 0 0 20px; font-size: 13px; color: #6b7280; }
+
+.fields { display: flex; flex-direction: column; gap: 14px; }
+.field-label { display: flex; flex-direction: column; gap: 5px; font-size: 14px; font-weight: 500; color: #374151; }
+
+input {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Review */
+.review-grid {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  row-gap: 10px;
+  column-gap: 8px;
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 0;
+}
+.review-dt { font-size: 13px; font-weight: 500; color: #6b7280; margin: 0; }
+.review-dd { font-size: 14px; color: #111827; margin: 0; font-weight: 500; }
+
+/* Buttons */
+.btn-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 28px;
+}
+
+button {
+  padding: 9px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary   { background: #3b82f6; color: #fff; }
+.btn-secondary { background: #fff; color: #374151; border-color: #d1d5db; }
+.btn-success   { background: #22c55e; color: #fff; }
+
+/* Submitted */
+.success-heading { color: #22c55e; margin: 0 0 16px; font-size: 20px; font-weight: 700; }
+
+pre {
+  background: #f3f4f6;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  overflow-x: auto;
 }
 `;
 
@@ -104,15 +208,18 @@ function validateStep(step, data) {
   return true;
 }
 
+const STEPS = ['Personal Info', 'Address', 'Review'];
+
 export default function MultiStepForm() {
   const [step, setStep] = useState(1);
-  const [data, setData] = useState(initialData);
+  const [formState, setFormState] = useState(initialData);
   const [submitted, setSubmitted] = useState(null);
 
-  const update = (field) => (e) =>
-    setData((prev) => ({ ...prev, [field]: e.target.value }));
+  const update = (field, event) => {
+    setFormState((prev) => ({ ...prev, [field]: event.target.value }));
+  };
 
-  const canAdvance = validateStep(step, data);
+  const canAdvance = validateStep(step, formState);
 
   const handleNext = () => {
     if (canAdvance && step < 3) setStep(step + 1);
@@ -123,92 +230,87 @@ export default function MultiStepForm() {
   };
 
   const handleSubmit = () => {
-    setSubmitted(data);
+    setSubmitted(formState);
   };
 
   if (submitted) {
     return (
-      <div style={{ maxWidth: 480, margin: '40px auto' }}>
-        <h2>Thanks, {submitted.name}!</h2>
-        <p>Submitted payload:</p>
-        <pre style={{ background: '#f3f4f6', padding: 12, borderRadius: 6 }}>
-          {JSON.stringify(submitted, null, 2)}
-        </pre>
+      <div className="card">
+        <h2 className="success-heading">All done, {submitted.name}!</h2>
+        <pre>{JSON.stringify(submitted, null, 2)}</pre>
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: 480, margin: '40px auto' }}>
-      <h2>Sign Up</h2>
-      <p style={{ color: '#6b7280' }}>Step {step} of 3</p>
+    <div className="card">
+      <div className="step-header">
+        {STEPS.map((label, i) => (
+          <div key={label} className="step-item">
+            <div className={\`step-dot \${i + 1 < step ? 'step-dot--done' : i + 1 === step ? 'step-dot--active' : ''}\`}>
+              {i + 1 < step ? '✓' : i + 1}
+            </div>
+            <span className={\`step-label \${i + 1 === step ? 'step-label--active' : ''}\`}>
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <h2 className="form-heading">Sign Up</h2>
+      <p className="form-subtext">Step {step} of 3</p>
 
       {step === 1 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <label>
+        <div className="fields">
+          <label className="field-label">
             Name
-            <input value={data.name} onChange={update('name')} />
+            <input value={formState.name} onChange={(e) => update('name', e)} placeholder="Ada Lovelace" />
           </label>
-          <label>
+          <label className="field-label">
             Email
-            <input value={data.email} onChange={update('email')} />
+            <input value={formState.email} onChange={(e) => update('email', e)} placeholder="ada@example.com" type="email" />
           </label>
         </div>
       )}
 
       {step === 2 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <label>
+        <div className="fields">
+          <label className="field-label">
             Street
-            <input value={data.street} onChange={update('street')} />
+            <input value={formState.street} onChange={(e) => update('street', e)} placeholder="123 Main St" />
           </label>
-          <label>
+          <label className="field-label">
             City
-            <input value={data.city} onChange={update('city')} />
+            <input value={formState.city} onChange={(e) => update('city', e)} placeholder="Springfield" />
           </label>
-          <label>
-            ZIP (5 digits)
-            <input value={data.zip} onChange={update('zip')} />
+          <label className="field-label">
+            ZIP
+            <input value={formState.zip} onChange={(e) => update('zip', e)} placeholder="12345" maxLength={5} />
           </label>
         </div>
       )}
 
       {step === 3 && (
         <div>
-          <h3>Review</h3>
-          <dl style={{ display: 'grid', gridTemplateColumns: '120px 1fr', rowGap: 6 }}>
-            <dt>Name</dt><dd>{data.name}</dd>
-            <dt>Email</dt><dd>{data.email}</dd>
-            <dt>Street</dt><dd>{data.street}</dd>
-            <dt>City</dt><dd>{data.city}</dd>
-            <dt>ZIP</dt><dd>{data.zip}</dd>
+          <h3 className="form-heading" style={{ fontSize: 15, margin: '0 0 12px' }}>Review your info</h3>
+          <dl className="review-grid">
+            <dt className="review-dt">Name</dt><dd className="review-dd">{formState.name}</dd>
+            <dt className="review-dt">Email</dt><dd className="review-dd">{formState.email}</dd>
+            <dt className="review-dt">Street</dt><dd className="review-dd">{formState.street}</dd>
+            <dt className="review-dt">City</dt><dd className="review-dd">{formState.city}</dd>
+            <dt className="review-dt">ZIP</dt><dd className="review-dd">{formState.zip}</dd>
           </dl>
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
-        <button
-          onClick={handleBack}
-          disabled={step === 1}
-          style={{ background: '#fff', borderColor: '#d1d5db' }}
-        >
-          Back
-        </button>
+      <div className="btn-row">
+        {step > 1 ? (
+          <button onClick={handleBack} className="btn-secondary">Back</button>
+        ) : <span />}
         {step < 3 ? (
-          <button
-            onClick={handleNext}
-            disabled={!canAdvance}
-            style={{ background: '#3b82f6', color: '#fff' }}
-          >
-            Next
-          </button>
+          <button onClick={handleNext} disabled={!canAdvance} className="btn-primary">Next</button>
         ) : (
-          <button
-            onClick={handleSubmit}
-            style={{ background: '#22c55e', color: '#fff' }}
-          >
-            Submit
-          </button>
+          <button onClick={handleSubmit} className="btn-success">Submit</button>
         )}
       </div>
     </div>
@@ -217,17 +319,17 @@ export default function MultiStepForm() {
 
 const SOLUTION_EXPLANATION = `## One source of truth for form data
 
-All five fields live in a single \`data\` object in \`useState\`. Each step renders a subset, but the values persist across step transitions because we never unmount the data — only the UI:
+All five fields live in a single \`formState\` object in \`useState\`. Each step renders a subset, but values persist across step transitions because the state is never unmounted — only the UI is:
 
 \`\`\`jsx
-const [data, setData] = useState({ name: '', email: '', street: '', city: '', zip: '' });
+const [formState, setFormState] = useState({ name: '', email: '', street: '', city: '', zip: '' });
 \`\`\`
 
-This is the key insight that makes "Back preserves values" free — there's nothing to preserve, the data was never lost.
+This is the key insight that makes "Back preserves values" free — there's nothing to restore, the data was never lost.
 
 ## Per-step validation as a pure function
 
-\`validateStep(step, data)\` takes the current step + form data and returns a boolean. It's pure (no state, no side effects), so it's easy to reason about and test:
+\`validateStep(step, data)\` takes the current step + form data and returns a boolean. It's pure (no state, no side effects), so it's easy to reason about and test in isolation:
 
 \`\`\`jsx
 function validateStep(step, data) {
@@ -237,27 +339,28 @@ function validateStep(step, data) {
 }
 \`\`\`
 
-The Next button's \`disabled\` derives from \`validateStep(step, data)\` directly — no need to track a separate \`isValid\` flag.
+The Next button's \`disabled\` derives from \`validateStep\` directly — no separate \`isValid\` flag needed.
 
-## Curried update handler
+## Two-arg update handler
 
-A single \`update(field)\` factory generates an onChange handler per field, keeping JSX terse:
+A single \`update(field, event)\` helper merges changes into state, called with an inline arrow on each input:
 
 \`\`\`jsx
-const update = (field) => (e) =>
-  setData((prev) => ({ ...prev, [field]: e.target.value }));
+const update = (field, event) => {
+  setFormState((prev) => ({ ...prev, [field]: event.target.value }));
+};
+// usage:
+<input onChange={(e) => update('name', e)} />
 \`\`\`
 
-## Submit only on the final step
+The explicit two-arg call makes the field name easy to see at a glance. An alternative is a curried factory (\`update('name')\` as a direct onChange prop), which is terser but slightly harder to scan.
 
-The button that triggers submit is conditionally rendered — when \`step < 3\` it's a "Next" button, when \`step === 3\` it's "Submit". This makes it impossible to submit early, and means there's no shared handler with mode-switching logic.
 
-## What to push on in interview
+## CSS (styles.css)
 
-- Where does form state live? (one object, not per-step)
-- How do you preserve values across Back navigation? (free — state outlives the rendered step)
-- How would you add async validation (e.g. "email already taken")? (per-step \`useEffect\` keyed on the field, or a debounced check)
-- How would you persist progress across refresh? (\`sessionStorage\` sync or URL-sync the step)
+\`\`\`css
+${SOLUTION_CSS.trim()}
+\`\`\`
 
 ## Full Implementation`;
 
@@ -265,38 +368,25 @@ const PROMPT = `Build a **multi-step sign-up form** with three steps and a revie
 
 ### Steps
 
-1. **Personal info** — Name, Email
-2. **Address** — Street, City, ZIP (5 digits)
-3. **Review** — read-only summary of all entered values, with a Submit button
+**Personal info** — Name, Email
+**Address** — Street, City, ZIP (5 digits)
+**Review** — read-only summary of all entered values, with a Submit button
 
 ### Requirements
 
-1. **Step indicator** — show "Step X of 3" at the top
-2. **Next button** — advances to the next step, **disabled until the current step is valid**
-3. **Back button** — returns to the previous step; **values entered earlier must persist** (don't reset on navigation)
-4. **Submit button** — only appears on step 3; clicking it logs/displays the full form payload
+1. Show "Step X of 3" at the top.
+2. Next button advances to the next step, **disabled until the current step is valid**.
+3. Back button returns to the previous step, **values entered earlier must persist**.
+4. Clicking on Submit button displays the full form payload, no need to do an actual POST.
 5. **Per-step validation:**
    - Step 1: name is non-empty, email matches a basic \`x@y.z\` pattern
-   - Step 2: street and city are non-empty, ZIP is exactly 5 digits
-   - Step 3: always valid (review only)
-
-### Behavior Details
-
-- The Back button on step 1 should be disabled (or hidden).
-- After Submit, show a confirmation view with the submitted data (e.g. \`<pre>{JSON.stringify(data, null, 2)}</pre>\`).
-- Validation runs on every keystroke — Next becomes enabled the moment input is valid.
-
-### Hints
-
-- Keep **all form fields in a single state object** at the top of the component, not per-step. This makes "Back preserves values" trivial.
-- A small \`validateStep(step, data)\` pure function keeps the Next-disabled logic readable.
-- Conditionally render the Next vs Submit button based on the current step — don't try to share one handler.`;
+   - Step 2: street and city are non-empty, ZIP is exactly 5 digits`;
 
 export const multiStepForm: SeedQuestion = {
   slug: 'multi-step-form',
   title: 'Multi-Step Form',
   prompt: PROMPT,
-  description: 'Build a 3-step sign-up wizard with per-step validation, Back/Next navigation that preserves values, and a final review + submit screen.',
+  description: 'Build a 3-step sign-up wizard.',
   type: QuestionType.REACT_APP,
   difficulty: Difficulty.HARD,
   accessTier: AccessTier.FREE,

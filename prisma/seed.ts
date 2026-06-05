@@ -3,7 +3,7 @@ import {
   seedAllQuestions,
   twoSum,
   debounceFunction,
-  useLocalStorageHook,
+  paginatedList,
   promiseAllImplementation,
   classHierarchy,
   closureSetTimeoutTrap,
@@ -29,7 +29,7 @@ const prisma = new PrismaClient();
 const allQuestions = [
   twoSum,
   debounceFunction,
-  useLocalStorageHook,
+  paginatedList,
   promiseAllImplementation,
   classHierarchy,
   closureSetTimeoutTrap,
