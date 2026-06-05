@@ -33,7 +33,6 @@ export default function TwoFactorInput() {
           />
         ))}
       </div>
-      {/* TODO: implement focus management, keyboard handling, and paste support */}
     </div>
   );
 }`;
@@ -70,7 +69,6 @@ export default function TwoFactorInput(): JSX.Element {
           />
         ))}
       </div>
-      {/* TODO: implement focus management, keyboard handling, and paste support */}
     </div>
   );
 }`;
@@ -253,20 +251,10 @@ for (let i = 0; i < pasted.length; i++) {
 
 When all 6 digits are filled (via typing or paste), the component auto-submits. A simple state machine (\`idle → verifying → success | error\`) drives a status message below the inputs. Inputs are disabled during verification and on success to prevent editing mid-flight. On error, the status resets to \`idle\` after 2 seconds so the user can retry.
 
-## Styles
-
-Each input gets a \`single-input\` class wired up in \`styles.css\`:
+## CSS (styles.css)
 
 \`\`\`css
-.single-input {
-  width: 48px;
-  height: 56px;
-  text-align: center;
-  font-size: 24px;
-  font-weight: 700;
-  border: 2px solid #d1d5db;
-  border-radius: 8px;
-}
+${STARTER_CSS.trim()}
 \`\`\`
 
 ## Full Implementation`;
@@ -295,7 +283,7 @@ export const twoFactorCodeInput: SeedQuestion = {
   slug: 'two-factor-code-input',
   title: 'Two-Factor Code Input',
   prompt: PROMPT,
-  description: 'Build a 6-digit 2FA code input with auto-focus advancing, paste support, arrow key navigation, and visual verification feedback.',
+  description: 'Build a 6-digit 2FA code input with auto-focus, paste support, arrow key navigation, and validation etc.',
   type: QuestionType.REACT_APP,
   difficulty: Difficulty.HARD,
   accessTier: AccessTier.FREE,
