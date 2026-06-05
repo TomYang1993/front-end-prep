@@ -228,45 +228,48 @@ test('disables after MAX_CLICKS rapid clicks', () => {
   const button = screen.getByRole('button');
   for (let i = 0; i < ${MAX_CLICKS}; i++) fireEvent.click(button);
   expect(button.disabled).toBe(true);
-});`,
-  hiddenTestCode: `beforeEach(() => {
-  jest.useFakeTimers();
 });
 
-afterEach(() => {
-  jest.useRealTimers();
-});
-
-test('shows a cooldown message with seconds when limited', () => {
-  render(<UserComponent />);
-  const button = screen.getByRole('button');
-  for (let i = 0; i < ${MAX_CLICKS}; i++) fireEvent.click(button);
-  expect(screen.getByTestId('status').textContent).toMatch(/Try again in \\d+s/);
-});
-
-test('re-enables after the window passes', async () => {
-  render(<UserComponent />);
-  const button = screen.getByRole('button');
-  for (let i = 0; i < ${MAX_CLICKS}; i++) fireEvent.click(button);
-  expect(button.disabled).toBe(true);
-
-  await act(async () => {
-    jest.advanceTimersByTime(${WINDOW_MS} + 500);
+describe('with fake timers', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
   });
 
-  expect(button.disabled).toBe(false);
-});
-
-test('clicks beyond the cap are dropped, not queued', async () => {
-  render(<UserComponent />);
-  const button = screen.getByRole('button');
-  for (let i = 0; i < ${MAX_CLICKS} + 10; i++) fireEvent.click(button);
-
-  await act(async () => {
-    jest.advanceTimersByTime(${WINDOW_MS} + 500);
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
-  expect(button.disabled).toBe(false);
+  test('shows a cooldown message with seconds when limited', () => {
+    render(<UserComponent />);
+    const button = screen.getByRole('button');
+    for (let i = 0; i < ${MAX_CLICKS}; i++) fireEvent.click(button);
+    expect(screen.getByTestId('status').textContent).toMatch(/Try again in \\d+s/);
+  });
+
+  test('re-enables after the window passes', async () => {
+    render(<UserComponent />);
+    const button = screen.getByRole('button');
+    for (let i = 0; i < ${MAX_CLICKS}; i++) fireEvent.click(button);
+    expect(button.disabled).toBe(true);
+
+    await act(async () => {
+      jest.advanceTimersByTime(${WINDOW_MS} + 500);
+    });
+
+    expect(button.disabled).toBe(false);
+  });
+
+  test('clicks beyond the cap are dropped, not queued', async () => {
+    render(<UserComponent />);
+    const button = screen.getByRole('button');
+    for (let i = 0; i < ${MAX_CLICKS} + 10; i++) fireEvent.click(button);
+
+    await act(async () => {
+      jest.advanceTimersByTime(${WINDOW_MS} + 500);
+    });
+
+    expect(button.disabled).toBe(false);
+  });
 });`,
   solutions: [
     {

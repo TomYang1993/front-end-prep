@@ -3,24 +3,8 @@ import type { SeedQuestion } from '../types';
 
 const STARTER_CODE_REACT = `import { useState, useEffect } from 'react';
 
-// Mock server — already wired up. Call fetch('/api/posts?page=N') like a real network request.
-// Response: { items: [{ id, title, body }], total: 15, page: N, totalPages: 3 }
-const POSTS = Array.from({ length: 15 }, (_, i) => ({
-  id: i + 1,
-  title: \`Post \${i + 1}\`,
-  body: \`This is the body of post \${i + 1}.\`,
-}));
-window.fetch = (url) => {
-  const params = new URL(url, location.origin).searchParams;
-  const page = parseInt(params.get('page') || '1', 10);
-  const items = POSTS.slice((page - 1) * 5, page * 5);
-  return new Promise((resolve) =>
-    setTimeout(
-      () => resolve({ ok: true, json: () => Promise.resolve({ items, total: 15, page, totalPages: 3 }) }),
-      200,
-    ),
-  );
-};
+// Fetch from PokéAPI — https://pokeapi.co/api/v2/pokemon?limit=5&offset=N
+// Response: { count, next, previous, results: [{ name, url }] }
 
 function useFetch(url) {
   // Return { data, loading, error }
@@ -29,27 +13,32 @@ function useFetch(url) {
   return { data: null, loading: false, error: null };
 }
 
+const PAGE_SIZE = 5;
+
 export default function App() {
   const [page, setPage] = useState(1);
-  const { data, loading, error } = useFetch(\`/api/posts?page=\${page}\`);
+  const offset = (page - 1) * PAGE_SIZE;
+  const { data, loading, error } = useFetch(
+    \`https://pokeapi.co/api/v2/pokemon?limit=\${PAGE_SIZE}&offset=\${offset}\`
+  );
 
-  // Render: loading state, error state, post list, and prev/next pagination
+  // Render: loading state, error state, pokémon list, and prev/next pagination
+  // totalPages = Math.ceil(data.count / PAGE_SIZE)
   return <div />;
 }`;
 
 const STARTER_CODE_REACT_TS = `import { useState, useEffect } from 'react';
 
-interface Post {
-  id: number;
-  title: string;
-  body: string;
+interface Pokemon {
+  name: string;
+  url: string;
 }
 
-interface PostsResponse {
-  items: Post[];
-  total: number;
-  page: number;
-  totalPages: number;
+interface PokemonResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Pokemon[];
 }
 
 interface FetchResult<T> {
@@ -58,25 +47,6 @@ interface FetchResult<T> {
   error: string | null;
 }
 
-// Mock server — already wired up. Call fetch('/api/posts?page=N') like a real network request.
-// Response: { items: [{ id, title, body }], total: 15, page: N, totalPages: 3 }
-const POSTS: Post[] = Array.from({ length: 15 }, (_, i) => ({
-  id: i + 1,
-  title: \`Post \${i + 1}\`,
-  body: \`This is the body of post \${i + 1}.\`,
-}));
-(window as any).fetch = (url: string) => {
-  const params = new URL(url, location.origin).searchParams;
-  const page = parseInt(params.get('page') || '1', 10);
-  const items = POSTS.slice((page - 1) * 5, page * 5);
-  return new Promise((resolve) =>
-    setTimeout(
-      () => resolve({ ok: true, json: () => Promise.resolve({ items, total: 15, page, totalPages: 3 }) }),
-      200,
-    ),
-  );
-};
-
 function useFetch<T>(url: string): FetchResult<T> {
   // Return { data, loading, error }
   // Re-fetch when url changes
@@ -84,32 +54,23 @@ function useFetch<T>(url: string): FetchResult<T> {
   return { data: null, loading: false, error: null };
 }
 
+const PAGE_SIZE = 5;
+
 export default function App(): JSX.Element {
   const [page, setPage] = useState<number>(1);
-  const { data, loading, error } = useFetch<PostsResponse>(\`/api/posts?page=\${page}\`);
+  const offset = (page - 1) * PAGE_SIZE;
+  const { data, loading, error } = useFetch<PokemonResponse>(
+    \`https://pokeapi.co/api/v2/pokemon?limit=\${PAGE_SIZE}&offset=\${offset}\`
+  );
 
-  // Render: loading state, error state, post list, and prev/next pagination
+  // Render: loading state, error state, pokémon list, and prev/next pagination
+  // totalPages = Math.ceil(data.count / PAGE_SIZE)
   return <div />;
 }`;
 
 const SOLUTION_CODE = `import { useState, useEffect } from 'react';
 
-const POSTS = Array.from({ length: 15 }, (_, i) => ({
-  id: i + 1,
-  title: \`Post \${i + 1}\`,
-  body: \`This is the body of post \${i + 1}.\`,
-}));
-window.fetch = (url) => {
-  const params = new URL(url, location.origin).searchParams;
-  const page = parseInt(params.get('page') || '1', 10);
-  const items = POSTS.slice((page - 1) * 5, page * 5);
-  return new Promise((resolve) =>
-    setTimeout(
-      () => resolve({ ok: true, json: () => Promise.resolve({ items, total: 15, page, totalPages: 3 }) }),
-      200,
-    ),
-  );
-};
+const PAGE_SIZE = 5;
 
 function useFetch(url) {
   const [data, setData] = useState(null);
@@ -150,9 +111,12 @@ function useFetch(url) {
 
 export default function App() {
   const [page, setPage] = useState(1);
-  const { data, loading, error } = useFetch(\`/api/posts?page=\${page}\`);
+  const offset = (page - 1) * PAGE_SIZE;
+  const { data, loading, error } = useFetch(
+    \`https://pokeapi.co/api/v2/pokemon?limit=\${PAGE_SIZE}&offset=\${offset}\`
+  );
 
-  const totalPages = data?.totalPages ?? 1;
+  const totalPages = data ? Math.ceil(data.count / PAGE_SIZE) : 1;
 
   return (
     <div style={{ maxWidth: 600, margin: '40px auto', fontFamily: 'sans-serif' }}>
@@ -160,14 +124,19 @@ export default function App() {
       {error && <p data-testid="error">{error}</p>}
       {!loading && !error && data && (
         <ul data-testid="list" style={{ listStyle: 'none', padding: 0 }}>
-          {data.items.map((post, i) => (
+          {data.results.map((pokemon, i) => (
             <li
-              key={post.id}
+              key={pokemon.name}
               data-testid={\`list-item-\${i}\`}
-              style={{ marginBottom: 16, padding: 12, border: '1px solid #e5e7eb', borderRadius: 6 }}
+              style={{
+                marginBottom: 8,
+                padding: 12,
+                border: '1px solid #e5e7eb',
+                borderRadius: 6,
+                textTransform: 'capitalize',
+              }}
             >
-              <strong>{post.title}</strong>
-              <p style={{ margin: '4px 0 0', color: '#6b7280' }}>{post.body}</p>
+              {pokemon.name}
             </li>
           ))}
         </ul>
@@ -232,15 +201,17 @@ return () => controller.abort();
 
 This frees the network connection and avoids parsing the response body.
 
-### Pagination: disabled state from response data
+### Pagination: total pages from \`count\`
 
-Deriving button state from the API's \`totalPages\` field keeps the component in sync with the server — no hardcoded page count. The \`?? 1\` fallback means buttons render in a safe initial state during the first load.
+PokéAPI returns the full collection size in \`count\` (1302+ at time of writing). Compute \`totalPages\` from \`count\` and your page size so the component stays in sync with the API — no hardcoded page count:
 
 \`\`\`js
-const totalPages = data?.totalPages ?? 1;
+const totalPages = data ? Math.ceil(data.count / PAGE_SIZE) : 1;
 // prev disabled when page === 1
 // next disabled when page === totalPages
 \`\`\`
+
+The \`data ? ... : 1\` fallback means buttons render in a safe initial state during the first load.
 
 ### Followups
 
@@ -250,13 +221,18 @@ const totalPages = data?.totalPages ?? 1;
 
 ## Full Implementation`;
 
-const PROMPT = `Build a **paginated post list** by implementing a \`useFetch\` hook, then use it to display posts with previous/next navigation.
+const PROMPT = `Build a **paginated Pokémon list** by implementing a \`useFetch\` hook, then use it to render results from the [PokéAPI](https://pokeapi.co) with previous/next navigation.
 
-The mock server is already wired up — call \`fetch('/api/posts?page=N')\` like any real network request:
+The API supports \`limit\` and \`offset\` query params:
 
 \`\`\`text
-GET /api/posts?page=1
-{ "items": [{ "id": 1, "title": "Post 1", "body": "..." }, ...], "total": 15, "page": 1, "totalPages": 3 }
+GET https://pokeapi.co/api/v2/pokemon?limit=5&offset=0
+{
+  "count": 1302,
+  "next": "https://pokeapi.co/api/v2/pokemon?limit=5&offset=5",
+  "previous": null,
+  "results": [{ "name": "bulbasaur", "url": "https://..." }, ...]
+}
 \`\`\`
 
 ### Requirements
@@ -264,8 +240,8 @@ GET /api/posts?page=1
 1. **\`useFetch(url)\`** returns \`{ data, loading, error }\`. Trigger a new fetch whenever \`url\` changes. Use a cleanup flag to cancel stale in-flight requests so a rapid page-change never overwrites newer results.
 2. **Loading state** — show \`data-testid="loading"\` while the request is in flight.
 3. **Error state** — show \`data-testid="error"\` when fetch rejects or returns a non-OK status.
-4. **Post list** — render each item inside \`data-testid="list"\` with \`data-testid="list-item-{i}"\` (zero-indexed).
-5. **Pagination** — Previous / Next buttons. Previous is disabled on page 1; Next is disabled on the last page. Show current position in \`data-testid="page-info"\` (e.g. \`Page 2 of 3\`).
+4. **Pokémon list** — render each pokémon's \`name\` inside \`data-testid="list"\` with \`data-testid="list-item-{i}"\` (zero-indexed).
+5. **Pagination** — page size 5. Previous / Next buttons. Previous is disabled on page 1; Next is disabled on the last page. Compute \`totalPages = Math.ceil(count / 5)\`. Show current position in \`data-testid="page-info"\` (e.g. \`Page 2 of 261\`).
 
 ### Required \`data-testid\` attributes
 
@@ -275,24 +251,27 @@ GET /api/posts?page=1
 - \`data-testid="error"\` — error message (only on failure)
 - \`data-testid="prev-btn"\` — previous page button
 - \`data-testid="next-btn"\` — next page button
-- \`data-testid="page-info"\` — page label, e.g. \`Page 1 of 3\`
+- \`data-testid="page-info"\` — page label, e.g. \`Page 1 of 261\`
 
 > [!tip]
 > The cleanup function returned from \`useEffect\` fires before the next effect run. Set a \`cancelled\` boolean there — then any \`.then()\` callbacks from the old fetch silently no-op instead of updating state.`;
 
-const PUBLIC_TEST_CODE = `const POSTS = Array.from({ length: 15 }, (_, i) => ({
-  id: i + 1,
-  title: \`Post \${i + 1}\`,
-  body: \`Body \${i + 1}\`,
-}));
-
-beforeEach(() => {
-  global.fetch = (url) => {
-    const page = parseInt(new URL(url, 'http://x').searchParams.get('page') || '1', 10);
-    const items = POSTS.slice((page - 1) * 5, page * 5);
+const PUBLIC_TEST_CODE = `beforeEach(() => {
+  globalThis.fetch = (url) => {
+    const match = /offset=(\\d+)/.exec(url);
+    const offset = match ? parseInt(match[1], 10) : 0;
+    const results = Array.from({ length: 5 }, (_, i) => ({
+      name: \`pokemon-\${offset + i + 1}\`,
+      url: \`https://pokeapi.co/api/v2/pokemon/\${offset + i + 1}/\`,
+    }));
     return Promise.resolve({
       ok: true,
-      json: () => Promise.resolve({ items, total: 15, page, totalPages: 3 }),
+      json: () => Promise.resolve({
+        count: 15,
+        next: offset + 5 < 15 ? 'next-url' : null,
+        previous: offset > 0 ? 'prev-url' : null,
+        results,
+      }),
     });
   };
 });
@@ -325,23 +304,6 @@ test('next button advances to page 2', async () => {
   await waitFor(() => {
     expect(screen.getByTestId('page-info').textContent).toMatch(/Page 2 of 3/);
   }, { timeout: 3000 });
-});`;
-
-const HIDDEN_TEST_CODE = `const POSTS = Array.from({ length: 15 }, (_, i) => ({
-  id: i + 1,
-  title: \`Post \${i + 1}\`,
-  body: \`Body \${i + 1}\`,
-}));
-
-beforeEach(() => {
-  global.fetch = (url) => {
-    const page = parseInt(new URL(url, 'http://x').searchParams.get('page') || '1', 10);
-    const items = POSTS.slice((page - 1) * 5, page * 5);
-    return Promise.resolve({
-      ok: true,
-      json: () => Promise.resolve({ items, total: 15, page, totalPages: 3 }),
-    });
-  };
 });
 
 test('prev button is disabled on page 1', async () => {
@@ -373,7 +335,7 @@ test('prev button navigates back to page 1 from page 2', async () => {
 });
 
 test('shows error state when fetch rejects', async () => {
-  global.fetch = () => Promise.reject(new Error('Network error'));
+  globalThis.fetch = () => Promise.reject(new Error('Network error'));
   render(<UserComponent />);
   await waitFor(() => {
     expect(screen.getByTestId('error')).toBeTruthy();
@@ -382,7 +344,7 @@ test('shows error state when fetch rejects', async () => {
 });
 
 test('shows error state when fetch returns non-OK status', async () => {
-  global.fetch = () => Promise.resolve({ ok: false, status: 500, json: () => Promise.resolve({}) });
+  globalThis.fetch = () => Promise.resolve({ ok: false, status: 500, json: () => Promise.resolve({}) });
   render(<UserComponent />);
   await waitFor(() => {
     expect(screen.getByTestId('error')).toBeTruthy();
@@ -393,7 +355,7 @@ export const paginatedList: SeedQuestion = {
   slug: 'paginated-list',
   title: 'Paginated List with useFetch',
   prompt: PROMPT,
-  description: 'Implement a useFetch(url) hook returning { data, loading, error } with stale-request cancellation, then use it to render a paginated post list with prev/next navigation.',
+  description: 'Implement a useFetch(url) hook returning { data, loading, error } with stale-request cancellation, then use it to render a paginated Pokémon list (PokéAPI) with prev/next navigation.',
   type: QuestionType.REACT_APP,
   difficulty: Difficulty.MEDIUM,
   accessTier: AccessTier.FREE,
@@ -404,7 +366,6 @@ export const paginatedList: SeedQuestion = {
     reactTypescript: STARTER_CODE_REACT_TS,
   },
   publicTestCode: PUBLIC_TEST_CODE,
-  hiddenTestCode: HIDDEN_TEST_CODE,
   solutions: [
     {
       language: 'javascript',

@@ -431,6 +431,56 @@ test('Back from step 2 preserves step 1 values', () => {
   const restored = document.querySelectorAll('input');
   expect(restored[0].value).toBe('Ada');
   expect(restored[1].value).toBe('ada@example.com');
+});
+
+test('Step 1: malformed email keeps Next disabled', () => {
+  render(<UserComponent />);
+  const inputs = document.querySelectorAll('input');
+  fireEvent.change(inputs[0], { target: { value: 'Ada' } });
+  fireEvent.change(inputs[1], { target: { value: 'not-an-email' } });
+  expect(screen.getByRole('button', { name: /next/i }).disabled).toBe(true);
+});
+
+test('Step 2: ZIP under 5 digits keeps Next disabled', () => {
+  render(<UserComponent />);
+  let inputs = document.querySelectorAll('input');
+  fireEvent.change(inputs[0], { target: { value: 'Ada' } });
+  fireEvent.change(inputs[1], { target: { value: 'ada@example.com' } });
+  fireEvent.click(screen.getByRole('button', { name: /next/i }));
+  inputs = document.querySelectorAll('input');
+  fireEvent.change(inputs[0], { target: { value: '1 Main St' } });
+  fireEvent.change(inputs[1], { target: { value: 'NYC' } });
+  fireEvent.change(inputs[2], { target: { value: '123' } });
+  expect(screen.getByRole('button', { name: /next/i }).disabled).toBe(true);
+});
+
+test('Step 2 valid advances to Step 3 review', () => {
+  render(<UserComponent />);
+  let inputs = document.querySelectorAll('input');
+  fireEvent.change(inputs[0], { target: { value: 'Ada' } });
+  fireEvent.change(inputs[1], { target: { value: 'ada@example.com' } });
+  fireEvent.click(screen.getByRole('button', { name: /next/i }));
+  inputs = document.querySelectorAll('input');
+  fireEvent.change(inputs[0], { target: { value: '1 Main St' } });
+  fireEvent.change(inputs[1], { target: { value: 'NYC' } });
+  fireEvent.change(inputs[2], { target: { value: '12345' } });
+  fireEvent.click(screen.getByRole('button', { name: /next/i }));
+  expect(screen.getByText(/Step 3 of 3/i)).toBeTruthy();
+});
+
+test('Submit on Step 3 shows confirmation with entered name', () => {
+  render(<UserComponent />);
+  let inputs = document.querySelectorAll('input');
+  fireEvent.change(inputs[0], { target: { value: 'Ada' } });
+  fireEvent.change(inputs[1], { target: { value: 'ada@example.com' } });
+  fireEvent.click(screen.getByRole('button', { name: /next/i }));
+  inputs = document.querySelectorAll('input');
+  fireEvent.change(inputs[0], { target: { value: '1 Main St' } });
+  fireEvent.change(inputs[1], { target: { value: 'NYC' } });
+  fireEvent.change(inputs[2], { target: { value: '12345' } });
+  fireEvent.click(screen.getByRole('button', { name: /next/i }));
+  fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+  expect(screen.getByText(/All done.*Ada/i)).toBeTruthy();
 });`,
   solutions: [
     {

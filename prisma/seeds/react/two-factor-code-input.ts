@@ -322,6 +322,66 @@ test('only digits accepted', () => {
   const inputs = document.querySelectorAll('input');
   fireEvent.change(inputs[0], { target: { value: 'a' } });
   expect(inputs[0].value).toBe('');
+});
+
+test('ArrowRight moves focus to next field', () => {
+  render(<UserComponent />);
+  const inputs = document.querySelectorAll('input');
+  inputs[0].focus();
+  fireEvent.keyDown(inputs[0], { key: 'ArrowRight' });
+  expect(document.activeElement).toBe(inputs[1]);
+});
+
+test('ArrowLeft moves focus to previous field', () => {
+  render(<UserComponent />);
+  const inputs = document.querySelectorAll('input');
+  inputs[2].focus();
+  fireEvent.keyDown(inputs[2], { key: 'ArrowLeft' });
+  expect(document.activeElement).toBe(inputs[1]);
+});
+
+test('paste distributes 6 digits across all fields', () => {
+  render(<UserComponent />);
+  const inputs = document.querySelectorAll('input');
+  fireEvent.paste(inputs[0], {
+    clipboardData: { getData: () => '123456' },
+  });
+  const values = Array.from(inputs).map((i) => i.value);
+  expect(values.join('')).toBe('123456');
+});
+
+describe('with fake timers', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  test('valid code 123456 transitions to Verified status', async () => {
+    render(<UserComponent />);
+    const inputs = document.querySelectorAll('input');
+    ['1', '2', '3', '4', '5', '6'].forEach((d, i) => {
+      fireEvent.change(inputs[i], { target: { value: d } });
+    });
+    await act(async () => {
+      jest.advanceTimersByTime(1600);
+    });
+    expect(screen.getByText(/Verified/i)).toBeTruthy();
+  });
+
+  test('wrong code shows Invalid status', async () => {
+    render(<UserComponent />);
+    const inputs = document.querySelectorAll('input');
+    ['9', '9', '9', '9', '9', '9'].forEach((d, i) => {
+      fireEvent.change(inputs[i], { target: { value: d } });
+    });
+    await act(async () => {
+      jest.advanceTimersByTime(1600);
+    });
+    expect(screen.getByText(/Invalid/i)).toBeTruthy();
+  });
 });`,
   solutions: [
     {

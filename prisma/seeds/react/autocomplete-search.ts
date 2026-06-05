@@ -361,8 +361,9 @@ test('clicking a suggestion fills the input and closes the list', async () => {
   fireEvent.mouseDown(screen.getByTestId('suggestion-0'));
   expect(input.value.length).toBeGreaterThan(0);
   expect(screen.queryByTestId('suggestion-list')).toBeNull();
-});`,
-  hiddenTestCode: `test('Arrow Down + Enter selects highlighted suggestion', async () => {
+});
+
+test('Arrow Down + Enter selects highlighted suggestion', async () => {
   render(<UserComponent />);
   const input = screen.getByTestId('search-input');
   fireEvent.change(input, { target: { value: 'a' } });
