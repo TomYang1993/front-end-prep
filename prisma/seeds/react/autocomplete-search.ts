@@ -131,7 +131,12 @@ export default function AutocompleteSearch() {
   }
 
   const handleKeyDown = (e) => {
-    if (!open || results.length === 0) return;
+    if (!open) return;
+    if (e.key === 'Escape') {
+      setOpen(false);
+      return;
+    }
+    if (results.length === 0) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setActiveIndex((i) => (i + 1) % results.length);
@@ -141,8 +146,6 @@ export default function AutocompleteSearch() {
     } else if (e.key === 'Enter' && activeIndex >= 0) {
       e.preventDefault();
       select(results[activeIndex]);
-    } else if (e.key === 'Escape') {
-      setOpen(false);
     }
   }
 
@@ -380,7 +383,7 @@ test('Escape closes the dropdown', async () => {
   render(<UserComponent />);
   const input = screen.getByTestId('search-input');
   fireEvent.change(input, { target: { value: 'a' } });
-  await waitFor(() => screen.getByTestId('suggestion-list'), { timeout: 3000 });
+  await waitFor(() => screen.getByTestId('suggestion-0'), { timeout: 3000 });
   fireEvent.keyDown(input, { key: 'Escape' });
   expect(screen.queryByTestId('suggestion-list')).toBeNull();
 });

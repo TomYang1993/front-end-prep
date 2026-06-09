@@ -11,6 +11,7 @@ tsconfig.tsbuildinfo
 backups/
 
 .claude/
+.codegraph/
 
 progress.md
 CLAUDE.md

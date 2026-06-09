@@ -31,6 +31,102 @@ import UserComponent from './App';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
+// Fake timer shim — Sandpack's jest-lite ships without useFakeTimers/advanceTimersByTime.
+// Patches setTimeout/setInterval/clearTimeout/clearInterval/Date.now while installed.
+(() => {
+  const g = globalThis;
+  if (typeof g.jest === 'undefined') g.jest = {};
+  if (typeof g.jest.advanceTimersByTime === 'function') return;
+
+  const real = {
+    setTimeout: g.setTimeout.bind(g),
+    clearTimeout: g.clearTimeout.bind(g),
+    setInterval: g.setInterval.bind(g),
+    clearInterval: g.clearInterval.bind(g),
+    dateNow: Date.now.bind(Date),
+  };
+  let installed = false;
+  let nowMs = 0;
+  let nextId = 1;
+  const timers = new Map();
+
+  const install = () => {
+    if (installed) return;
+    installed = true;
+    nowMs = real.dateNow();
+    g.setTimeout = (cb, ms) => {
+      const id = nextId++;
+      timers.set(id, { time: nowMs + (ms || 0), cb });
+      return id;
+    };
+    g.clearTimeout = (id) => { timers.delete(id); };
+    g.setInterval = (cb, ms) => {
+      const id = nextId++;
+      timers.set(id, { time: nowMs + (ms || 0), cb, interval: ms || 0 });
+      return id;
+    };
+    g.clearInterval = (id) => { timers.delete(id); };
+    Date.now = () => nowMs;
+  };
+
+  const uninstall = () => {
+    if (!installed) return;
+    installed = false;
+    g.setTimeout = real.setTimeout;
+    g.clearTimeout = real.clearTimeout;
+    g.setInterval = real.setInterval;
+    g.clearInterval = real.clearInterval;
+    Date.now = real.dateNow;
+    timers.clear();
+  };
+
+  const advance = (ms) => {
+    const target = nowMs + (ms || 0);
+    // Loop firing due timers, smallest-time first, until none remain <= target.
+    // Intervals reschedule themselves; setTimeout entries get deleted on fire.
+    while (true) {
+      let dueId = null;
+      let dueEntry = null;
+      for (const [id, t] of timers) {
+        if (t.time <= target && (!dueEntry || t.time < dueEntry.time)) {
+          dueId = id;
+          dueEntry = t;
+        }
+      }
+      if (!dueEntry) break;
+      nowMs = dueEntry.time;
+      if (typeof dueEntry.interval === 'number') {
+        dueEntry.time = nowMs + dueEntry.interval;
+      } else {
+        timers.delete(dueId);
+      }
+      try { dueEntry.cb(); } catch (e) { /* swallow timer errors */ }
+    }
+    nowMs = target;
+  };
+
+  g.jest.useFakeTimers = install;
+  g.jest.useRealTimers = uninstall;
+  g.jest.advanceTimersByTime = advance;
+  g.jest.runOnlyPendingTimers = () => {
+    while (timers.size > 0) {
+      let dueId = null;
+      let dueEntry = null;
+      for (const [id, t] of timers) {
+        if (!dueEntry || t.time < dueEntry.time) { dueId = id; dueEntry = t; }
+      }
+      if (!dueEntry) break;
+      nowMs = dueEntry.time;
+      if (typeof dueEntry.interval === 'number') {
+        dueEntry.time = nowMs + dueEntry.interval;
+      } else {
+        timers.delete(dueId);
+      }
+      try { dueEntry.cb(); } catch (e) {}
+    }
+  };
+})();
+
 `;
 
 

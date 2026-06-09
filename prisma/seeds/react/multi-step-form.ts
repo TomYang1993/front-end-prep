@@ -90,28 +90,6 @@ const SOLUTION_CSS = `body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
 }
 
-/* Step indicator */
-.step-header { display: flex; justify-content: space-between; margin-bottom: 24px; }
-.step-item { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
-
-.step-dot {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 600;
-  background: #e5e7eb;
-  color: #9ca3af;
-}
-.step-dot--done   { background: #22c55e; color: #fff; }
-.step-dot--active { background: #3b82f6; color: #fff; }
-
-.step-label { font-size: 12px; color: #9ca3af; }
-.step-label--active { color: #3b82f6; font-weight: 600; }
-
 /* Form */
 .form-heading { margin: 0 0 4px; font-size: 20px; font-weight: 700; color: #111827; }
 .form-subtext  { margin: 0 0 20px; font-size: 13px; color: #6b7280; }
@@ -168,17 +146,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-primary   { background: #3b82f6; color: #fff; }
 .btn-secondary { background: #fff; color: #374151; border-color: #d1d5db; }
 .btn-success   { background: #22c55e; color: #fff; }
-
-/* Submitted */
-.success-heading { color: #22c55e; margin: 0 0 16px; font-size: 20px; font-weight: 700; }
-
-pre {
-  background: #f3f4f6;
-  padding: 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  overflow-x: auto;
-}
 `;
 
 const SOLUTION_CODE = `import React, { useState } from 'react';
@@ -208,12 +175,9 @@ function validateStep(step, data) {
   return true;
 }
 
-const STEPS = ['Personal Info', 'Address', 'Review'];
-
 export default function MultiStepForm() {
   const [step, setStep] = useState(1);
   const [formState, setFormState] = useState(initialData);
-  const [submitted, setSubmitted] = useState(null);
 
   const update = (field, event) => {
     setFormState((prev) => ({ ...prev, [field]: event.target.value }));
@@ -229,34 +193,8 @@ export default function MultiStepForm() {
     if (step > 1) setStep(step - 1);
   };
 
-  const handleSubmit = () => {
-    setSubmitted(formState);
-  };
-
-  if (submitted) {
-    return (
-      <div className="card">
-        <h2 className="success-heading">All done, {submitted.name}!</h2>
-        <pre>{JSON.stringify(submitted, null, 2)}</pre>
-      </div>
-    );
-  }
-
   return (
     <div className="card">
-      <div className="step-header">
-        {STEPS.map((label, i) => (
-          <div key={label} className="step-item">
-            <div className={\`step-dot \${i + 1 < step ? 'step-dot--done' : i + 1 === step ? 'step-dot--active' : ''}\`}>
-              {i + 1 < step ? '✓' : i + 1}
-            </div>
-            <span className={\`step-label \${i + 1 === step ? 'step-label--active' : ''}\`}>
-              {label}
-            </span>
-          </div>
-        ))}
-      </div>
-
       <h2 className="form-heading">Sign Up</h2>
       <p className="form-subtext">Step {step} of 3</p>
 
@@ -264,11 +202,11 @@ export default function MultiStepForm() {
         <div className="fields">
           <label className="field-label">
             Name
-            <input value={formState.name} onChange={(e) => update('name', e)} placeholder="Ada Lovelace" />
+            <input value={formState.name} onChange={(e) => update('name', e)} />
           </label>
           <label className="field-label">
             Email
-            <input value={formState.email} onChange={(e) => update('email', e)} placeholder="ada@example.com" type="email" />
+            <input value={formState.email} onChange={(e) => update('email', e)} />
           </label>
         </div>
       )}
@@ -277,22 +215,22 @@ export default function MultiStepForm() {
         <div className="fields">
           <label className="field-label">
             Street
-            <input value={formState.street} onChange={(e) => update('street', e)} placeholder="123 Main St" />
+            <input value={formState.street} onChange={(e) => update('street', e)} />
           </label>
           <label className="field-label">
             City
-            <input value={formState.city} onChange={(e) => update('city', e)} placeholder="Springfield" />
+            <input value={formState.city} onChange={(e) => update('city', e)} />
           </label>
           <label className="field-label">
             ZIP
-            <input value={formState.zip} onChange={(e) => update('zip', e)} placeholder="12345" maxLength={5} />
+            <input value={formState.zip} onChange={(e) => update('zip', e)} />
           </label>
         </div>
       )}
 
       {step === 3 && (
         <div>
-          <h3 className="form-heading" style={{ fontSize: 15, margin: '0 0 12px' }}>Review your info</h3>
+          <h3>Review</h3>
           <dl className="review-grid">
             <dt className="review-dt">Name</dt><dd className="review-dd">{formState.name}</dd>
             <dt className="review-dt">Email</dt><dd className="review-dd">{formState.email}</dd>
@@ -310,7 +248,7 @@ export default function MultiStepForm() {
         {step < 3 ? (
           <button onClick={handleNext} disabled={!canAdvance} className="btn-primary">Next</button>
         ) : (
-          <button onClick={handleSubmit} className="btn-success">Submit</button>
+          <button className="btn-success">Submit</button>
         )}
       </div>
     </div>
@@ -466,21 +404,6 @@ test('Step 2 valid advances to Step 3 review', () => {
   fireEvent.change(inputs[2], { target: { value: '12345' } });
   fireEvent.click(screen.getByRole('button', { name: /next/i }));
   expect(screen.getByText(/Step 3 of 3/i)).toBeTruthy();
-});
-
-test('Submit on Step 3 shows confirmation with entered name', () => {
-  render(<UserComponent />);
-  let inputs = document.querySelectorAll('input');
-  fireEvent.change(inputs[0], { target: { value: 'Ada' } });
-  fireEvent.change(inputs[1], { target: { value: 'ada@example.com' } });
-  fireEvent.click(screen.getByRole('button', { name: /next/i }));
-  inputs = document.querySelectorAll('input');
-  fireEvent.change(inputs[0], { target: { value: '1 Main St' } });
-  fireEvent.change(inputs[1], { target: { value: 'NYC' } });
-  fireEvent.change(inputs[2], { target: { value: '12345' } });
-  fireEvent.click(screen.getByRole('button', { name: /next/i }));
-  fireEvent.click(screen.getByRole('button', { name: /submit/i }));
-  expect(screen.getByText(/All done.*Ada/i)).toBeTruthy();
 });`,
   solutions: [
     {
