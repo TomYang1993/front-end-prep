@@ -3,7 +3,7 @@
 import { ChevronDown } from 'lucide-react';
 
 const selectClass =
-  'appearance-none bg-surface-raised border border-line text-ink text-xs font-semibold py-[0.35rem] pr-7 pl-3 rounded-md outline-none cursor-pointer transition-all duration-200 shadow-sm hover:border-brand hover:bg-brand/10 focus:border-brand focus:ring-2 focus:ring-brand/20';
+  'appearance-none bg-surface-raised border border-line text-ink text-xs max-md:text-sm font-semibold py-[0.35rem] max-md:py-2 pr-7 pl-3 rounded-md outline-none cursor-pointer transition-all duration-200 shadow-sm hover:border-brand hover:bg-brand/10 focus:border-brand focus:ring-2 focus:ring-brand/20';
 
 interface QuestionsFiltersProps {
   type: string;

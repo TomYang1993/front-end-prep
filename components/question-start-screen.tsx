@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Clock, Play, Timer, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Clock, Play, Timer, RefreshCw, Monitor } from 'lucide-react';
 import { DIFFICULTY_LABEL, DIFFICULTY_BADGE_CLASS } from '@/types/domain';
 
 interface QuestionStartScreenProps {
@@ -57,7 +57,7 @@ export function QuestionStartScreen({
         <div className="flex flex-col items-center gap-4 text-center">
           <h1 className="text-2xl font-bold">{title}</h1>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap justify-center">
             <span
               className={`inline-flex items-center px-2 py-1 rounded-sm text-[0.65rem] font-bold uppercase tracking-[0.05em] leading-none ${DIFFICULTY_BADGE_CLASS[difficulty] ?? ''}`}
             >
@@ -95,7 +95,7 @@ export function QuestionStartScreen({
         </div>
 
         {isReact && (
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-2 max-md:hidden">
             <span className="text-sm text-muted">Language</span>
             <div className="flex items-center bg-surface-raised rounded-lg overflow-hidden border border-line text-sm font-bold">
               <button
@@ -113,11 +113,19 @@ export function QuestionStartScreen({
         <button
           onClick={handleStart}
           disabled={starting}
-          className="btn btn-primary inline-flex items-center gap-2 text-base px-8 py-3"
+          className="btn btn-primary inline-flex items-center gap-2 text-base px-8 py-3 max-md:hidden"
         >
           <Play size={18} />
           {starting ? 'Starting…' : 'Start Challenge'}
         </button>
+
+        <div className="md:hidden flex flex-col items-center gap-3 rounded-lg bg-surface-raised px-5 py-4 text-center">
+          <Monitor size={22} className="text-brand" />
+          <p className="text-sm text-muted leading-relaxed m-0">
+            This challenge needs a real keyboard. Switch to a desktop to start
+            the timer and solve it.
+          </p>
+        </div>
       </div>
     </div>
   );

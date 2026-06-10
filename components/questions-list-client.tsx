@@ -55,8 +55,8 @@ export function QuestionsListClient({ allRows, isLoggedIn }: Props) {
 
   return (
     <>
-      <div className="flex items-center gap-3 flex-nowrap w-full">
-        <div className="relative flex-1 max-w-[289px]">
+      <div className="flex items-center gap-3 flex-wrap w-full">
+        <div className="relative flex-1 max-w-[289px] max-md:max-w-none max-md:basis-full">
           <Search size={16} className="absolute left-[10px] top-1/2 -translate-y-1/2 text-muted" />
           <input
             type="search"
@@ -64,11 +64,11 @@ export function QuestionsListClient({ allRows, isLoggedIn }: Props) {
             aria-label="Search questions"
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full py-2 pl-[2.2rem] pr-4 rounded-sm border border-line bg-surface text-ink text-[0.88rem] outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand"
+            className="w-full py-2 pl-[2.2rem] pr-4 rounded-sm border border-line bg-surface text-ink text-[0.88rem] max-md:text-base outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand"
           />
         </div>
-        <span className="mx-2 text-line">|</span>
-        <span className="flex items-center text-muted">
+        <span className="mx-2 text-line max-md:hidden">|</span>
+        <span className="flex items-center text-muted max-md:hidden">
           <SlidersHorizontal size={18} />
         </span>
         <QuestionsFilters

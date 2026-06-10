@@ -36,9 +36,9 @@ export function QuestionsStatsBar({
   const dim = !isLoggedIn;
 
   return (
-    <div className={`flex flex-wrap items-center gap-4 mb-8 ${dim ? 'opacity-40 saturate-0 pointer-events-none select-none' : ''}`}>
+    <div className={`flex flex-wrap items-center gap-4 mb-8 max-md:mb-5 ${dim ? 'opacity-40 saturate-0 pointer-events-none select-none' : ''}`}>
       {/* Hero Chip: Streak */}
-      <div className="flex items-center bg-surface border border-line-soft rounded-md px-4 py-3 gap-3 shadow-sm min-w-[140px]">
+      <div className="flex items-center bg-surface border border-line-soft rounded-md px-4 py-3 gap-3 shadow-sm min-w-[140px] max-sm:flex-1 max-sm:min-w-[45%]">
         <Flame size={20} className="text-orange-500 drop-shadow-sm" style={{ animation: streak > 0 && !dim ? 'flame-flicker 2s ease-in-out infinite' : undefined }} />
         <div className="flex flex-col">
           <span className="text-ink font-semibold leading-tight">{dim ? '—' : `${streak} ${streak === 1 ? 'day' : 'days'}`}</span>
@@ -47,7 +47,7 @@ export function QuestionsStatsBar({
       </div>
 
       {/* Hero Chip: Solved */}
-      <div className="flex items-center bg-surface border border-line-soft rounded-md px-4 py-3 gap-3 shadow-sm min-w-[140px]">
+      <div className="flex items-center bg-surface border border-line-soft rounded-md px-4 py-3 gap-3 shadow-sm min-w-[140px] max-sm:flex-1 max-sm:min-w-[45%]">
         <Trophy size={20} className="text-yellow-400 drop-shadow-sm" />
         <div className="flex flex-col">
           <span className="text-ink font-semibold leading-tight">

@@ -11,10 +11,10 @@ export async function SiteHeader() {
       <div className="flex justify-between items-center gap-4 min-h-[56px] px-6 max-md:px-4">
         <Link href="/" className="inline-flex items-center gap-2.5 font-bold text-[0.92rem] tracking-tight">
           <span className="w-[30px] h-[30px] rounded-lg inline-grid place-items-center bg-brand text-brand-ink text-[0.75rem] font-extrabold transition-colors duration-200">WTF</span>
-          <span>Whack The Fullstack Interview</span>
+          <span className="max-md:hidden">Whack The Fullstack Interview</span>
         </Link>
-        <nav className="flex items-center gap-2.5 text-muted flex-wrap text-[0.88rem] [&_a]:px-2 [&_a]:py-[0.3rem] [&_a]:rounded-lg [&_a]:transition-[color,background] [&_a]:duration-150 [&_a:hover]:text-ink [&_a:hover]:bg-bg-subtle">
-          <Link href="/questions">Questions</Link>
+        <nav className="flex items-center gap-2.5 text-muted flex-wrap text-[0.88rem] [&_a]:px-2 [&_a]:py-[0.3rem] max-md:[&_a]:px-3 max-md:[&_a]:py-2 [&_a]:rounded-lg [&_a]:transition-[color,background] [&_a]:duration-150 [&_a:hover]:text-ink [&_a:hover]:bg-bg-subtle">
+          <Link href="/questions" className="max-md:hidden">Questions</Link>
           <ThemeToggle />
           <AuthControls email={user?.email || null} />
         </nav>

@@ -1,14 +1,22 @@
 import Link from "next/link";
-import { Atom, Zap, Timer, ArrowRight, Youtube, Twitter } from "lucide-react";
+import {
+  Atom,
+  Zap,
+  Timer,
+  ArrowRight,
+  Youtube,
+  Twitter,
+  Coffee,
+} from "lucide-react";
 
 export default function HomePage() {
   return (
     <div className="w-screen ml-[calc(-50vw+50%)] -mt-8 -mb-16">
       {/* ─── Hero ─── */}
-      <section className="relative min-h-[88vh] flex items-center justify-center pt-32 pb-24 px-6 overflow-hidden">
+      <section className="relative min-h-[88vh] max-md:min-h-[72vh] flex items-center justify-center pt-32 pb-24 max-md:pt-20 max-md:pb-16 px-6 overflow-hidden">
         {/* Decorative orbs */}
-        <div className="absolute top-[15%] left-[10%] w-[320px] h-[320px] bg-brand/10 rounded-full blur-[100px] pointer-events-none animate-pulse" />
-        <div className="absolute bottom-[20%] right-[8%] w-[280px] h-[280px] bg-purple-500/8 rounded-full blur-[90px] pointer-events-none animate-pulse [animation-delay:1s]" />
+        <div className="absolute top-[15%] left-[10%] w-[320px] h-[320px] max-md:w-[180px] max-md:h-[180px] bg-brand/10 rounded-full blur-[100px] pointer-events-none animate-pulse" />
+        <div className="absolute bottom-[20%] right-[8%] w-[280px] h-[280px] max-md:w-[160px] max-md:h-[160px] bg-purple-500/8 rounded-full blur-[90px] pointer-events-none animate-pulse [animation-delay:1s]" />
         <div className="relative z-10 text-center max-w-[820px]">
           <h1 className="text-[clamp(2rem,10vw,3.2rem)] md:text-[clamp(2.8rem,7.5vw,5rem)] font-extrabold leading-[1.05] tracking-tight mb-7">
             Ace Your <br />
@@ -24,8 +32,13 @@ export default function HomePage() {
             feeling generous,{" "}
             <Link
               href="/coffee"
-              className="text-brand underline underline-offset-2 font-semibold hover:text-brand-hover transition-colors"
+              className="inline-flex items-center gap-1 align-baseline text-brand underline underline-offset-2 font-semibold hover:text-brand-hover transition-colors group/coffee"
             >
+              <Coffee
+                size={16}
+                className="shrink-0 transition-transform group-hover/coffee:-rotate-12"
+                aria-hidden="true"
+              />
               buy me a coffee
             </Link>
             !
@@ -44,7 +57,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── What You'll Master — Bento Grid ─── */}
-      <section className="py-24 px-8 max-w-[1200px] mx-auto">
+      <section className="py-24 px-8 max-md:py-16 max-md:px-5 max-w-[1200px] mx-auto">
         <div className="mb-12">
           <h2 className="text-[2rem] font-extrabold tracking-tight mb-2">
             Why Did I Build This?
@@ -54,7 +67,7 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
           {/* React — large card */}
-          <div className="bg-surface border border-line rounded-xl p-8 relative overflow-hidden md:col-span-8 transition-all duration-300 hover:border-brand/30 hover:-translate-y-1 hover:shadow-md group">
+          <div className="bg-surface border border-line rounded-xl p-8 max-md:p-6 relative overflow-hidden md:col-span-8 transition-all duration-300 hover:border-brand/30 hover:-translate-y-1 hover:shadow-md group">
             <span className="flex items-center justify-center w-11 h-11 rounded-[10px] mb-5 bg-brand-subtle text-brand">
               <Atom size={24} />
             </span>
@@ -71,7 +84,7 @@ export default function HomePage() {
           </div>
 
           {/* JS/TS Logic */}
-          <div className="bg-surface border border-line rounded-xl p-8 relative overflow-hidden md:col-span-4 transition-all duration-300 hover:border-brand/30 hover:-translate-y-1 hover:shadow-md group">
+          <div className="bg-surface border border-line rounded-xl p-8 max-md:p-6 relative overflow-hidden md:col-span-4 transition-all duration-300 hover:border-brand/30 hover:-translate-y-1 hover:shadow-md group">
             <span className="flex items-center justify-center w-11 h-11 rounded-[10px] mb-5 bg-accent-secondary/12 text-accent-secondary">
               <Zap size={24} />
             </span>
@@ -83,7 +96,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="bg-surface border border-line rounded-xl p-8 relative overflow-hidden md:col-span-4 transition-all duration-300 hover:border-brand/30 hover:-translate-y-1 hover:shadow-md group">
+          <div className="bg-surface border border-line rounded-xl p-8 max-md:p-6 relative overflow-hidden md:col-span-4 transition-all duration-300 hover:border-brand/30 hover:-translate-y-1 hover:shadow-md group">
             <span className="flex items-center justify-center w-11 h-11 rounded-[10px] mb-5 bg-accent-tertiary/12 text-accent-tertiary">
               <Timer size={24} />
             </span>
@@ -98,29 +111,29 @@ export default function HomePage() {
           </div>
 
           {/* Supported languages — wide */}
-          <div className="bg-surface border border-line rounded-xl p-8 relative overflow-hidden md:col-span-8 transition-all duration-300 hover:border-brand/30 hover:shadow-md group flex items-center justify-evenly flex-wrap">
+          <div className="bg-surface border border-line rounded-xl p-8 max-md:p-6 relative overflow-hidden md:col-span-8 transition-all duration-300 hover:border-brand/30 hover:shadow-md group flex items-center justify-evenly flex-wrap">
             <h3 className="w-full text-center text-[1rem] font-semibold text-muted mb-3 tracking-wide">
               Supported Languages and Frameworks for Now
             </h3>
-            <div className="text-center flex-1">
+            <div className="text-center flex-1 max-sm:min-w-[40%]">
               <span className="block text-[1.3rem] font-extrabold tracking-tight bg-gradient-to-br from-ink to-muted bg-clip-text text-transparent">
                 JavaScript
               </span>
             </div>
-            <div className="w-[1px] h-6 bg-line shrink-0" />
-            <div className="text-center flex-1">
+            <div className="w-[1px] h-6 bg-line shrink-0 max-sm:hidden" />
+            <div className="text-center flex-1 max-sm:min-w-[40%]">
               <span className="block text-[1.3rem] font-extrabold tracking-tight bg-gradient-to-br from-ink to-muted bg-clip-text text-transparent">
                 TypeScript
               </span>
             </div>
-            <div className="w-[1px] h-6 bg-line shrink-0" />
-            <div className="text-center flex-1">
+            <div className="w-[1px] h-6 bg-line shrink-0 max-sm:hidden" />
+            <div className="text-center flex-1 max-sm:min-w-[40%]">
               <span className="block text-[1.3rem] font-extrabold tracking-tight bg-gradient-to-br from-ink to-muted bg-clip-text text-transparent">
                 React
               </span>
             </div>
-            <div className="w-[1px] h-6 bg-line shrink-0" />
-            <div className="text-center flex-1">
+            <div className="w-[1px] h-6 bg-line shrink-0 max-sm:hidden" />
+            <div className="text-center flex-1 max-sm:min-w-[40%]">
               <span className="block text-[1.3rem] font-extrabold tracking-tight bg-gradient-to-br from-ink to-muted bg-clip-text text-transparent">
                 Python
               </span>

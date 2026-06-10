@@ -48,10 +48,10 @@ export function QuestionsTable({ questions, isLoggedIn, page, pageSize, totalPag
       <table className="w-full border-collapse text-left">
         <thead>
           <tr className="bg-bg-subtle text-[13px] text-muted border-b border-line uppercase tracking-wider font-semibold">
-            <th className="w-[65px] pr-0 py-3 text-center">Status</th>
+            <th className="w-[65px] max-sm:w-[48px] pr-0 py-3 text-center">Status</th>
             <th className="w-1/4 pl-2 py-3">Challenge</th>
             <th className="hidden sm:table-cell w-auto py-3">Description</th>
-            <th className="w-[100px] py-3 text-center">Difficulty</th>
+            <th className="w-[100px] max-sm:w-[80px] py-3 text-center">Difficulty</th>
           </tr>
         </thead>
         <tbody>
@@ -120,7 +120,7 @@ export function QuestionsTable({ questions, isLoggedIn, page, pageSize, totalPag
         </tbody>
       </table>
 
-      <div className="flex items-center justify-between px-5 py-3 border-t border-line bg-bg-subtle/50 mt-auto">
+      <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-3 border-t border-line bg-bg-subtle/50 mt-auto">
         <span className="text-[0.85rem] text-muted font-medium">
           {totalPages > 1
             ? `Showing ${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, totalFiltered)} of ${totalFiltered}`

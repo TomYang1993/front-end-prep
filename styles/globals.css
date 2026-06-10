@@ -645,37 +645,15 @@ code {
   background: var(--muted);
 }
 
-/* ─── Responsive: Questions ─── */
-@media (max-width: 960px) {
-  .questions-sidebar {
-    display: none;
-  }
-
-  .questions-main {
-    padding: 1.5rem 1rem;
-  }
-
-  .stat-widgets {
-    grid-template-columns: 1fr;
-  }
-
-  .questions-filter-bar {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 720px) {
-  .stats-bar {
-    flex-wrap: wrap;
-  }
-
-  .stats-bar-progress {
-    display: none;
-  }
-
-  .questions-table th.col-description,
-  .questions-table td:nth-child(3) {
-    display: none;
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
