@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { Space_Grotesk, IBM_Plex_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import '@/styles/globals.css';
 import { SiteHeader } from '@/components/site-header';
 import { HeaderWrapper } from '@/components/header-wrapper';
@@ -51,6 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </UserProvider>
         </ThemeProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
