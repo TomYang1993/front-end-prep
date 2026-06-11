@@ -1,0 +1,67 @@
+name: Promote to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g. 0.3.0) — creates tag v<version>-prod'
+        required: true
+      notes:
+        description: 'Extra release notes (optional, shown above auto-generated notes)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: production
+          fetch-depth: 0
+
+      - name: Validate version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must be semver like 0.3.0, got: $VERSION" >&2
+            exit 1
+          fi
+          if git rev-parse "v${VERSION}-prod" >/dev/null 2>&1; then
+            echo "Tag v${VERSION}-prod already exists" >&2
+            exit 1
+          fi
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fast-forward production to main
+        run: |
+          git merge --ff-only origin/main
+          git push origin production
+
+      - name: Tag promotion
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          git tag "v${VERSION}-prod"
+          git push origin "v${VERSION}-prod"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          TAG="v${VERSION}-prod"
+          ARGS=(--verify-tag --generate-notes --title "Production $TAG")
+          if [ -n "$NOTES" ]; then
+            ARGS+=(--notes "$NOTES")
+          fi
+          gh release create "$TAG" "${ARGS[@]}"
