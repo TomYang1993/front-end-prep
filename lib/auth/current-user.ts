@@ -78,18 +78,30 @@ export async function requireUser(req: NextRequest): Promise<SessionUser> {
   return user;
 }
 
+async function fetchCurrentRolesFromDb(userId: string): Promise<string[]> {
+  const dbUser = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { userRoles: { include: { role: true } } }
+  });
+  return dbUser?.userRoles.map((item) => item.role.key) ?? [];
+}
+
 export async function requireAdmin(req: NextRequest): Promise<SessionUser> {
   const user = await requireUser(req);
-  if (!user.roles.includes('ADMIN')) {
+  // Re-fetch roles from DB — JWT claims can be stale (e.g. demoted admin retains cookie for up to 24h)
+  const roles = await fetchCurrentRolesFromDb(user.id);
+  if (!roles.includes('ADMIN')) {
     throw new Error('FORBIDDEN');
   }
-  return user;
+  return { ...user, roles };
 }
 
 /** Returns the user, or a NextResponse to short-circuit the route on auth failure. */
 export async function authorizeAdmin(req: NextRequest): Promise<SessionUser | NextResponse> {
   const user = await getCurrentUserFromRequest(req);
   if (!user) return unauthorized();
-  if (!user.roles.includes('ADMIN')) return forbidden();
-  return user;
+  // Re-fetch roles from DB — JWT claims can be stale (e.g. demoted admin retains cookie for up to 24h)
+  const roles = await fetchCurrentRolesFromDb(user.id);
+  if (!roles.includes('ADMIN')) return forbidden();
+  return { ...user, roles };
 }

@@ -26,7 +26,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-ink-secondary max-w-[580px] mx-auto mb-11 text-[1.08rem] leading-[1.75]">
-            Curated front end questions cover most aspects of tech screening
+            Curated questions cover most aspects of fullstack tech screening
             questions. Questions are updated regularly to keep up with current
             trends in the job market. Completely free — and if you&apos;re
             feeling generous,{" "}
@@ -60,7 +60,7 @@ export default function HomePage() {
       <section className="py-24 px-8 max-md:py-16 max-md:px-5 max-w-[1200px] mx-auto">
         <div className="mb-12">
           <h2 className="text-[2rem] font-extrabold tracking-tight mb-2">
-            Why Did I Build This?
+            Built for the Interviews You&apos;ll Actually Face
           </h2>
           <div className="w-12 h-[3px] bg-brand rounded-[2px]" />
         </div>
@@ -72,13 +72,12 @@ export default function HomePage() {
               <Atom size={24} />
             </span>
             <h3 className="text-[1.25rem] font-bold mb-2 tracking-tight">
-              A Knowledge Base, Built from Experience
+              Questions from Real Interviews
             </h3>
             <p className="text-ink-secondary leading-[1.65] m-0 text-[0.92rem]">
-              As a seasoned engineer, I&apos;ve been through countless
-              interviews. I built this platform to organize what I&apos;ve
-              learned and share it with others — because helping others learn
-              makes you better too.
+              Every question is adapted from real interview rounds. No
+              LeetCode-style puzzles here: we focus on what tech screens
+              actually test, and update the question bank as the market shifts.
             </p>
             <div className="absolute -right-10 -bottom-10 w-[200px] h-[200px] bg-brand-subtle rounded-full blur-[60px] pointer-events-none opacity-60 transition-all duration-500 group-hover:opacity-100 group-hover:scale-110" />
           </div>
@@ -89,10 +88,11 @@ export default function HomePage() {
               <Zap size={24} />
             </span>
             <h3 className="text-[1.25rem] font-bold mb-2 tracking-tight">
-              Just for fun!
+              Solve Right in the Browser
             </h3>
             <p className="text-ink-secondary leading-[1.65] m-0 text-[0.92rem]">
-              Most of the website will be built by AI. Fun Project!
+              Full editor, live test runner, instant feedback. Open a question
+              and start coding.
             </p>
           </div>
 
@@ -101,19 +101,18 @@ export default function HomePage() {
               <Timer size={24} />
             </span>
             <h3 className="text-[1.25rem] font-bold mb-2 tracking-tight">
-              Practice with a Timebox
+              Practice Under Real Pressure
             </h3>
             <p className="text-ink-secondary leading-[1.65] m-0 text-[0.92rem]">
-              In real interviews, you&apos;re always on the clock. Our interview
-              mode enforces actual time limits to give you real interview
-              pressure. Surprisingly, most platforms don&apos;t offer this.
+              Real interviews put you on the clock, so we do too. Actual time
+              limits is enforced, the pressure most platforms skip.
             </p>
           </div>
 
           {/* Supported languages — wide */}
           <div className="bg-surface border border-line rounded-xl p-8 max-md:p-6 relative overflow-hidden md:col-span-8 transition-all duration-300 hover:border-brand/30 hover:shadow-md group flex items-center justify-evenly flex-wrap">
             <h3 className="w-full text-center text-[1rem] font-semibold text-muted mb-3 tracking-wide">
-              Supported Languages and Frameworks for Now
+              Supported Languages and Frameworks
             </h3>
             <div className="text-center flex-1 max-sm:min-w-[40%]">
               <span className="block text-[1.3rem] font-extrabold tracking-tight bg-gradient-to-br from-ink to-muted bg-clip-text text-transparent">

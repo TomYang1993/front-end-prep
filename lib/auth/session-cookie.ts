@@ -12,10 +12,10 @@ export interface SessionPayload {
 
 function getSecret() {
   const secret = process.env.SESSION_SECRET;
-  if (!secret && process.env.NODE_ENV === 'production') {
-    throw new Error('SESSION_SECRET env var is required in production');
+  if (!secret) {
+    throw new Error('SESSION_SECRET env var is required');
   }
-  return new TextEncoder().encode(secret ?? 'dev-session-secret-not-for-prod');
+  return new TextEncoder().encode(secret);
 }
 
 /** Decode and verify a raw session JWT string. Works anywhere (middleware, route handlers, etc). */
