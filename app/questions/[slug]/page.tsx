@@ -4,6 +4,7 @@ import { EditorWorkspace } from '@/components/editor-workspace';
 import { ReactEditorWorkspace } from '@/components/react-editor-workspace';
 import { PremiumUpsell } from '@/components/premium-upsell';
 import { QuestionStartScreen } from '@/components/question-start-screen';
+import { DesktopOnlyGate } from '@/components/desktop-only-gate';
 import { getCurrentServerUser } from '@/lib/auth/current-user-server';
 import { getQuestionDetailBySlug } from '@/lib/questions';
 import { prisma } from '@/lib/db/prisma';
@@ -108,39 +109,43 @@ export default async function QuestionDetailPage({ params }: PageProps) {
 
   if (question.type === 'FUNCTION_JS' || question.type === 'FUNCTION_PYTHON') {
     return (
-      <EditorWorkspace
-        questionId={question.id}
-        slug={slug}
-        questionType={question.type}
-        title={question.title}
-        prompt={question.prompt}
-        difficulty={question.difficulty}
-        tags={question.tags}
-        starterCode={starterCode}
-        publicTestCode={question.publicTestCode || ''}
-        publicTestCases={
-          (question.publicTestCases as { name: string; args: unknown[]; expected: unknown }[] | null) ?? null
-        }
-        functionName={question.functionName ?? null}
-        expiresAt={expiresAt}
-      />
+      <DesktopOnlyGate title={question.title}>
+        <EditorWorkspace
+          questionId={question.id}
+          slug={slug}
+          questionType={question.type}
+          title={question.title}
+          prompt={question.prompt}
+          difficulty={question.difficulty}
+          tags={question.tags}
+          starterCode={starterCode}
+          publicTestCode={question.publicTestCode || ''}
+          publicTestCases={
+            (question.publicTestCases as { name: string; args: unknown[]; expected: unknown }[] | null) ?? null
+          }
+          functionName={question.functionName ?? null}
+          expiresAt={expiresAt}
+        />
+      </DesktopOnlyGate>
     );
   }
 
   const reactLanguage = (timerState?.reactLanguage === 'ts' ? 'ts' : 'js') as 'js' | 'ts';
 
   return (
-    <ReactEditorWorkspace
-      questionId={question.id}
-      slug={slug}
-      title={question.title}
-      prompt={question.prompt}
-      difficulty={question.difficulty}
-      tags={question.tags}
-      starterCode={starterCode}
-      publicTestCode={question.publicTestCode || ''}
-      expiresAt={expiresAt}
-      language={reactLanguage}
-    />
+    <DesktopOnlyGate title={question.title}>
+      <ReactEditorWorkspace
+        questionId={question.id}
+        slug={slug}
+        title={question.title}
+        prompt={question.prompt}
+        difficulty={question.difficulty}
+        tags={question.tags}
+        starterCode={starterCode}
+        publicTestCode={question.publicTestCode || ''}
+        expiresAt={expiresAt}
+        language={reactLanguage}
+      />
+    </DesktopOnlyGate>
   );
 }
