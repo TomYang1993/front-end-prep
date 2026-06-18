@@ -1,0 +1,99 @@
+name: Prepare Production Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version in package.json (e.g. 0.3.0). Opens release PR main -> production.'
+        required: true
+      notes:
+        description: 'Release notes shown in the production PR and GitHub Release.'
+        required: false
+        default: ''
+      staging_url:
+        description: 'Optional staging URL validated before release.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate release input
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must be semver like 0.3.0, got: $VERSION" >&2
+            exit 1
+          fi
+
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$PACKAGE_VERSION" != "$VERSION" ]; then
+            echo "Input version $VERSION does not match package.json version $PACKAGE_VERSION" >&2
+            exit 1
+          fi
+
+          git fetch origin production --tags
+          if git rev-parse "v${VERSION}-prod" >/dev/null 2>&1; then
+            echo "Tag v${VERSION}-prod already exists" >&2
+            exit 1
+          fi
+
+          if [ -z "$(git log --format=%H origin/production..HEAD)" ]; then
+            echo "No unreleased commits found on main compared with production" >&2
+            exit 1
+          fi
+
+      - name: Create or update production PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          NOTES: ${{ inputs.notes }}
+          STAGING_URL: ${{ inputs.staging_url }}
+        run: |
+          BODY_FILE="$RUNNER_TEMP/release-pr-body.md"
+          {
+            echo "## Release v${VERSION}"
+            echo
+            if [ -n "$NOTES" ]; then
+              echo "$NOTES"
+              echo
+            fi
+            if [ -n "$STAGING_URL" ]; then
+              echo "Staging: $STAGING_URL"
+              echo
+            fi
+            echo "## Changes"
+            git log --oneline --no-merges origin/production..HEAD
+            echo
+            echo "## Release checklist"
+            echo
+            echo "- [ ] Staging deployment is healthy"
+            echo "- [ ] Database migrations, if any, have been verified"
+            echo "- [ ] Production-only env var or billing changes have been checked"
+            echo "- [ ] Rollback path is understood"
+            echo
+            echo "After this PR merges, production deploys from the production branch."
+            echo "The finalize workflow will tag v${VERSION}-prod and create the GitHub Release."
+          } > "$BODY_FILE"
+
+          EXISTING_PR="$(gh pr list --base production --head main --state open --json url --jq '.[0].url // empty')"
+          if [ -n "$EXISTING_PR" ]; then
+            gh pr edit "$EXISTING_PR" --title "release: v${VERSION}" --body-file "$BODY_FILE"
+            echo "Updated existing production release PR: $EXISTING_PR"
+            echo "release_pr=$EXISTING_PR" >> "$GITHUB_STEP_SUMMARY"
+          else
+            PR_URL="$(gh pr create --base production --head main --title "release: v${VERSION}" --body-file "$BODY_FILE")"
+            echo "Created production release PR: $PR_URL"
+            echo "release_pr=$PR_URL" >> "$GITHUB_STEP_SUMMARY"
+          fi
