@@ -83,14 +83,13 @@ describe('session-cookie', () => {
     ).rejects.toThrow(/SESSION_SECRET/);
   });
 
-  it('falls back to dev secret when missing in non-production', async () => {
+  it('throws when SESSION_SECRET missing outside production', async () => {
     delete process.env.SESSION_SECRET;
     process.env.NODE_ENV = 'development';
-    const { signSessionToken, verifySessionToken } = await import(
-      '@/lib/auth/session-cookie'
-    );
-    const token = await signSessionToken({ id: 'u1', email: 'x', roles: [] });
-    expect(await verifySessionToken(token)).toMatchObject({ id: 'u1' });
+    const { signSessionToken } = await import('@/lib/auth/session-cookie');
+    await expect(
+      signSessionToken({ id: 'u1', email: 'x', roles: [] })
+    ).rejects.toThrow(/SESSION_SECRET/);
   });
 
   it('readSessionCookie returns null when cookie absent', async () => {
