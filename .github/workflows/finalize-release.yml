@@ -66,10 +66,15 @@ jobs:
           fi
 
           BODY_FILE="$RUNNER_TEMP/release-notes.md"
-          PR_NUMBER="$(gh pr list --base production --state merged --limit 1 --json number --jq '.[0].number // ""')"
-          PR_TITLE="$(gh pr list --base production --state merged --limit 1 --json title --jq '.[0].title // ""')"
-          PR_URL="$(gh pr list --base production --state merged --limit 1 --json url --jq '.[0].url // ""')"
-          PR_BODY="$(gh pr list --base production --state merged --limit 1 --json body --jq '.[0].body // ""')"
+          PR_JSON="$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" \
+            --jq 'map(select(.base.ref == "production")) | .[0] // {}')"
+          PR_NUMBER="$(jq -r '.number // empty' <<< "$PR_JSON")"
+          PR_TITLE="$(jq -r '.title // empty' <<< "$PR_JSON")"
+          PR_URL="$(jq -r '.html_url // empty' <<< "$PR_JSON")"
+          PR_BODY="$(jq -r '.body // empty' <<< "$PR_JSON")"
 
           {
             if [ -n "$PR_NUMBER" ]; then

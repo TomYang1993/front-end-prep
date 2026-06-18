@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version in package.json (e.g. 0.3.0). Opens release PR main -> production.'
+        description: 'Version in package.json (e.g. 0.3.0). Validates release readiness.'
         required: true
       notes:
         description: 'Release notes shown in the production PR and GitHub Release.'
@@ -17,7 +17,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   prepare:
@@ -54,14 +53,13 @@ jobs:
             exit 1
           fi
 
-      - name: Create or update production PR
+      - name: Generate production PR body
         env:
-          GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
           NOTES: ${{ inputs.notes }}
           STAGING_URL: ${{ inputs.staging_url }}
         run: |
-          BODY_FILE="$RUNNER_TEMP/release-pr-body.md"
+          BODY_FILE="release-pr-body.md"
           {
             echo "## Release v${VERSION}"
             echo
@@ -87,13 +85,23 @@ jobs:
             echo "The finalize workflow will tag v${VERSION}-prod and create the GitHub Release."
           } > "$BODY_FILE"
 
-          EXISTING_PR="$(gh pr list --base production --head main --state open --json url --jq '.[0].url // empty')"
-          if [ -n "$EXISTING_PR" ]; then
-            gh pr edit "$EXISTING_PR" --title "release: v${VERSION}" --body-file "$BODY_FILE"
-            echo "Updated existing production release PR: $EXISTING_PR"
-            echo "release_pr=$EXISTING_PR" >> "$GITHUB_STEP_SUMMARY"
-          else
-            PR_URL="$(gh pr create --base production --head main --title "release: v${VERSION}" --body-file "$BODY_FILE")"
-            echo "Created production release PR: $PR_URL"
-            echo "release_pr=$PR_URL" >> "$GITHUB_STEP_SUMMARY"
-          fi
+          {
+            echo "## Release v${VERSION} is ready"
+            echo
+            echo "GitHub Actions intentionally does not create or approve production PRs."
+            echo "Create the production PR locally with:"
+            echo
+            echo '```bash'
+            echo "gh pr create --base production --head main --title \"release: v${VERSION}\" --body-file release-pr-body.md"
+            echo '```'
+            echo
+            echo "Generated PR body:"
+            echo
+            cat "$BODY_FILE"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload production PR body
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-pr-body
+          path: release-pr-body.md
